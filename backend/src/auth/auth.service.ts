@@ -7,6 +7,6 @@ import bcrypt from 'bcrypt';
 export class AuthService {
     constructor(private prisma: PrismaService, private jwt: JwtService) {}
     async login(email: String, senha: String){
-        
+        const user = 
     }
 }
