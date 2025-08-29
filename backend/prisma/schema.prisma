@@ -1,0 +1,41 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Papel { 
+  MESTRE 
+  JOGADOR 
+}
+
+model Usuario {
+  id        String @id @default(uuid())
+  nome      String
+  email     String @unique
+  senhaHash String
+  papel     Papel
+  campanhas Campanha[]
+}
+
+model Campanha {
+  id        String @id @default(uuid())
+  usuarioId String
+  usuario   Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  nome      String
+  descricao String?
+  eventos   Evento[]
+}
+
+model Evento {
+  id         String @id @default(uuid())
+  campanhaId String
+  campanha   Campanha @relation(fields: [campanhaId], references: [id], onDelete: Cascade)
+  titulo     String
+  descricao  String?
+  ocorridoEm DateTime?
+  createdAt  DateTime @default(now())
+}
