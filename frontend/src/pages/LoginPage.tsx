@@ -7,7 +7,7 @@ export default function LoginPage() {
         setToken('fake-token')
     }
     return (
-        <div className="min-h-screen grid place items-center p-4">
+        <div className="min-h-screen grid place-items-center bg-neutral-950 p-4">
             <form onSubmit={onLogin} className="bg-neutral-900 p-6 rounded-2x1 w-full max-w-sm space-y-4">
                 <h1 className="text-xl font-semibold">Login</h1>
                 <input className="w-full rounded bg-neutral-800 p-2" placeholder="email"/>
