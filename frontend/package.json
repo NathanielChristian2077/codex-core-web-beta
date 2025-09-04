@@ -10,8 +10,6 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@types/d3": "^7.4.3",
-    "@types/react-router-dom": "^5.3.3",
     "axios": "^1.11.0",
     "d3": "^7.9.0",
     "prettier": "^3.6.2",
@@ -27,8 +25,10 @@
     "@tailwindcss/vite": "^4.1.12",
     "@testing-library/jest-dom": "^6.8.0",
     "@testing-library/react": "^16.3.0",
+    "@types/d3": "^7.4.3",
     "@types/react": "^19.1.10",
     "@types/react-dom": "^19.1.7",
+    "@types/react-router-dom": "^5.3.3",
     "@vitejs/plugin-react": "^5.0.0",
     "autoprefixer": "^10.4.21",
     "eslint": "^9.34.0",
