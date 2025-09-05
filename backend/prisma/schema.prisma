@@ -13,21 +13,24 @@ enum Papel {
 }
 
 model Usuario {
-  id        String @id @default(uuid())
-  nome      String
-  email     String @unique
-  senhaHash String
-  papel     Papel
-  campanhas Campanha[]
+  id          String @id @default(uuid())
+  nome        String
+  email       String @unique
+  senhaHash   String
+  papel       Papel
+  campanhas   Campanha[]
 }
 
 model Campanha {
-  id        String @id @default(uuid())
-  usuarioId String
-  usuario   Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
-  nome      String
-  descricao String?
-  eventos   Evento[]
+  id          String @id @default(uuid())
+  usuarioId   String
+  usuario     Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  nome        String
+  descricao   String?
+  eventos     Evento[]
+  personagens Personagem[]
+  locais      Local[]
+  objetos     Objeto[]
 }
 
 model Evento {
@@ -45,7 +48,7 @@ model Personagem {
   campanhaId String
   campanha   Campanha @relation(fields: [campanhaId], references: [id], onDelete: Cascade)
   nome       String
-  descricao  String
+  descricao  String?
   createdAt  DateTime @default(now())
 
   @@index([campanhaId, nome])
@@ -56,18 +59,18 @@ model Local {
   campanhaId String
   campanha   Campanha @relation(fields: [campanhaId], references: [id], onDelete: Cascade)
   nome       String
-  descricao  String
+  descricao  String?
   createdAt  DateTime @default(now())
 
   @@index([campanhaId, nome])
 }
 
-model Local {
+model Objeto {
   id         String @id @default(uuid())
   campanhaId String
   campanha   Campanha @relation(fields: [campanhaId], references: [id], onDelete: Cascade)
   nome       String
-  descricao  String
+  descricao  String?
   createdAt  DateTime @default(now())
 
   @@index([campanhaId, nome])
@@ -96,12 +99,13 @@ model Relacao {
   origemTipo  NodoTipo
   origemId    String
   destinoTipo NodoTipo
+  destinoId   String
   tipo        RelTipo
   createdAt   DateTime @default(now())
 
   @@unique([origemTipo, origemId, destinoTipo, destinoId, tipo])
 
   @@index([origemTipo, origemId])
-  @@index(destinoTipo, destinoId)
+  @@index([destinoTipo, destinoId])
 
 }

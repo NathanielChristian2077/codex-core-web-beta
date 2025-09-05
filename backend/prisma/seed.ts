@@ -27,6 +27,31 @@ async function main() {
         skipDuplicates: true
     })
 
+    const p1 = await prisma.personagem.create({
+        data: { campanhaId: camp.id, nome: 'Aria', descricao: 'Barda ruim, fighter boa' }
+    })
+
+    const l1 = await prisma.local.create({
+        data: { campanhaId: camp.id, nome: 'Taverna do Corvo', descricao: '"Alguém falou em pi-po-ca?"' }
+    })
+
+    const o1 = await prisma.objeto.create({
+        data: { campanhaId: camp.id, nome: 'Anel de Prata', descricao: 'Anel... de prata' }
+    })
+
+    const ev0 = await prisma.evento.findFirst({ where: { campanhaId: camp.id, titulo: 'Evento 0' } });
+
+    if (ev0) {
+        await prisma.relacao.createMany({
+            data: [
+                { origemTipo: 'PERSONAGEM', origemId: p1.id, destinoTipo: 'EVENTO', destinoId: ev0.id, tipo: 'APARECE' },
+                { origemTipo: 'OBJETO', origemId: o1.id, destinoTipo: 'EVENTO', destinoId: ev0.id, tipo: 'APARECE' },
+                { origemTipo: 'EVENTO', origemId: ev0.id, destinoTipo: 'LOCAL', destinoId: l1.id, tipo: 'OCORRE_EM' }
+            ],
+            skipDuplicates: true
+        })
+    }
+
     console.log({ user: user.email, campanha: camp.nome });
 }
 

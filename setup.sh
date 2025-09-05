@@ -24,7 +24,7 @@ fi
 echo "== Installing frontend dependencies =="
 cd ../frontend
 npm install
-npm install i -D @tailwindcss/vite @tailwindcss/cli tailwindcss postcss autoprefixer
+npm install i -D @tailwindcss/vite @tailwindcss/cli tailwindcss postcss autoprefixer framer-motion
 
 echo "== Installing libs =="
 npm i react-router-dom zustand axios d3

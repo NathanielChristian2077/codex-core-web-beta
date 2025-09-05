@@ -2,8 +2,12 @@ import { Module } from "@nestjs/common";
 import { AuthModule } from './auth/auth.module';
 import { CampanhasModule } from './campanhas/campanhas.module';
 import { EventosModule } from './eventos/eventos.module';
+import { PersonagensModule } from "./personagens/personagens.module";
+import { LocaisModule } from "./locais/locais.module";
+import { ObjetosModule } from "./objetos/objetos.module";
+import { RelacoesModule } from "./relacoes/relacoes.module";
 
 @Module({
-    imports: [AuthModule, CampanhasModule, EventosModule],
+    imports: [AuthModule, CampanhasModule, EventosModule, PersonagensModule, LocaisModule, ObjetosModule, RelacoesModule],
 })
 export class AppModule {}
