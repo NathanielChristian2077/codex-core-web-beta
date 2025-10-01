@@ -17,7 +17,7 @@ model Usuario {
   nome        String
   email       String @unique
   senhaHash   String
-  papel       Papel
+  papel       Papel  @default(JOGADOR)
   campanhas   Campanha[]
 }
 
@@ -41,6 +41,9 @@ model Evento {
   descricao  String?
   ocorridoEm DateTime?
   createdAt  DateTime @default(now())
+
+  @@index([campanhaId, ocorridoEm])
+  @@unique([campanhaId, titulo])
 }
 
 model Personagem {
@@ -52,6 +55,7 @@ model Personagem {
   createdAt  DateTime @default(now())
 
   @@index([campanhaId, nome])
+  @@unique([campanhaId, nome])
 }
 
 model Local {
@@ -63,6 +67,7 @@ model Local {
   createdAt  DateTime @default(now())
 
   @@index([campanhaId, nome])
+  @@unique([campanhaId, nome])
 }
 
 model Objeto {
@@ -74,6 +79,7 @@ model Objeto {
   createdAt  DateTime @default(now())
 
   @@index([campanhaId, nome])
+  @@unique([campanhaId, nome])
 }
 
 enum NodoTipo {
@@ -107,5 +113,4 @@ model Relacao {
 
   @@index([origemTipo, origemId])
   @@index([destinoTipo, destinoId])
-
 }

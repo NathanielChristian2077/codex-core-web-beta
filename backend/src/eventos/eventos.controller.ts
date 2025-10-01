@@ -1,13 +1,35 @@
-import { Body, Controller, Param, Post } from '@nestjs/common';
-import { PrismaService } from '../common/prisma.service';
+import { Body, Controller, Delete, Get, Headers, Param, Post } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
+import { EventosService } from './eventos.service';
 
-@Controller('campanhas/:id/eventos')
+@Controller()
 export class EventosController {
-  constructor(private prisma: PrismaService) {}
-  @Post()
-  create(@Param('id') campanhaId: string, @Body() dto: { titulo: string; descricao?: string; ocorridoEm?: string }) {
-    return this.prisma.evento.create({
-      data: { campanhaId, titulo: dto.titulo, descricao: dto.descricao, ocorridoEm: dto.ocorridoEm ? new Date(dto.ocorridoEm) : null }
-    });
+  constructor(private readonly svc: EventosService, private readonly jwt: JwtService) {}
+
+  private userIdFromAuth(auth?: string) {
+    const token = auth?.replace('Bearer ', '') ?? '';
+    const payload = token ? (this.jwt.decode(token) as any) : null;
+    return payload?.sub ?? '';
+  }
+
+  @Get('campanhas/:id/eventos')
+  list(@Param('id') campanhaId: string) {
+    return this.svc.list(campanhaId);
+  }
+
+  @Post('campanhas/:id/eventos')
+  create(
+    @Param('id') campanhaId: string,
+    @Headers('authorization') auth: string,
+    @Body() dto: { titulo: string; descricao?: string; ocorridoEm?: string },
+  ) {
+    const userId = this.userIdFromAuth(auth);
+    return this.svc.create(campanhaId, userId, dto);
+  }
+
+  @Delete('eventos/:eventoId')
+  remove(@Param('eventoId') eventoId: string, @Headers('authorization') auth: string) {
+    const userId = this.userIdFromAuth(auth);
+    return this.svc.remove(eventoId, userId);
   }
 }

@@ -12,7 +12,7 @@ echo "== Prisma generate =="
 npx prisma generate
 
 echo "== Prisma migrate dev =="
-npx prisma migrate dev --name init
+npx prisma migrate dev
 
 echo "== Starting seed =="
 if [ -f prisma/seed.ts ]; then
