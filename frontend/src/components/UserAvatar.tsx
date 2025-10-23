@@ -31,6 +31,6 @@ export default function UserAvatar({ name, email, imageUrl, size = 36 }: Props) 
 }
 
 function getInitials(s: string) {
-  return s.split()
+  return s.split(/[@\s._-]+/).filter(Boolean).slice(0, 2).map((p) => p[0]?.toUpperCase()).join("");
 }
 
