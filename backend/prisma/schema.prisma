@@ -7,110 +7,110 @@ generator client {
   provider = "prisma-client-js"
 }
 
-enum Papel { 
-  MESTRE 
-  JOGADOR 
+enum Role {
+  GM
+  PLAYER
 }
 
-model Usuario {
-  id          String @id @default(uuid())
-  nome        String
-  email       String @unique
-  senhaHash   String
-  papel       Papel  @default(JOGADOR)
-  campanhas   Campanha[]
+model User {
+  id        String     @id @default(uuid())
+  name      String
+  email     String     @unique
+  password  String
+  role      Role       @default(PLAYER)
+  campaigns Campaign[]
 }
 
-model Campanha {
-  id          String @id @default(uuid())
-  usuarioId   String
-  usuario     Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
-  nome        String
-  descricao   String?
-  eventos     Evento[]
-  personagens Personagem[]
-  locais      Local[]
-  objetos     Objeto[]
+model Campaign {
+  id          String       @id @default(uuid())
+  userId      String
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  events      Event[]
+  characters  Character[]
+  locations   Location[]
+  objects     ObjectModel[]
 }
 
-model Evento {
-  id         String @id @default(uuid())
-  campanhaId String
-  campanha   Campanha @relation(fields: [campanhaId], references: [id], onDelete: Cascade)
-  titulo     String
-  descricao  String?
-  ocorridoEm DateTime?
-  createdAt  DateTime @default(now())
+model Event {
+  id         String    @id @default(uuid())
+  campaignId String
+  campaign   Campaign  @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  title      String
+  description String?
+  occurredAt DateTime?
+  createdAt  DateTime  @default(now())
 
-  @@index([campanhaId, ocorridoEm])
-  @@unique([campanhaId, titulo])
+  @@index([campaignId, occurredAt])
+  @@unique([campaignId, title])
 }
 
-model Personagem {
-  id         String @id @default(uuid())
-  campanhaId String
-  campanha   Campanha @relation(fields: [campanhaId], references: [id], onDelete: Cascade)
-  nome       String
-  descricao  String?
-  createdAt  DateTime @default(now())
+model Character {
+  id          String    @id @default(uuid())
+  campaignId  String
+  campaign    Campaign  @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  createdAt   DateTime  @default(now())
 
-  @@index([campanhaId, nome])
-  @@unique([campanhaId, nome])
+  @@index([campaignId, name])
+  @@unique([campaignId, name])
 }
 
-model Local {
-  id         String @id @default(uuid())
-  campanhaId String
-  campanha   Campanha @relation(fields: [campanhaId], references: [id], onDelete: Cascade)
-  nome       String
-  descricao  String?
-  createdAt  DateTime @default(now())
+model Location {
+  id          String    @id @default(uuid())
+  campaignId  String
+  campaign    Campaign  @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  createdAt   DateTime  @default(now())
 
-  @@index([campanhaId, nome])
-  @@unique([campanhaId, nome])
+  @@index([campaignId, name])
+  @@unique([campaignId, name])
 }
 
-model Objeto {
-  id         String @id @default(uuid())
-  campanhaId String
-  campanha   Campanha @relation(fields: [campanhaId], references: [id], onDelete: Cascade)
-  nome       String
-  descricao  String?
-  createdAt  DateTime @default(now())
+model ObjectModel {
+  id          String    @id @default(uuid())
+  campaignId  String
+  campaign    Campaign  @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  createdAt   DateTime  @default(now())
 
-  @@index([campanhaId, nome])
-  @@unique([campanhaId, nome])
+  @@index([campaignId, name])
+  @@unique([campaignId, name])
 }
 
-enum NodoTipo {
-  EVENTO
-  PERSONAGEM
-  LOCAL
-  OBJETO
+enum NodeType {
+  EVENT
+  CHARACTER
+  LOCATION
+  OBJECT
 }
 
-enum RelTipo {
-  APARECE
-  OCORRE_EM
-  USA
-  TEM
-  PARALELO
-  ANTERIOR
-  POSTERIOR
-  VINCULO
+enum RelationType {
+  APPEARS
+  OCCURS_AT
+  USES
+  HAS
+  PARALLEL
+  PREVIOUS
+  NEXT
+  LINK
 }
 
-model Relacao {
-  id          String @id @default(uuid())
-  origemTipo  NodoTipo
-  origemId    String
-  destinoTipo NodoTipo
-  destinoId   String
-  tipo        RelTipo
-  createdAt   DateTime @default(now())
+model Relation {
+  id          String       @id @default(uuid())
+  fromType    NodeType
+  fromId      String
+  toType      NodeType
+  toId        String
+  kind        RelationType
+  createdAt   DateTime     @default(now())
 
-  @@unique([origemTipo, origemId, destinoTipo, destinoId, tipo])
+  @@unique([fromType, fromId, toType, toId, kind])
 
-  @@index([origemTipo, origemId])
-  @@index([destinoTipo, destinoId])
+  @@index([fromType, fromId])
+  @@index([toType, toId])
 }

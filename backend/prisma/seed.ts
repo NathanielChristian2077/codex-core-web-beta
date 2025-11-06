@@ -3,60 +3,64 @@ import bcrypt from "bcrypt";
 const prisma = new PrismaClient();
 
 async function main() {
-  const senhaHash = await bcrypt.hash("123456", 10);
+  const password = await bcrypt.hash("123456", 10);
 
-  const user = await prisma.usuario.upsert({
+  const user = await prisma.user.upsert({
     where: { email: "mestre@ex.com" },
     update: {},
-    create: { nome: "Mestre", email: "mestre@ex.com", senhaHash, papel: "MESTRE" },
+    create: { name: "Game Master", email: "mestre@ex.com", password, role: "GM" },
   });
 
-  const camp = await prisma.campanha.upsert({
+  const campaign = await prisma.campaign.upsert({
     where: { id: "00000000-0000-0000-0000-000000000001" },
     update: {},
-    create: { id: "00000000-0000-0000-0000-000000000001", nome: "Campanha Demo", usuarioId: user.id },
+    create: {
+      id: "00000000-0000-0000-0000-000000000001",
+      name: "Demo Campaign",
+      userId: user.id,
+    },
   });
 
-  const ev0 = await prisma.evento.upsert({
-    where: { campanhaId_titulo: { campanhaId: camp.id, titulo: "Evento 0" } },
+  const ev0 = await prisma.event.upsert({
+    where: { campaignId_title: { campaignId: campaign.id, title: "Event 0" } },
     update: {},
-    create: { campanhaId: camp.id, titulo: "Evento 0", descricao: "Inicio" },
+    create: { campaignId: campaign.id, title: "Event 0", description: "Beginning" },
   });
 
-  await prisma.evento.upsert({
-    where: { campanhaId_titulo: { campanhaId: camp.id, titulo: "Evento 1" } },
+  await prisma.event.upsert({
+    where: { campaignId_title: { campaignId: campaign.id, title: "Event 1" } },
     update: {},
-    create: { campanhaId: camp.id, titulo: "Evento 1", descricao: "A Porta" },
+    create: { campaignId: campaign.id, title: "Event 1", description: "The Door" },
   });
 
-  const p1 = await prisma.personagem.upsert({
-    where: { campanhaId_nome: { campanhaId: camp.id, nome: "Aria" } },
+  const ch1 = await prisma.character.upsert({
+    where: { campaignId_name: { campaignId: campaign.id, name: "Aria" } },
     update: {},
-    create: { campanhaId: camp.id, nome: "Aria", descricao: "Barda ruim, fighter boa" },
+    create: { campaignId: campaign.id, name: "Aria", description: "Bad bard, good fighter" },
   });
 
-  const l1 = await prisma.local.upsert({
-    where: { campanhaId_nome: { campanhaId: camp.id, nome: "Taverna do Corvo" } },
+  const loc1 = await prisma.location.upsert({
+    where: { campaignId_name: { campaignId: campaign.id, name: "Raven Tavern" } },
     update: {},
-    create: { campanhaId: camp.id, nome: "Taverna do Corvo", descricao: '"Alguém falou em pi-po-ca?"' },
+    create: { campaignId: campaign.id, name: "Raven Tavern", description: '"Did someone say pop-corn?"' },
   });
 
-  const o1 = await prisma.objeto.upsert({
-    where: { campanhaId_nome: { campanhaId: camp.id, nome: "Anel de Prata" } },
+  const obj1 = await prisma.objectModel.upsert({
+    where: { campaignId_name: { campaignId: campaign.id, name: "Silver Ring" } },
     update: {},
-    create: { campanhaId: camp.id, nome: "Anel de Prata", descricao: "Anel... de prata" },
+    create: { campaignId: campaign.id, name: "Silver Ring", description: "A ring... made of silver" },
   });
 
-  await prisma.relacao.createMany({
+  await prisma.relation.createMany({
     data: [
-      { origemTipo: "PERSONAGEM", origemId: p1.id, destinoTipo: "EVENTO", destinoId: ev0.id, tipo: "APARECE" },
-      { origemTipo: "OBJETO", origemId: o1.id, destinoTipo: "EVENTO", destinoId: ev0.id, tipo: "APARECE" },
-      { origemTipo: "EVENTO", origemId: ev0.id, destinoTipo: "LOCAL", destinoId: l1.id, tipo: "OCORRE_EM" },
+      { fromType: "CHARACTER", fromId: ch1.id, toType: "EVENT", toId: ev0.id, kind: "APPEARS" },
+      { fromType: "OBJECT", fromId: obj1.id, toType: "EVENT", toId: ev0.id, kind: "APPEARS" },
+      { fromType: "EVENT", fromId: ev0.id, toType: "LOCATION", toId: loc1.id, kind: "OCCURS_AT" },
     ],
     skipDuplicates: true,
   });
 
-  console.log({ user: user.email, campaign: camp.nome });
+  console.log({ user: user.email, campaign: campaign.name });
 }
 
 main()

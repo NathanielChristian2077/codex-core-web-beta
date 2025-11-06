@@ -1,5 +1,7 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import api from "../../lib/apiClient";
+import Spinner from "../ui/Spinner";
+import { useToast } from "../ui/ToastProvider";
 
 type Props = {
   open: boolean;
@@ -13,9 +15,12 @@ export default function ManageCampaignModal({ open, onClose, campaignId, onUpdat
   const [name, setName] = useState("");
   const [desc, setDesc] = useState("");
   const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [dupLoading, setDupLoading] = useState(false);
+  const toast = useToast();
 
   useEffect(() => {
-    if (!campaignId) {
+    if (!open || !campaignId) {
       return;
     }
     (async () => {
@@ -24,10 +29,12 @@ export default function ManageCampaignModal({ open, onClose, campaignId, onUpdat
         setName(res.data.name);
         setDesc(res.data.desc ?? "");
       } catch {
-        console.warn("Failed to load campaign data");
+        toast.show("Failed to load campaign", "error");
+      } finally {
+        setLoading(false);
       }
     })();
-  }, [campaignId]);
+  }, [open, campaignId, toast]);
 
   if (!open) return null;
 
@@ -35,18 +42,19 @@ export default function ManageCampaignModal({ open, onClose, campaignId, onUpdat
     if (!campaignId) {
       return;
     }
-    setLoading(true);
     try {
+      setSaving(true);
       await api.put(`/campaigns/${campaignId}`, {
         name: name.trim(),
         desc: desc.trim() || null,
       });
+      toast.show("Campaign updated", "success");
       onUpdated?.();
       onClose();
     } catch {
-      alert("Failed to update campaign");
+      toast.show("Failed to update campaign", "error");
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   }
 
@@ -55,62 +63,149 @@ export default function ManageCampaignModal({ open, onClose, campaignId, onUpdat
     if (!confirm("Are you sure you want to delete this campaign?")) return;
     try {
       await api.delete(`/campaigns/${campaignId}`);
+      toast.show("Campaign deleted", "success");
       onDeleted?.();
       onClose();
     } catch {
-      alert("Failed to delete campaign");
+      toast.show("Failed to delete campaign", "error");
+    }
+  }
+
+  async function handleExportJSON() {
+    if (!campaignId) return;
+    try {
+      const [campRes, eventsRes] = await Promise.all([
+        api.get(`/campaigns/${campaignId}`),
+        api.get(`/campaigns/${campaignId}/events`),
+      ]);
+      const payload = {
+        campaign: campRes.data,
+        events: eventsRes.data,
+      };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `campaign-${campaignId}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.show("Exported as JSON", "success");
+    } catch {
+      toast.show("Failed to export", "error");
+    }
+  }
+
+  async function handleDuplicate() {
+    if (!campaignId) return;
+    try {
+      setDupLoading(true);
+      const [campRes, eventsRes] = await Promise.all([
+        api.get(`/campaigns/${campaignId}`),
+        api.get(`/campaigns/${campaignId}/events`),
+      ]);
+
+      const source = campRes.data as { name: string; desc?: string | null; id: string };
+      const events = eventsRes.data as Array<{ title: string; desc?: string | null; happenedIn?: string | null }>;
+
+      const newCamp = await api.post(`/campaigns`, {
+        name: `${source.name} (Copy)`,
+        desc: source.desc ?? null,
+      });
+
+      const newId = newCamp.data?.id as string;
+      for (const ev of events) {
+        await api.post(`/campaigns/${newId}/events`, {
+          title: ev.title,
+          desc: ev.desc ?? undefined,
+          happenedIn: ev.happenedIn ?? undefined,
+        });
+      }
+      toast.show("Campaign duplicated", "success");
+      onUpdated?.();
+      onClose();
+    } catch {
+      toast.show("Failed to duplicate", "error");
+    } finally {
+      setDupLoading(false);
     }
   }
 
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4" role="dialog" aria-modal="true">
-      <div className="w-full max-w-lg rounded-xl border bg-white p-6 shadow-xl dark:border-zinc-800 dark:bg-zinc-900">
+      <div className="w-full max-w-xl rounded-xl border bg-white p-6 shadow-xl dark:border-zinc-800 dark:bg-zinc-900">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-lg font-semibold">Manage campaign</h2>
-          <button
-            onClick={onClose}
-            className="rounded p-1 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800"
-            aria-label="Close"
-          >
-            ✕
-          </button>
+          <button onClick={onClose} className="rounded p-1 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800" aria-label="Close">✕</button>
         </div>
 
-        <div className="grid gap-3">
-          <label className="grid gap-1">
-            <span className="text-sm">Name</span>
-            <input
-              className="rounded-md border border-zinc-300 bg-white px-3 py-2 outline-none focus:ring-2 focus:ring-blue-600 dark:border-zinc-700 dark:bg-zinc-900"
-              placeholder="e.g. Crows of Vesteria"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
-          </label>
-
-          <label className="grid gap-1">
-            <span className="text-sm">Description</span>
-            <textarea
-              className="min-h-[96px] rounded-md border border-zinc-300 bg-white px-3 py-2 outline-none focus:ring-2 focus:ring-blue-600 dark:border-zinc-700 dark:bg-zinc-900"
-              placeholder="Optional short pitch about the campaign"
-              value={desc}
-              onChange={(e) => setDesc(e.target.value)}
-            />
-          </label>
-        </div>
-
-        <div className="mt-5 flex items-center justify-end gap-2">
-          <button onClick={handleDelete} className="rounded border border-red-500 px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/20" type="button">
-            Delete
-          </button>
-          <div className="flex gap-2">
-            <button onClick={onClose} className="rounded border px-3 py-1.5 hover:bg-zinc-50 dark:hover:bg-zinc-800">
-              Cancel
-            </button>
-            <button disabled={loading} onClick={handleSave} className="rounded bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700 disabled:opacity-70">
-              {loading ? "Saving..." : "Save changes"}
-            </button>
+        {loading ? (
+          <div className="flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-300">
+            <Spinner /> Loading...
           </div>
-        </div>
+        ) : (
+          <>
+            <div className="grid gap-3">
+              <label className="grid gap-1">
+                <span className="text-sm">Name</span>
+                <input
+                  className="rounded-md border border-zinc-300 bg-white px-3 py-2 outline-none focus:ring-2 focus:ring-blue-600 dark:border-zinc-700 dark:bg-zinc-900"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                />
+              </label>
+
+              <label className="grid gap-1">
+                <span className="text-sm">Description</span>
+                <textarea
+                  className="min-h-[96px] rounded-md border border-zinc-300 bg-white px-3 py-2 outline-none focus:ring-2 focus:ring-blue-600 dark:border-zinc-700 dark:bg-zinc-900"
+                  value={desc}
+                  onChange={(e) => setDesc(e.target.value)}
+                />
+              </label>
+            </div>
+
+            <div className="mt-5 flex items-center justify-between">
+              <div className="flex gap-2">
+                <button
+                  onClick={handleExportJSON}
+                  className="rounded border px-3 py-1.5 text-sm hover:bg-zinc-50 dark:hover:bg-zinc-800"
+                  type="button"
+                >
+                  Export JSON
+                </button>
+                <button
+                  onClick={handleDuplicate}
+                  disabled={dupLoading}
+                  className="rounded border px-3 py-1.5 text-sm hover:bg-zinc-50 disabled:opacity-70 dark:hover:bg-zinc-800"
+                  type="button"
+                >
+                  {dupLoading ? "Duplicating..." : "Duplicate"}
+                </button>
+              </div>
+
+              <div className="flex gap-2">
+                <button onClick={onClose} className="rounded border px-3 py-1.5 hover:bg-zinc-50 dark:hover:bg-zinc-800" type="button">
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSave}
+                  disabled={saving}
+                  className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:opacity-70"
+                  type="button"
+                >
+                  {saving ? "Saving..." : "Save changes"}
+                </button>
+                <button
+                  onClick={handleDelete}
+                  className="rounded border border-red-500 px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/20"
+                  type="button"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

@@ -1,20 +1,27 @@
-# --run chmod +x setup.sh before running setup
-# --create both '.env'(back/front) before running setup
+#!/bin/bash
+# -- Run 'chmod +x setup.sh' before running setup
+# -- Make sure both '.env' files (backend and frontend) exist before running
+
 set -e
 
-echo "== Uploading db trough Docker =="
+echo "== Starting PostgreSQL via Docker Compose =="
 docker compose -f infra/docker-compose.yml up -d
+
 echo "== Installing backend dependencies =="
 cd backend
 npm install
 
-echo "== Prisma generate =="
+echo "== Installing authentication dependencies =="
+npm install @nestjs/passport passport passport-jwt @nestjs/jwt
+npm install -D @types/passport-jwt
+
+echo "== Generating Prisma client =="
 npx prisma generate
 
-echo "== Prisma migrate dev =="
-npx prisma migrate dev
+echo "== Running Prisma migrations =="
+npx prisma migrate dev --name init
 
-echo "== Starting seed =="
+echo "== Running database seed =="
 if [ -f prisma/seed.ts ]; then
   npm run db:seed
 else
@@ -24,13 +31,18 @@ fi
 echo "== Installing frontend dependencies =="
 cd ../frontend
 npm install
-npm install i -D @tailwindcss/vite @tailwindcss/cli tailwindcss postcss autoprefixer framer-motion
 
-echo "== Installing libs =="
-npm i react-router-dom zustand axios d3
-npm i -D @types/d3 @types/react-router-dom
+echo "== Installing Tailwind and styling tools =="
+npm install -D @tailwindcss/vite @tailwindcss/cli tailwindcss postcss autoprefixer framer-motion
 
-echo "== Installing utils (optional:recommended) =="
-npm i -D eslint prettier vite-tsconfig-paths
+echo "== Installing frontend libraries =="
+npm install react-router-dom zustand axios d3
+npm install -D @types/d3 @types/react-router-dom
 
-echo "== Setup succeded! run 'npm run dev' on /backend or /frontend. =="
+echo "== Installing optional utilities (ESLint, Prettier, TS paths) =="
+npm install -D eslint prettier vite-tsconfig-paths
+
+echo "== Setup completed successfully! =="
+echo "You can now run the project using:"
+echo "  → Backend: cd backend && npm run dev"
+echo "  → Frontend: cd frontend && npm run dev"

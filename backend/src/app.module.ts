@@ -1,14 +1,23 @@
-import { Module } from "@nestjs/common";
+import { Module } from '@nestjs/common';
 import { AuthModule } from './auth/auth.module';
-import { CampanhasModule } from './campanhas/campanhas.module';
-import { EventosModule } from './eventos/eventos.module';
-import { PersonagensModule } from "./personagens/personagens.module";
-import { LocaisModule } from "./locais/locais.module";
-import { ObjetosModule } from "./objetos/objetos.module";
-import { RelacoesModule } from "./relacoes/relacoes.module";
-import { GrafoModule } from "./grafo/grafo.module";
+import { CampaignsModule } from './campaigns/campaigns.module';
+import { CharactersModule } from './characters/characters.module';
+import { EventsModule } from './events/events.module';
+import { GraphModule } from './graph/graph.module';
+import { LocationsModule } from './locations/locations.module';
+import { ObjectsModule } from './objects/objects.module';
+import { RelationsModule } from './relations/relations.module';
 
 @Module({
-    imports: [AuthModule, CampanhasModule, EventosModule, PersonagensModule, LocaisModule, ObjetosModule, RelacoesModule, GrafoModule],
+  imports: [
+    AuthModule,
+    CampaignsModule,
+    EventsModule,
+    CharactersModule,
+    LocationsModule,
+    ObjectsModule,
+    RelationsModule,
+    GraphModule,
+  ],
 })
 export class AppModule {}
