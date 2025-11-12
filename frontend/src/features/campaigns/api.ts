@@ -1,5 +1,5 @@
 import api from "../../lib/apiClient";
-import type { Campaign, CampaignEventInput, CampaignExport } from "./types";
+import type { Campaign, CampaignExport, EventItem } from "./types";
 
 export async function listCampaigns(): Promise<Campaign[]> {
   const { data } = await api.get("/campaigns");
@@ -25,22 +25,6 @@ export async function deleteCampaign(id: string) {
   await api.delete(`/campaigns/${id}`);
 }
 
-export async function listCampaignEvents(campaignId: string) {
-  const { data } = await api.get(`/campaigns/${campaignId}/events`);
-  return data as CampaignEventInput[];
-}
-
-export async function createCampaignEvent(campaignId: string, payload: CampaignEventInput) {
-  const occurred = payload.occurredAt ?? payload.date ?? null;
-  const body: CampaignEventInput = {
-    title: payload.title,
-    desc: payload.desc ?? null,
-    happenedIn: payload.happenedIn ?? null,
-    occurredAt: occurred,
-  };
-  const { data } = await api.post(`/campaigns/${campaignId}/events`, body);
-  return data;
-}
 
 export async function duplicateCampaign(sourceId: string) {
   const [camp, events] = await Promise.all([
@@ -70,4 +54,36 @@ export async function importCampaign(payload: CampaignExport) {
     await createCampaignEvent(newCamp.id, ev);
   }
   return newCamp;
+}
+
+export async function listCampaignEvents(campaignId: string): Promise<EventItem[]> {
+  const { data } = await api.get(`/campaigns/${campaignId}/events`);
+  return data;
+}
+export async function createCampaignEvent(campaignId: string, payload: Partial<EventItem>) {
+  const body = normalizeEventPayload(payload);
+  const { data } = await api.post(`/campaigns/${campaignId}/events`, body);
+  return data as EventItem;
+}
+export async function updateEvent(eventId: string, payload: Partial<EventItem>) {
+  const body = normalizeEventPayload(payload);
+  const { data } = await api.put(`/events/${eventId}`, body);
+  return data as EventItem;
+}
+export async function deleteEvent(eventId: string) {
+  await api.delete(`/events/${eventId}`);
+}
+
+function normalizeEventPayload(p: Partial<EventItem>): Partial<EventItem> {
+  const occurred = p.occurredAt ?? null;
+  return {
+    title: p.title?.trim() || "",
+    desc: p.desc?.trim() ?? null,
+    happenedIn: p.happenedIn?.trim() ?? null,
+    occurredAt: occurred ? toISODate(occurred) : null,
+  };
+}
+function toISODate(s: string): string {
+  if (/\d{4}-\d{2}-\d{2}T/.test(s)) return s;
+  return s;
 }

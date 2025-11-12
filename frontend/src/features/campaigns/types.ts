@@ -19,3 +19,13 @@ export type CampaignEventInput = {
   occurredAt?: string | null;
   date?: string | null;
 };
+
+export type EventItem = {
+  id: string;
+  title: string;
+  desc?: string | null;
+  occurredAt?: string | null;
+  happenedIn?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+};
