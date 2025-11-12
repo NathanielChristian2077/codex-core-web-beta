@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { useSession } from "../store/useSession";
+import { useSession } from "../../store/useSession";
 import UserAvatar from "./UserAvatar";
 
 export default function SideBar() {

@@ -10,6 +10,7 @@ export default function CreateCampaignModal({ open, onClose, onCreate }: Props) 
   const [name, setName] = useState("");
   const [desc, setDesc] = useState("");
   const [saving, setSaving] = useState(false);
+  const [coverUrl, setCoverUrl] = useState("");
   if (!open) return null
 
   async function submit() {
@@ -19,7 +20,7 @@ export default function CreateCampaignModal({ open, onClose, onCreate }: Props) 
     setSaving(false);
     setName("");
     setDesc("");
-  }  
+  }
 
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4" role="dialog" aria-modal="true">
@@ -55,13 +56,22 @@ export default function CreateCampaignModal({ open, onClose, onCreate }: Props) 
               onChange={(e) => setDesc(e.target.value)}
             />
           </label>
+          <label className="grid gap-1">
+            <span className="text-sm">Cover image URL (optional)</span>
+            <input
+              className="rounded-md border border-zinc-300 bg-white px-3 py-2 outline-none focus:ring-2 focus:ring-blue-600 dark:border-zinc-700 dark:bg-zinc-900"
+              placeholder="https://…"
+              value={coverUrl}
+              onChange={(e) => setCoverUrl(e.target.value)}
+            />
+          </label>
         </div>
 
         <div className="mt-5 flex items-center justify-end gap-2">
           <button onClick={onClose} className="rounded border px-3 py-1.5 hover:bg-zinc-50 dark:hover:bg-zinc-800" type="button">
             Cancel
           </button>
-          <button onClick={ submit } disabled={ saving || !name.trim()} className="rounded bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700" type="button">
+          <button onClick={submit} disabled={saving || !name.trim()} className="rounded bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700" type="button">
             {saving ? "Creating..." : "Create"}
           </button>
         </div>

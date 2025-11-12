@@ -1,5 +1,5 @@
 import { Navigate, Outlet } from "react-router-dom";
-import { useSession } from "../store/useSession";
+import { useSession } from "../../store/useSession";
 
 export default function RequireAuth() {
   const { isLogged } = useSession();

@@ -1,5 +1,10 @@
 import { useEffect, useState } from "react";
-import api from "../../lib/apiClient";
+import {
+  deleteCampaign,
+  duplicateCampaign,
+  getCampaign,
+  updateCampaign,
+} from "../../features/campaigns/api";
 import Spinner from "../ui/Spinner";
 import { useToast } from "../ui/ToastProvider";
 
@@ -9,9 +14,15 @@ type Props = {
   campaignId?: string;
   onUpdated?: () => void;
   onDeleted?: () => void;
-}
+};
 
-export default function ManageCampaignModal({ open, onClose, campaignId, onUpdated, onDeleted }: Props) {
+export default function ManageCampaignModal({
+  open,
+  onClose,
+  campaignId,
+  onUpdated,
+  onDeleted,
+}: Props) {
   const [name, setName] = useState("");
   const [desc, setDesc] = useState("");
   const [loading, setLoading] = useState(false);
@@ -20,14 +31,13 @@ export default function ManageCampaignModal({ open, onClose, campaignId, onUpdat
   const toast = useToast();
 
   useEffect(() => {
-    if (!open || !campaignId) {
-      return;
-    }
+    if (!open || !campaignId) return;
+    setLoading(true);
     (async () => {
       try {
-        const res = await api.get(`/campaigns/${campaignId}`);
-        setName(res.data.name);
-        setDesc(res.data.desc ?? "");
+        const c = await getCampaign(campaignId);
+        setName(c.name);
+        setDesc(c.desc ?? "");
       } catch {
         toast.show("Failed to load campaign", "error");
       } finally {
@@ -39,15 +49,10 @@ export default function ManageCampaignModal({ open, onClose, campaignId, onUpdat
   if (!open) return null;
 
   async function handleSave() {
-    if (!campaignId) {
-      return;
-    }
+    if (!campaignId) return;
     try {
       setSaving(true);
-      await api.put(`/campaigns/${campaignId}`, {
-        name: name.trim(),
-        desc: desc.trim() || null,
-      });
+      await updateCampaign(campaignId, { name: name.trim(), desc: desc.trim() || null });
       toast.show("Campaign updated", "success");
       onUpdated?.();
       onClose();
@@ -62,7 +67,7 @@ export default function ManageCampaignModal({ open, onClose, campaignId, onUpdat
     if (!campaignId) return;
     if (!confirm("Are you sure you want to delete this campaign?")) return;
     try {
-      await api.delete(`/campaigns/${campaignId}`);
+      await deleteCampaign(campaignId);
       toast.show("Campaign deleted", "success");
       onDeleted?.();
       onClose();
@@ -71,17 +76,27 @@ export default function ManageCampaignModal({ open, onClose, campaignId, onUpdat
     }
   }
 
+  async function handleDuplicate() {
+    if (!campaignId) return;
+    try {
+      setDupLoading(true);
+      await duplicateCampaign(campaignId);
+      toast.show("Campaign duplicated", "success");
+      onUpdated?.();
+      onClose();
+    } catch {
+      toast.show("Failed to duplicate", "error");
+    } finally {
+      setDupLoading(false);
+    }
+  }
+
   async function handleExportJSON() {
     if (!campaignId) return;
     try {
-      const [campRes, eventsRes] = await Promise.all([
-        api.get(`/campaigns/${campaignId}`),
-        api.get(`/campaigns/${campaignId}/events`),
-      ]);
-      const payload = {
-        campaign: campRes.data,
-        events: eventsRes.data,
-      };
+      const camp = await getCampaign(campaignId);
+      const events = await (await import("../../features/campaigns/api")).listCampaignEvents(campaignId);
+      const payload = { campaign: camp, events };
       const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -92,41 +107,6 @@ export default function ManageCampaignModal({ open, onClose, campaignId, onUpdat
       toast.show("Exported as JSON", "success");
     } catch {
       toast.show("Failed to export", "error");
-    }
-  }
-
-  async function handleDuplicate() {
-    if (!campaignId) return;
-    try {
-      setDupLoading(true);
-      const [campRes, eventsRes] = await Promise.all([
-        api.get(`/campaigns/${campaignId}`),
-        api.get(`/campaigns/${campaignId}/events`),
-      ]);
-
-      const source = campRes.data as { name: string; desc?: string | null; id: string };
-      const events = eventsRes.data as Array<{ title: string; desc?: string | null; happenedIn?: string | null }>;
-
-      const newCamp = await api.post(`/campaigns`, {
-        name: `${source.name} (Copy)`,
-        desc: source.desc ?? null,
-      });
-
-      const newId = newCamp.data?.id as string;
-      for (const ev of events) {
-        await api.post(`/campaigns/${newId}/events`, {
-          title: ev.title,
-          desc: ev.desc ?? undefined,
-          happenedIn: ev.happenedIn ?? undefined,
-        });
-      }
-      toast.show("Campaign duplicated", "success");
-      onUpdated?.();
-      onClose();
-    } catch {
-      toast.show("Failed to duplicate", "error");
-    } finally {
-      setDupLoading(false);
     }
   }
 
@@ -166,19 +146,10 @@ export default function ManageCampaignModal({ open, onClose, campaignId, onUpdat
 
             <div className="mt-5 flex items-center justify-between">
               <div className="flex gap-2">
-                <button
-                  onClick={handleExportJSON}
-                  className="rounded border px-3 py-1.5 text-sm hover:bg-zinc-50 dark:hover:bg-zinc-800"
-                  type="button"
-                >
+                <button onClick={handleExportJSON} className="rounded border px-3 py-1.5 text-sm hover:bg-zinc-50 dark:hover:bg-zinc-800" type="button">
                   Export JSON
                 </button>
-                <button
-                  onClick={handleDuplicate}
-                  disabled={dupLoading}
-                  className="rounded border px-3 py-1.5 text-sm hover:bg-zinc-50 disabled:opacity-70 dark:hover:bg-zinc-800"
-                  type="button"
-                >
+                <button onClick={handleDuplicate} disabled={dupLoading} className="rounded border px-3 py-1.5 text-sm hover:bg-zinc-50 disabled:opacity-70 dark:hover:bg-zinc-800" type="button">
                   {dupLoading ? "Duplicating..." : "Duplicate"}
                 </button>
               </div>
@@ -187,19 +158,10 @@ export default function ManageCampaignModal({ open, onClose, campaignId, onUpdat
                 <button onClick={onClose} className="rounded border px-3 py-1.5 hover:bg-zinc-50 dark:hover:bg-zinc-800" type="button">
                   Cancel
                 </button>
-                <button
-                  onClick={handleSave}
-                  disabled={saving}
-                  className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:opacity-70"
-                  type="button"
-                >
+                <button onClick={handleSave} disabled={saving} className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:opacity-70" type="button">
                   {saving ? "Saving..." : "Save changes"}
                 </button>
-                <button
-                  onClick={handleDelete}
-                  className="rounded border border-red-500 px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/20"
-                  type="button"
-                >
+                <button onClick={handleDelete} className="rounded border border-red-500 px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/20" type="button">
                   Delete
                 </button>
               </div>

@@ -1,5 +1,5 @@
-import AppHeader from "../components/AppHeader"
-import { Link } from "react-router-dom"
+import { Link } from "react-router-dom";
+import AppHeader from "../components/ui/AppHeader";
 
 export default function LandingPage() {
     return (

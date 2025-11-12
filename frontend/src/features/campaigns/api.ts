@@ -1,24 +1,73 @@
 import api from "../../lib/apiClient";
-import type { Campaign } from "./types";
+import type { Campaign, CampaignEventInput, CampaignExport } from "./types";
 
 export async function listCampaigns(): Promise<Campaign[]> {
   const { data } = await api.get("/campaigns");
   return data;
 }
 
-export async function createCampaign(payload: {
-  name: string;
-  desc?: string | null;
-}) {
-  const { data } = await api.post("/campaigns", payload);
+export async function getCampaign(id: string): Promise<Campaign> {
+  const { data } = await api.get(`/campaigns/${id}`);
   return data;
+}
+
+export async function createCampaign(payload: { name: string; desc?: string | null }) {
+  const { data } = await api.post("/campaigns", payload);
+  return data as Campaign;
 }
 
 export async function updateCampaign(id: string, payload: Partial<Campaign>) {
   const { data } = await api.put(`/campaigns/${id}`, payload);
-  return data;
+  return data as Campaign;
 }
 
 export async function deleteCampaign(id: string) {
   await api.delete(`/campaigns/${id}`);
+}
+
+export async function listCampaignEvents(campaignId: string) {
+  const { data } = await api.get(`/campaigns/${campaignId}/events`);
+  return data as CampaignEventInput[];
+}
+
+export async function createCampaignEvent(campaignId: string, payload: CampaignEventInput) {
+  const occurred = payload.occurredAt ?? payload.date ?? null;
+  const body: CampaignEventInput = {
+    title: payload.title,
+    desc: payload.desc ?? null,
+    happenedIn: payload.happenedIn ?? null,
+    occurredAt: occurred,
+  };
+  const { data } = await api.post(`/campaigns/${campaignId}/events`, body);
+  return data;
+}
+
+export async function duplicateCampaign(sourceId: string) {
+  const [camp, events] = await Promise.all([
+    getCampaign(sourceId),
+    listCampaignEvents(sourceId),
+  ]);
+
+  const newCamp = await createCampaign({
+    name: `${camp.name} (Copy)`,
+    desc: camp.desc ?? null,
+  });
+
+  for (const ev of events) {
+    await createCampaignEvent(newCamp.id, ev);
+  }
+  return newCamp;
+}
+
+export async function importCampaign(payload: CampaignExport) {
+  const base = payload.campaign;
+  const newCamp = await createCampaign({
+    name: base?.name ? `${base.name} (Imported)` : "Imported campaign",
+    desc: base?.desc ?? null,
+  });
+
+  for (const ev of payload.events || []) {
+    await createCampaignEvent(newCamp.id, ev);
+  }
+  return newCamp;
 }
