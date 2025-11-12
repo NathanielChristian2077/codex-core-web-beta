@@ -1,20 +1,23 @@
 import { Link, useLocation } from "react-router-dom";
+import { useSession } from "../store/useSession";
 import UserAvatar from "./UserAvatar";
 
 export default function SideBar() {
-  const loc = useLocation()
-  const active = (p: string) => (loc.pathname.startsWith(p) ? "bg-zinc-100 dark:bg-zinc-800" : "");
+  const loc = useLocation();
+  const { logout } = useSession();
+  const active = (p: string) =>
+    loc.pathname.startsWith(p) ? "bg-zinc-100 dark:bg-zinc-800" : "";
 
-  // Demo... Mudar para decodificação do JWT para pegar nome/email
   const user = { name: "Game Master", email: "mestre@ex.com", imageUrl: "" };
 
   return (
-    <aside className="flex h-dvh w-64 flex-col border-r bg-white/70 backdrop-blur dark:border-zinc-800 dark:bg-zinc-950/70" >
+    <aside className="flex h-dvh w-64 flex-col border-r bg-white/70 backdrop-blur dark:border-zinc-800 dark:bg-zinc-950/70">
       <div className="px-4 pb-2 pt-4">
         <Link to="/" className="block text-sm font-semibold tracking-tight">
           Codex Core
         </Link>
       </div>
+
       <nav className="mt-2 flex-1 space-y-1 px-2 text-sm">
         <NavItem to="/dashboard" label="Dashboard" activeClass={active("/dashboard")} />
         <NavItem to="/campanhas" label="Campaigns" activeClass={active("/campanhas")} disabled />
@@ -31,19 +34,19 @@ export default function SideBar() {
         <div className="flex item-center gap-3">
           <UserAvatar name={user.name} email={user.email} imageUrl={user.imageUrl} />
           <div className="min-w-0">
-            <div className="truncate text-sm font-medium" >{user.name}</div>
-            <div className="truncate text-zinc-600 dark:text-zinc-400" >{user.email}</div>
+            <div className="truncate text-sm font-medium">{user.name}</div>
+            <div className="truncate text-zinc-600 dark:text-zinc-400">{user.email}</div>
           </div>
         </div>
         <div className="mt-3 flex gap-2">
-          <Link to="/settings/profile" className="flex-1 rounded border px-3 py=1.5 text-center text-sm hover:bg-zinc-50 dark:hover:bg-zinc-900">
+          <Link
+            to="/settings/profile"
+            className="flex-1 rounded border px-3 py-1.5 text-center text-sm hover:bg-zinc-50 dark:hover:bg-zinc-900"
+          >
             Manage
           </Link>
           <button
-            onClick={() => {
-              localStorage.removeItem("token");
-              location.href = "/login";
-            }}
+            onClick={logout}
             className="flex-1 rounded border px-3 py-1.5 text-center text-sm hover:bg-zinc-50 dark:hover:bg-zinc-900"
           >
             Sign out
@@ -65,7 +68,8 @@ function NavItem({
   activeClass?: string;
   disabled?: boolean;
 }) {
-  const cls = "block rounded px-3 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-800" +
+  const cls =
+    "block rounded px-3 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-800" +
     (activeClass || "") +
     (disabled ? " opacity-50 pointer-events-none" : "");
   return (
@@ -76,5 +80,9 @@ function NavItem({
 }
 
 function Section({ label }: { label: string }) {
-  return <div className="px-3 pt-4 text-xs font-medium uppercase text-zinc-500">{label}</div>;
+  return (
+    <div className="px-3 pt-4 text-xs font-medium uppercase text-zinc-500">
+      {label}
+    </div>
+  );
 }
