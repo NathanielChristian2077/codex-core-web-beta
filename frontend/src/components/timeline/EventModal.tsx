@@ -15,7 +15,7 @@ type Props = {
 export default function EventModal({ open, onClose, campaignId, editing, onSaved }: Props) {
   const t = useToast();
   const [title, setTitle] = useState("");
-  const [desc, setDesc] = useState("");
+  const [description, setDescription] = useState("");
   const [occurredAt, setOccurredAt] = useState("");
   const [happenedIn, setHappenedIn] = useState("");
   const [saving, setSaving] = useState(false);
@@ -23,7 +23,7 @@ export default function EventModal({ open, onClose, campaignId, editing, onSaved
   useEffect(() => {
     if (!open) return;
     setTitle(editing?.title ?? "");
-    setDesc(editing?.desc ?? "");
+    setDescription(editing?.description ?? "");
     setOccurredAt((editing?.occurredAt ?? "").substring(0, 10));
     setHappenedIn(editing?.happenedIn ?? "");
   }, [open, editing]);
@@ -38,10 +38,10 @@ export default function EventModal({ open, onClose, campaignId, editing, onSaved
     try {
       setSaving(true);
       if (editing?.id) {
-        await updateEvent(editing.id, { title, desc, occurredAt, happenedIn });
+        await updateEvent(editing.id, { title, description, occurredAt, happenedIn });
         t.show("Event updated", "success");
       } else {
-        await createCampaignEvent(campaignId, { title, desc, occurredAt, happenedIn });
+        await createCampaignEvent(campaignId, { title, description, occurredAt, happenedIn });
         t.show("Event created", "success");
       }
       onSaved?.();
@@ -76,8 +76,8 @@ export default function EventModal({ open, onClose, campaignId, editing, onSaved
             <span className="text-sm">Description (optional)</span>
             <textarea
               className="min-h-[96px] rounded-md border border-zinc-300 bg-white px-3 py-2 outline-none focus:ring-2 focus:ring-blue-600 dark:border-zinc-700 dark:bg-zinc-900"
-              value={desc}
-              onChange={(e) => setDesc(e.target.value)}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
             />
           </label>
 

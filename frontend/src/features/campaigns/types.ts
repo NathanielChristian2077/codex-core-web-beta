@@ -1,7 +1,7 @@
 export type Campaign = {
   id: string;
   name: string;
-  desc?: string | null;
+  description?: string | null;
   createdAt?: string;
   updatedAt?: string;
   _count?: { events?: number };
@@ -14,7 +14,7 @@ export type CampaignExport = {
 
 export type CampaignEventInput = {
   title: string;
-  desc?: string | null;
+  description?: string | null;
   happenedIn?: string | null;
   occurredAt?: string | null;
   date?: string | null;
@@ -23,7 +23,7 @@ export type CampaignEventInput = {
 export type EventItem = {
   id: string;
   title: string;
-  desc?: string | null;
+  description?: string | null;
   occurredAt?: string | null;
   happenedIn?: string | null;
   createdAt?: string;

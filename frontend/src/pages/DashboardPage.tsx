@@ -28,9 +28,9 @@ export default function DashboardPage() {
     }
   }
 
-  async function handleCreate(name: string, desc: string) {
+  async function handleCreate(name: string, description: string) {
     try {
-      await createCampaign({ name, desc: desc?.trim() || null });
+      await createCampaign({ name, description: description?.trim() || null });
       t.show("Campaign created", "success");
       await fetchAll();
     } catch {
@@ -103,7 +103,7 @@ export default function DashboardPage() {
               key={c.id}
               id={c.id}
               name={c.name}
-              description={c.desc ?? undefined}
+              description={c.description ?? undefined}
               eventsCount={c._count?.events}
               onManage={setManageId}
             />

@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { useCurrentCampaign } from "../../store/useCurrentCampaign";
 
 type Props = {
   id: string;
@@ -18,9 +19,17 @@ export default function CampaignCard({
   onManage,
 }: Props) {
   const navigate = useNavigate();
+  const setCurrentCampaign = useCurrentCampaign((s) => s.setCurrentCampaign);
+
+  function selectCampaign() {
+    setCurrentCampaign(id);
+  }
 
   return (
-    <li className="group relative overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm transition hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900">
+    <li
+      className="group relative cursor-pointer overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm transition hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900"
+      onClick={selectCampaign}
+    >
       <div className="relative h-32 w-full">
         {coverUrl ? (
           <img
@@ -52,14 +61,22 @@ export default function CampaignCard({
 
         <div className="mt-4 flex gap-2">
           <button
-            onClick={() => navigate(`/campaigns/${id}/timeline`)}
+            onClick={(e) => {
+              e.stopPropagation();
+              selectCampaign();
+              navigate(`/campaigns/${id}/timeline`);
+            }}
             className="inline-flex items-center rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500/60"
             type="button"
           >
             Open timeline
           </button>
           <button
-            onClick={() => onManage?.(id)}
+            onClick={(e) => {
+              e.stopPropagation();
+              selectCampaign();
+              onManage?.(id);
+            }}
             className="inline-flex items-center rounded-md border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-900 hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-zinc-300/60 dark:border-zinc-700 dark:text-zinc-100 dark:hover:bg-zinc-800 dark:focus:ring-zinc-600/50"
             type="button"
           >

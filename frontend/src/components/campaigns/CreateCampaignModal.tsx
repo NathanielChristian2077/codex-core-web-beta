@@ -3,12 +3,12 @@ import { useState } from "react";
 type Props = {
   open: boolean;
   onClose: () => void;
-  onCreate: (name: string, desc: string) => Promise<void> | void;
+  onCreate: (name: string, description: string) => Promise<void> | void;
 }
 
 export default function CreateCampaignModal({ open, onClose, onCreate }: Props) {
   const [name, setName] = useState("");
-  const [desc, setDesc] = useState("");
+  const [description, setDescription] = useState("");
   const [saving, setSaving] = useState(false);
   const [coverUrl, setCoverUrl] = useState("");
   if (!open) return null
@@ -16,10 +16,10 @@ export default function CreateCampaignModal({ open, onClose, onCreate }: Props) 
   async function submit() {
     if (!name.trim()) return;
     setSaving(true);
-    await onCreate(name, desc);
+    await onCreate(name, description);
     setSaving(false);
     setName("");
-    setDesc("");
+    setDescription("");
   }
 
   return (
@@ -48,12 +48,12 @@ export default function CreateCampaignModal({ open, onClose, onCreate }: Props) 
           </label>
 
           <label className="grid gap-1">
-            <span className="text-sm">Description</span>
+            <span className="text-sm">descriptionription</span>
             <textarea
               className="min-h-[96px] rounded-md border border-zinc-300 bg-white px-3 py-2 outline-none focus:ring-2 focus:ring-blue-600 dark:border-zinc-700 dark:bg-zinc-900"
               placeholder="Optional short pitch about the campaign"
-              value={desc}
-              onChange={(e) => setDesc(e.target.value)}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
             />
           </label>
           <label className="grid gap-1">

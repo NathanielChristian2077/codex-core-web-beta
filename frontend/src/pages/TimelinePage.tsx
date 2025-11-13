@@ -6,15 +6,21 @@ import Spinner from "../components/ui/Spinner";
 import { useToast } from "../components/ui/ToastProvider";
 import { deleteEvent, getCampaign, listCampaignEvents } from "../features/campaigns/api";
 import type { EventItem } from "../features/campaigns/types";
+import { useCurrentCampaign } from "../store/useCurrentCampaign";
 
 export default function TimelinePage() {
   const { id } = useParams<{ id: string }>();
+  const setCurrentCampaign = useCurrentCampaign((s) => s.setCurrentCampaign);
   const [campaignName, setCampaignName] = useState<string>("");
   const [events, setEvents] = useState<EventItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<EventItem | null>(null);
   const t = useToast();
+
+  useEffect(() => {
+    if (id) setCurrentCampaign(id);
+  }, [id, setCurrentCampaign]);
 
   async function fetchAll() {
     if (!id) return;

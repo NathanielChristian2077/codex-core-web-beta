@@ -24,21 +24,21 @@ export default function LandingPage() {
                 </section>
 
                 <section className="mx-auto grid w-full max-w-4x1 gap-6 sm:grid-cols-2">
-                    <Feature title="Timeline" desc="Chronologically ordered events."/>
-                    <Feature title="Graph View" desc="Relations between events, characters, locations and objects."/>
-                    <Feature title="Fast CRUD" desc="Quick creation and removal with instant feedback."/>
-                    <Feature title="JWT Auth" desc="Simple authentication to keep your privacy."/>
+                    <Feature title="Timeline" description="Chronologically ordered events."/>
+                    <Feature title="Graph View" description="Relations between events, characters, locations and objects."/>
+                    <Feature title="Fast CRUD" description="Quick creation and removal with instant feedback."/>
+                    <Feature title="JWT Auth" description="Simple authentication to keep your privacy."/>
                 </section>
             </main>
         </div>
     )
 }
 
-function Feature({ title, desc }: { title: string; desc: string; }) {
+function Feature({ title, description }: { title: string; description: string; }) {
     return (
         <div className="rounded-lg border p-4">
             <h3 className="text-lg font-semibold">{title}</h3>
-            <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-300">{desc}</p>
+            <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-300">{description}</p>
         </div>
     )
 }

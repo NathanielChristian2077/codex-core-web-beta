@@ -11,7 +11,7 @@ export async function getCampaign(id: string): Promise<Campaign> {
   return data;
 }
 
-export async function createCampaign(payload: { name: string; desc?: string | null }) {
+export async function createCampaign(payload: { name: string; description?: string | null }) {
   const { data } = await api.post("/campaigns", payload);
   return data as Campaign;
 }
@@ -34,7 +34,7 @@ export async function duplicateCampaign(sourceId: string) {
 
   const newCamp = await createCampaign({
     name: `${camp.name} (Copy)`,
-    desc: camp.desc ?? null,
+    description: camp.description ?? null,
   });
 
   for (const ev of events) {
@@ -47,7 +47,7 @@ export async function importCampaign(payload: CampaignExport) {
   const base = payload.campaign;
   const newCamp = await createCampaign({
     name: base?.name ? `${base.name} (Imported)` : "Imported campaign",
-    desc: base?.desc ?? null,
+    description: base?.description ?? null,
   });
 
   for (const ev of payload.events || []) {
@@ -78,7 +78,7 @@ function normalizeEventPayload(p: Partial<EventItem>): Partial<EventItem> {
   const occurred = p.occurredAt ?? null;
   return {
     title: p.title?.trim() || "",
-    desc: p.desc?.trim() ?? null,
+    description: p.description?.trim() ?? null,
     happenedIn: p.happenedIn?.trim() ?? null,
     occurredAt: occurred ? toISODate(occurred) : null,
   };

@@ -24,7 +24,7 @@ export default function ManageCampaignModal({
   onDeleted,
 }: Props) {
   const [name, setName] = useState("");
-  const [desc, setDesc] = useState("");
+  const [description, setDescription] = useState("");
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [dupLoading, setDupLoading] = useState(false);
@@ -37,7 +37,7 @@ export default function ManageCampaignModal({
       try {
         const c = await getCampaign(campaignId);
         setName(c.name);
-        setDesc(c.desc ?? "");
+        setDescription(c.description ?? "");
       } catch {
         toast.show("Failed to load campaign", "error");
       } finally {
@@ -52,7 +52,7 @@ export default function ManageCampaignModal({
     if (!campaignId) return;
     try {
       setSaving(true);
-      await updateCampaign(campaignId, { name: name.trim(), desc: desc.trim() || null });
+      await updateCampaign(campaignId, { name: name.trim(), description: description.trim() || null });
       toast.show("Campaign updated", "success");
       onUpdated?.();
       onClose();
@@ -138,8 +138,8 @@ export default function ManageCampaignModal({
                 <span className="text-sm">Description</span>
                 <textarea
                   className="min-h-[96px] rounded-md border border-zinc-300 bg-white px-3 py-2 outline-none focus:ring-2 focus:ring-blue-600 dark:border-zinc-700 dark:bg-zinc-900"
-                  value={desc}
-                  onChange={(e) => setDesc(e.target.value)}
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
                 />
               </label>
             </div>

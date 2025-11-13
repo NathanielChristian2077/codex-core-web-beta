@@ -16,9 +16,9 @@ export default function EventRow({ event, onEdit, onDelete }: Props) {
             {formatDate(event.occurredAt)}
           </div>
           <h4 className="line-clamp-1 text-sm font-semibold">{event.title}</h4>
-          {event.desc && (
+          {event.description && (
             <p className="mt-0.5 line-clamp-2 text-sm text-zinc-600 dark:text-zinc-300">
-              {event.desc}
+              {event.description}
             </p>
           )}
           {event.happenedIn && (
