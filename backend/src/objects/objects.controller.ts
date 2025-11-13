@@ -1,14 +1,14 @@
 import {
-    Body,
-    Controller,
-    Delete,
-    Get,
-    Param,
-    ParseUUIDPipe,
-    Post,
-    Put,
-    Req,
-    UseGuards,
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  ParseUUIDPipe,
+  Post,
+  Put,
+  Req,
+  UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '../auth/auth.guard';
 import { ObjectsService } from './objects.service';
@@ -18,49 +18,45 @@ import { ObjectsService } from './objects.service';
 export class ObjectsController {
   constructor(private readonly svc: ObjectsService) {}
 
-  // GET /campaigns/:campaignId/objects
   @Get('campaigns/:campaignId/objects')
   listByCampaign(
     @Param('campaignId', new ParseUUIDPipe()) campaignId: string,
     @Req() req: any,
   ) {
-    const userId: string = req.user?.sub;
-    return this.svc.listByCampaign(campaignId, userId);
+    return this.svc.listByCampaign(campaignId, req.user?.sub);
   }
 
-  // POST /campaigns/:campaignId/objects
   @Post('campaigns/:campaignId/objects')
   create(
     @Param('campaignId', new ParseUUIDPipe()) campaignId: string,
     @Body() dto: { name: string; description?: string },
     @Req() req: any,
   ) {
-    const userId: string = req.user?.sub;
-    return this.svc.create(campaignId, userId, dto);
+    return this.svc.create(campaignId, req.user?.sub, dto);
   }
 
-  // GET /objects/:id
   @Get('objects/:id')
-  getOne(@Param('id', new ParseUUIDPipe()) id: string, @Req() req: any) {
-    const userId: string = req.user?.sub;
-    return this.svc.getOne(id, userId);
+  getOne(
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @Req() req: any,
+  ) {
+    return this.svc.getOne(id, req.user?.sub);
   }
 
-  // PUT /objects/:id
   @Put('objects/:id')
   update(
     @Param('id', new ParseUUIDPipe()) id: string,
     @Body() dto: { name?: string; description?: string },
     @Req() req: any,
   ) {
-    const userId: string = req.user?.sub;
-    return this.svc.update(id, userId, dto);
+    return this.svc.update(id, req.user?.sub, dto);
   }
 
-  // DELETE /objects/:id
   @Delete('objects/:id')
-  remove(@Param('id', new ParseUUIDPipe()) id: string, @Req() req: any) {
-    const userId: string = req.user?.sub;
-    return this.svc.remove(id, userId);
+  remove(
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @Req() req: any,
+  ) {
+    return this.svc.remove(id, req.user?.sub);
   }
 }

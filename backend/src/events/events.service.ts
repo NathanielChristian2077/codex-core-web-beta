@@ -5,16 +5,24 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { NodeType, Prisma, RelationType } from '@prisma/client';
 import { PrismaService } from '../common/prisma.service';
 
 type CreateEventDto = {
   title: string;
   description?: string;
-  occurredAt?: string;
 };
 
 type UpdateEventDto = Partial<CreateEventDto>;
+
+const LINK_REGEX = /<<([ECLO]):([^>]+)>>/g;
+
+const TYPE_MAP: Record<'E' | 'C' | 'L' | 'O', NodeType> = {
+  E: NodeType.EVENT,
+  C: NodeType.CHARACTER,
+  L: NodeType.LOCATION,
+  O: NodeType.OBJECT,
+};
 
 @Injectable()
 export class EventsService {
@@ -38,20 +46,115 @@ export class EventsService {
     return ev;
   }
 
-  private parseDateOrNull(s?: string): Date | null {
-    if (!s) return null;
-    const d = new Date(s);
-    if (Number.isNaN(d.getTime())) {
-      throw new BadRequestException('Invalid ISO date in "occurredAt"');
+  /**
+   * Lê a descrição do evento, encontra tokens `<<X:Name>>`
+   * e sincroniza as Relations LINK correspondentes.
+   */
+  private async syncDescriptionLinksForEvent(event: {
+    id: string;
+    campaignId: string;
+    description?: string | null;
+  }) {
+    const description = event.description ?? '';
+
+    await this.prisma.relation.deleteMany({
+      where: {
+        fromType: NodeType.EVENT,
+        fromId: event.id,
+        kind: RelationType.LINK,
+      },
+    });
+
+    if (!description) return;
+
+    const tokens: { type: 'E' | 'C' | 'L' | 'O'; name: string }[] = [];
+    let match: RegExpExecArray | null;
+
+    while ((match = LINK_REGEX.exec(description)) !== null) {
+      const [, t, rawName] = match;
+      const type = t as 'E' | 'C' | 'L' | 'O';
+      const name = rawName.trim();
+      if (!name) continue;
+      tokens.push({ type, name });
     }
-    return d;
+
+    if (!tokens.length) return;
+
+    const byType = {
+      E: [] as string[],
+      C: [] as string[],
+      L: [] as string[],
+      O: [] as string[],
+    };
+
+    for (const token of tokens) {
+      byType[token.type].push(token.name);
+    }
+
+    const [events, chars, locs, objs] = await Promise.all([
+      byType.E.length
+        ? this.prisma.event.findMany({
+            where: { campaignId: event.campaignId, title: { in: byType.E } },
+          })
+        : Promise.resolve([]),
+      byType.C.length
+        ? this.prisma.character.findMany({
+            where: { campaignId: event.campaignId, name: { in: byType.C } },
+          })
+        : Promise.resolve([]),
+      byType.L.length
+        ? this.prisma.location.findMany({
+            where: { campaignId: event.campaignId, name: { in: byType.L } },
+          })
+        : Promise.resolve([]),
+      byType.O.length
+        ? this.prisma.objectModel.findMany({
+            where: { campaignId: event.campaignId, name: { in: byType.O } },
+          })
+        : Promise.resolve([]),
+    ]);
+
+    const map = {
+      E: new Map(events.map((e) => [e.title, e.id])),
+      C: new Map(chars.map((c) => [c.name, c.id])),
+      L: new Map(locs.map((l) => [l.name, l.id])),
+      O: new Map(objs.map((o) => [o.name, o.id])),
+    };
+
+    const data: {
+      fromType: NodeType;
+      fromId: string;
+      toType: NodeType;
+      toId: string;
+      kind: RelationType;
+    }[] = [];
+
+    for (const token of tokens) {
+      const toType = TYPE_MAP[token.type];
+      const toId = map[token.type].get(token.name);
+      if (!toId) continue;
+      data.push({
+        fromType: NodeType.EVENT,
+        fromId: event.id,
+        toType,
+        toId,
+        kind: RelationType.LINK,
+      });
+    }
+
+    if (!data.length) return;
+
+    await this.prisma.relation.createMany({
+      data,
+      skipDuplicates: true,
+    });
   }
 
   async listByCampaign(campaignId: string, userId: string) {
     await this.assertCampaignOwnership(campaignId, userId);
     return this.prisma.event.findMany({
       where: { campaignId },
-      orderBy: [{ occurredAt: 'asc' }, { createdAt: 'asc' }],
+      orderBy: { createdAt: 'asc' },
     });
   }
 
@@ -69,18 +172,22 @@ export class EventsService {
     }
 
     try {
-      return await this.prisma.event.create({
+      const created = await this.prisma.event.create({
         data: {
           campaignId,
           title: dto.title.trim(),
           description: dto.description?.trim() || null,
-          occurredAt: this.parseDateOrNull(dto.occurredAt),
         },
       });
+
+      await this.syncDescriptionLinksForEvent(created);
+
+      return created;
     } catch (e) {
       if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
-        // unique(campaignId, title)
-        throw new ConflictException('An event with this title already exists in this campaign');
+        throw new ConflictException(
+          'An event with this title already exists in this campaign',
+        );
       }
       throw e;
     }
@@ -95,18 +202,25 @@ export class EventsService {
     }
 
     try {
-      return await this.prisma.event.update({
+      const updated = await this.prisma.event.update({
         where: { id: eventId },
         data: {
-          title: dto.title?.trim(),
-          description: dto.description?.trim() ?? undefined,
-          occurredAt:
-            dto.occurredAt !== undefined ? this.parseDateOrNull(dto.occurredAt) : undefined,
+          title: dto.title !== undefined ? dto.title.trim() : undefined,
+          description:
+            dto.description !== undefined
+              ? dto.description.trim() || null
+              : undefined,
         },
       });
+
+      await this.syncDescriptionLinksForEvent(updated);
+
+      return updated;
     } catch (e) {
       if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
-        throw new ConflictException('An event with this title already exists in this campaign');
+        throw new ConflictException(
+          'An event with this title already exists in this campaign',
+        );
       }
       throw e;
     }
@@ -115,6 +229,16 @@ export class EventsService {
   async remove(eventId: string, userId: string) {
     const ev = await this.getEventWithOwner(eventId);
     if (ev.campaign.userId !== userId) throw new ForbiddenException('Not permitted');
+
+    await this.prisma.relation.deleteMany({
+      where: {
+        OR: [
+          { fromType: NodeType.EVENT, fromId: eventId },
+          { toType: NodeType.EVENT, toId: eventId },
+        ],
+      },
+    });
+
     await this.prisma.event.delete({ where: { id: eventId } });
     return { ok: true };
   }

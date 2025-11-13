@@ -9,23 +9,13 @@ export type Campaign = {
 
 export type CampaignExport = {
   campaign: Campaign;
-  events: Array<CampaignEventInput>;
-};
-
-export type CampaignEventInput = {
-  title: string;
-  description?: string | null;
-  happenedIn?: string | null;
-  occurredAt?: string | null;
-  date?: string | null;
+  events: Array<EventItem>;
 };
 
 export type EventItem = {
   id: string;
   title: string;
   description?: string | null;
-  occurredAt?: string | null;
-  happenedIn?: string | null;
   createdAt?: string;
   updatedAt?: string;
 };

@@ -1,6 +1,7 @@
 import api from "../../lib/apiClient";
 import type { Campaign, CampaignExport, EventItem } from "./types";
 
+// Campaigns
 export async function listCampaigns(): Promise<Campaign[]> {
   const { data } = await api.get("/campaigns");
   return data;
@@ -12,19 +13,20 @@ export async function getCampaign(id: string): Promise<Campaign> {
 }
 
 export async function createCampaign(payload: { name: string; description?: string | null }) {
-  const { data } = await api.post("/campaigns", payload);
+  const { data } = await api.post("/campaigns", {
+    name: payload.name,
+    description: payload.description ?? null,
+  });
   return data as Campaign;
 }
 
 export async function updateCampaign(id: string, payload: Partial<Campaign>) {
-  const { data } = await api.put(`/campaigns/${id}`, payload);
+  const { data } = await api.put(`/campaigns/${id}`, {
+    name: payload.name,
+    description: payload.description ?? null,
+  });
   return data as Campaign;
 }
-
-export async function deleteCampaign(id: string) {
-  await api.delete(`/campaigns/${id}`);
-}
-
 
 export async function duplicateCampaign(sourceId: string) {
   const [camp, events] = await Promise.all([
@@ -56,34 +58,45 @@ export async function importCampaign(payload: CampaignExport) {
   return newCamp;
 }
 
+export async function deleteCampaign(id: string) {
+  await api.delete(`/campaigns/${id}`);
+}
+
+// Events
 export async function listCampaignEvents(campaignId: string): Promise<EventItem[]> {
   const { data } = await api.get(`/campaigns/${campaignId}/events`);
   return data;
 }
-export async function createCampaignEvent(campaignId: string, payload: Partial<EventItem>) {
-  const body = normalizeEventPayload(payload);
+
+export async function createCampaignEvent(
+  campaignId: string,
+  payload: { title: string; description?: string | null },
+) {
+  const body = {
+    title: payload.title.trim(),
+    description: payload.description?.trim() || null,
+  };
+
   const { data } = await api.post(`/campaigns/${campaignId}/events`, body);
   return data as EventItem;
 }
-export async function updateEvent(eventId: string, payload: Partial<EventItem>) {
-  const body = normalizeEventPayload(payload);
+
+export async function updateEvent(
+  eventId: string,
+  payload: { title?: string; description?: string | null },
+) {
+  const body = {
+    title: payload.title?.trim(),
+    description:
+      payload.description !== undefined
+        ? payload.description?.trim() || null
+        : undefined,
+  };
+
   const { data } = await api.put(`/events/${eventId}`, body);
   return data as EventItem;
 }
+
 export async function deleteEvent(eventId: string) {
   await api.delete(`/events/${eventId}`);
-}
-
-function normalizeEventPayload(p: Partial<EventItem>): Partial<EventItem> {
-  const occurred = p.occurredAt ?? null;
-  return {
-    title: p.title?.trim() || "",
-    description: p.description?.trim() ?? null,
-    happenedIn: p.happenedIn?.trim() ?? null,
-    occurredAt: occurred ? toISODate(occurred) : null,
-  };
-}
-function toISODate(s: string): string {
-  if (/\d{4}-\d{2}-\d{2}T/.test(s)) return s;
-  return s;
 }

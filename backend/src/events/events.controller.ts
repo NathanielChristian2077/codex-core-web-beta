@@ -18,49 +18,45 @@ import { EventsService } from './events.service';
 export class EventsController {
   constructor(private readonly svc: EventsService) {}
 
-  // GET /campaigns/:campaignId/events
   @Get('campaigns/:campaignId/events')
   listByCampaign(
     @Param('campaignId', new ParseUUIDPipe()) campaignId: string,
     @Req() req: any,
   ) {
-    const userId: string = req.user?.sub;
-    return this.svc.listByCampaign(campaignId, userId);
+    return this.svc.listByCampaign(campaignId, req.user?.sub);
   }
 
-  // POST /campaigns/:campaignId/events
   @Post('campaigns/:campaignId/events')
   create(
     @Param('campaignId', new ParseUUIDPipe()) campaignId: string,
-    @Body() dto: { title: string; description?: string; occurredAt?: string },
+    @Body() dto: { title: string; description?: string },
     @Req() req: any,
   ) {
-    const userId: string = req.user?.sub;
-    return this.svc.create(campaignId, userId, dto);
+    return this.svc.create(campaignId, req.user?.sub, dto);
   }
 
-  // GET /events/:id
   @Get('events/:id')
-  getOne(@Param('id', new ParseUUIDPipe()) id: string, @Req() req: any) {
-    const userId: string = req.user?.sub;
-    return this.svc.getOne(id, userId);
+  getOne(
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @Req() req: any,
+  ) {
+    return this.svc.getOne(id, req.user?.sub);
   }
 
-  // PUT /events/:id
   @Put('events/:id')
   update(
     @Param('id', new ParseUUIDPipe()) id: string,
-    @Body() dto: { title?: string; description?: string; occurredAt?: string },
+    @Body() dto: { title?: string; description?: string },
     @Req() req: any,
   ) {
-    const userId: string = req.user?.sub;
-    return this.svc.update(id, userId, dto);
+    return this.svc.update(id, req.user?.sub, dto);
   }
 
-  // DELETE /events/:id
   @Delete('events/:id')
-  remove(@Param('id', new ParseUUIDPipe()) id: string, @Req() req: any) {
-    const userId: string = req.user?.sub;
-    return this.svc.remove(id, userId);
+  remove(
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @Req() req: any,
+  ) {
+    return this.svc.remove(id, req.user?.sub);
   }
 }

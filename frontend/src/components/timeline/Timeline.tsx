@@ -9,8 +9,8 @@ type Props = {
 
 export default function Timeline({ events, onEdit, onDelete }: Props) {
   const sorted = [...events].sort((a, b) => {
-    const da = a.occurredAt ? Date.parse(a.occurredAt) : Infinity;
-    const db = b.occurredAt ? Date.parse(b.occurredAt) : Infinity;
+    const da = a.createdAt ? Date.parse(a.createdAt) : Infinity;
+    const db = b.createdAt ? Date.parse(b.createdAt) : Infinity;
     return da - db;
   });
 

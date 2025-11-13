@@ -16,16 +16,12 @@ export default function EventModal({ open, onClose, campaignId, editing, onSaved
   const t = useToast();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [occurredAt, setOccurredAt] = useState("");
-  const [happenedIn, setHappenedIn] = useState("");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!open) return;
     setTitle(editing?.title ?? "");
     setDescription(editing?.description ?? "");
-    setOccurredAt((editing?.occurredAt ?? "").substring(0, 10));
-    setHappenedIn(editing?.happenedIn ?? "");
   }, [open, editing]);
 
   if (!open) return null;
@@ -37,13 +33,15 @@ export default function EventModal({ open, onClose, campaignId, editing, onSaved
     }
     try {
       setSaving(true);
+
       if (editing?.id) {
-        await updateEvent(editing.id, { title, description, occurredAt, happenedIn });
+        await updateEvent(editing.id, { title, description });
         t.show("Event updated", "success");
       } else {
-        await createCampaignEvent(campaignId, { title, description, occurredAt, happenedIn });
+        await createCampaignEvent(campaignId, { title, description });
         t.show("Event created", "success");
       }
+
       onSaved?.();
       onClose();
     } catch {
@@ -57,8 +55,16 @@ export default function EventModal({ open, onClose, campaignId, editing, onSaved
     <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4" role="dialog" aria-modal="true">
       <div className="w-full max-w-xl rounded-xl border bg-white p-6 shadow-xl dark:border-zinc-800 dark:bg-zinc-900">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-semibold">{editing ? "Edit event" : "New event"}</h2>
-          <button onClick={onClose} className="rounded p-1 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800" aria-label="Close">✕</button>
+          <h2 className="text-lg font-semibold">
+            {editing ? "Edit event" : "New event"}
+          </h2>
+          <button
+            onClick={onClose}
+            className="rounded p-1 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+            aria-label="Close"
+          >
+            ✕
+          </button>
         </div>
 
         <div className="grid gap-3">
@@ -73,42 +79,55 @@ export default function EventModal({ open, onClose, campaignId, editing, onSaved
           </label>
 
           <label className="grid gap-1">
-            <span className="text-sm">Description (optional)</span>
+            <span className="text-sm">Description</span>
             <textarea
               className="min-h-[96px] rounded-md border border-zinc-300 bg-white px-3 py-2 outline-none focus:ring-2 focus:ring-blue-600 dark:border-zinc-700 dark:bg-zinc-900"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
             />
+            <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+              Use tokens like{" "}
+              <code className="rounded bg-zinc-200 px-1 dark:bg-zinc-700">
+                &lt;&lt;C:Name&gt;&gt;
+              </code>
+              ,{" "}
+              <code className="rounded bg-zinc-200 px-1 dark:bg-zinc-700">
+                &lt;&lt;L:Location&gt;&gt;
+              </code>
+              ,{" "}
+              <code className="rounded bg-zinc-200 px-1 dark:bg-zinc-700">
+                &lt;&lt;O:Object&gt;&gt;
+              </code>{" "}
+              or{" "}
+              <code className="rounded bg-zinc-200 px-1 dark:bg-zinc-700">
+                &lt;&lt;E:Event title&gt;&gt;
+              </code>{" "}
+              to create links between entities.
+            </p>
           </label>
-
-          <div className="grid grid-cols-2 gap-3 max-[480px]:grid-cols-1">
-            <label className="grid gap-1">
-              <span className="text-sm">Date (optional)</span>
-              <input
-                type="date"
-                className="rounded-md border border-zinc-300 bg-white px-3 py-2 outline-none focus:ring-2 focus:ring-blue-600 dark:border-zinc-700 dark:bg-zinc-900"
-                value={occurredAt}
-                onChange={(e) => setOccurredAt(e.target.value)}
-              />
-            </label>
-            <label className="grid gap-1">
-              <span className="text-sm">Location (optional)</span>
-              <input
-                className="rounded-md border border-zinc-300 bg-white px-3 py-2 outline-none focus:ring-2 focus:ring-blue-600 dark:border-zinc-700 dark:bg-zinc-900"
-                value={happenedIn}
-                onChange={(e) => setHappenedIn(e.target.value)}
-                placeholder="Neverwinter, Baldur's Gate…"
-              />
-            </label>
-          </div>
         </div>
 
         <div className="mt-5 flex justify-end gap-2">
-          <button onClick={onClose} className="rounded border px-3 py-1.5 hover:bg-zinc-50 dark:hover:bg-zinc-800" type="button">
+          <button
+            onClick={onClose}
+            className="rounded border px-3 py-1.5 hover:bg-zinc-50 dark:hover:bg-zinc-800"
+            type="button"
+          >
             Cancel
           </button>
-          <button onClick={handleSave} disabled={saving} className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:opacity-70" type="button">
-            {saving ? <span className="inline-flex items-center"><Spinner />&nbsp;Saving…</span> : "Save"}
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:opacity-70"
+            type="button"
+          >
+            {saving ? (
+              <span className="inline-flex items-center gap-1">
+                <Spinner size={16} /> Saving...
+              </span>
+            ) : (
+              "Save"
+            )}
           </button>
         </div>
       </div>
