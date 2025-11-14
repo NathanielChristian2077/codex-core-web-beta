@@ -100,3 +100,37 @@ export async function updateEvent(
 export async function deleteEvent(eventId: string) {
   await api.delete(`/events/${eventId}`);
 }
+
+export type GraphNodeDto = {
+  id: string;
+  label: string;
+  type: "EVENT" | "CHARACTER" | "LOCATION" | "OBJECT";
+  description?: string | null;
+};
+
+export type GraphEdgeDto = {
+  id: string;
+  from: {
+    id: string;
+    type: "EVENT" | "CHARACTER" | "LOCATION" | "OBJECT";
+  };
+  to: {
+    id: string;
+    type: "EVENT" | "CHARACTER" | "LOCATION" | "OBJECT";
+  };
+  kind: string;
+};
+
+export type CampaignGraphResponse = {
+  nodes: GraphNodeDto[];
+  edges: GraphEdgeDto[];
+};
+
+export async function getCampaignGraph(
+  campaignId: string
+): Promise<CampaignGraphResponse> {
+  const res = await api.get<CampaignGraphResponse>(
+    `/campaigns/${campaignId}/graph`
+  );
+  return res.data;
+}

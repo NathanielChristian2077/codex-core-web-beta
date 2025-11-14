@@ -45,7 +45,7 @@ export default function SideBar() {
           to={hasCampaign ? `/campaigns/${currentCampaignId}/graph` : "#"}
           label="Graph"
           activeClass={loc.pathname.includes("/graph") ? ACTIVE_CLS : ""}
-          disabled
+          disabled={!hasCampaign}
         />
 
         <NavItem

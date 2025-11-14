@@ -5,6 +5,7 @@ import RequireAuth from "../components/ui/RequireAuth";
 
 import CharactersPage from "../pages/CharactersPage";
 import DashboardPage from "../pages/DashboardPage";
+import GraphPage from "../pages/GraphPage";
 import LandingPage from "../pages/LandingPage";
 import LocationsPage from "../pages/LocationsPage";
 import LoginPage from "../pages/LoginPage";
@@ -27,8 +28,7 @@ export const router = createBrowserRouter([
 
           // timeline
           { path: "/campaigns/:id/timeline", element: <TimelinePage /> },
-
-
+          { path: "/campaigns/:id/graph", element: <GraphPage /> },
           { path: "/campaigns/:id/characters", element: <CharactersPage /> },
           { path: "/campaigns/:id/locations", element: <LocationsPage /> },
           { path: "/campaigns/:id/objects", element: <ObjectsPage /> },
