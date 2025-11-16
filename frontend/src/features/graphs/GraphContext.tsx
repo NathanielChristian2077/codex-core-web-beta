@@ -20,6 +20,7 @@ type DisplaySettingsState = {
   nodeSizeBase: number;
   edgeWidth: number;
   showArrows: boolean;
+  autoZoomOnClick: boolean;
 };
 
 type PhysicsSettingsState = {
@@ -36,25 +37,35 @@ export type GraphContextValue = {
   graphData: GraphData | null;
   setGraphDataFromOutside: (data: GraphData | null) => void;
 
+  /** current view mode */
   viewMode: ViewMode;
   setViewMode: (mode: ViewMode) => void;
 
+  /** filtering rules for nodes and relations */
   filters: FiltersState;
   setFilters: React.Dispatch<React.SetStateAction<FiltersState>>;
 
+  /** visual styling (node size, edge width, arrows) */
   displaySettings: DisplaySettingsState;
   setDisplaySettings: React.Dispatch<
     React.SetStateAction<DisplaySettingsState>
   >;
 
+  /** physics configuration for d3-force */
   physicsSettings: PhysicsSettingsState;
   setPhysicsSettings: React.Dispatch<
     React.SetStateAction<PhysicsSettingsState>
   >;
 
+  /** hovered or focused node */
   focusNodeId: string | null;
   setFocusNodeId: (id: string | null) => void;
 
+  /** double-click selected node */
+  selectedNodeId: string | null;
+  setSelectedNodeId: (id: string | null) => void;
+
+  /** stored node positions (persistent) */
   nodePositions: NodePositions;
   setNodePositions: (positions: NodePositions) => void;
 };
@@ -74,6 +85,7 @@ const defaultDisplaySettings: DisplaySettingsState = {
   nodeSizeBase: 18,
   edgeWidth: 2,
   showArrows: true,
+  autoZoomOnClick: true,
 };
 
 const defaultPhysicsSettings: PhysicsSettingsState = {
@@ -92,9 +104,8 @@ type GraphProviderProps = {
   children: ReactNode;
 };
 
-function loadNodePositionsFromStorage(
-  storageKey?: string
-): NodePositions {
+/** Safely load saved node positions from localStorage */
+function loadNodePositionsFromStorage(storageKey?: string): NodePositions {
   if (!storageKey) return {};
   try {
     const raw = localStorage.getItem(storageKey);
@@ -112,21 +123,35 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
   storageKey,
   children,
 }) => {
+  /** core graph data */
   const [graphData, setGraphData] = useState<GraphData | null>(initialData);
+
+  /** view mode: "graph" | "timeline" */
   const [viewMode, setViewMode] = useState<ViewMode>("graph");
+
+  /** UI filters */
   const [filters, setFilters] = useState<FiltersState>(defaultFilters);
+
+  /** display settings (visual only) */
   const [displaySettings, setDisplaySettings] =
     useState<DisplaySettingsState>(defaultDisplaySettings);
+
+  /** physics forces for d3-force */
   const [physicsSettings, setPhysicsSettings] =
     useState<PhysicsSettingsState>(defaultPhysicsSettings);
+
+  /** currently double-click selected node */
+  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+
+  /** hovered/pointed node (used for highlight waves) */
   const [focusNodeId, setFocusNodeId] = useState<string | null>(null);
 
-  // estado interno real das posições
+  /** internal real node positions */
   const [nodePositionsState, setNodePositionsState] = useState<NodePositions>(
     () => loadNodePositionsFromStorage(storageKey)
   );
 
-  // quando a campanha / storageKey mudam, recarrega posições e dados
+  /** reload positions when campaign or storage key changes */
   useEffect(() => {
     setGraphData(initialData);
     setFocusNodeId(null);
@@ -135,17 +160,18 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
     setNodePositionsState(loaded);
   }, [initialData, storageKey]);
 
-  // setter exposto no contexto que também persiste em localStorage
+  /** setter that also persists to localStorage */
   const setNodePositions = (positions: NodePositions) => {
     setNodePositionsState(positions);
     if (!storageKey) return;
     try {
       localStorage.setItem(storageKey, JSON.stringify(positions));
     } catch {
-      // quota, navegação privada, etc. -> ignora e segue.
+      /* ignore write errors */
     }
   };
 
+  /** memoized context value to avoid re-renders */
   const value = useMemo<GraphContextValue>(
     () => ({
       graphData,
@@ -166,6 +192,9 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
       focusNodeId,
       setFocusNodeId,
 
+      selectedNodeId,
+      setSelectedNodeId,
+
       nodePositions: nodePositionsState,
       setNodePositions,
     }),
@@ -177,6 +206,7 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
       physicsSettings,
       focusNodeId,
       nodePositionsState,
+      selectedNodeId,
     ]
   );
 
@@ -185,6 +215,7 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
   );
 };
 
+/** hook for accessing graph context safely */
 export const useGraph = (): GraphContextValue => {
   const ctx = useContext(GraphContext);
   if (!ctx) {
