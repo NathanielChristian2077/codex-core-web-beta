@@ -6,7 +6,7 @@ import {
   forceSimulation,
   forceX,
   forceY,
-  type Simulation
+  type Simulation,
 } from "d3-force";
 import type { GraphNode } from "../types";
 
@@ -48,48 +48,55 @@ export function createSimulation(
   physics: Physics,
   timeline?: Record<string, { x: number; y: number }>
 ) {
+  nodes.forEach((n) => {
+    if (isOrphan(n) && typeof n.x === "number" && typeof n.y === "number") {
+      n.fx = n.x;
+      n.fy = n.y;
+    }
+  });
+
   const sim: Simulation<SimNode, SimLink> = forceSimulation(nodes)
     // Repulsion only for non-orphans
     .force(
       "charge",
-      forceManyBody<SimNode>().strength(n =>
+      forceManyBody<SimNode>().strength((n) =>
         isOrphan(n) ? 0 : physics.chargeStrength
       )
     )
     .force(
       "link",
       forceLink<SimNode, SimLink>(links)
-        .id(d => (d as SimNode).id)
+        .id((d) => (d as SimNode).id)
         .distance(physics.linkDistance)
         .strength(physics.linkStrength)
     )
-    // Soft centering; combinado com velocityDecay alto pra ficar “fluido”
     .force(
       "center",
       forceCenter(WIDTH / 2, HEIGHT / 2).strength(physics.centerStrength)
     )
-    // Orphans praticamente ignoram colisão
     .force(
       "collide",
-      forceCollide<SimNode>().radius(n =>
+      forceCollide<SimNode>().radius((n) =>
         isOrphan(n) ? 0 : Math.max(20, physics.collisionRadius)
       )
     )
-    // Começa moderado, esfria suave, mas com bastante amortecimento
-    .alpha(0.4)
-    .alphaDecay(0.02)
-    .velocityDecay(0.7);
+    .alpha(0.9)
+    .alphaDecay(0.002)
+    .velocityDecay(0.86);
 
   if (timeline) {
-    // Timeline com força mais suave pra não ficar “quicando”
     sim.force(
       "timelineX",
-      forceX<SimNode>(n => timeline[(n as SimNode).id]?.x ?? WIDTH / 2).strength(0.5)
+      forceX<SimNode>(
+        (n) => timeline[(n as SimNode).id]?.x ?? WIDTH / 2
+      ).strength(0.4)
     );
 
     sim.force(
       "timelineY",
-      forceY<SimNode>(n => timeline[(n as SimNode).id]?.y ?? HEIGHT / 2).strength(0.5)
+      forceY<SimNode>(
+        (n) => timeline[(n as SimNode).id]?.y ?? HEIGHT / 2
+      ).strength(0.4)
     );
   }
 

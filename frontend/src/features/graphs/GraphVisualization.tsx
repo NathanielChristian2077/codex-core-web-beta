@@ -5,9 +5,9 @@ import { useGraph } from "./GraphContext";
 import type { GraphLink, GraphNode } from "./types";
 
 import {
-    createSimulation,
-    type SimLink,
-    type SimNode
+  createSimulation,
+  type SimLink,
+  type SimNode
 } from "./core/SimulationManager";
 
 import { GraphCanvas } from "./core/GraphCanvas";
@@ -213,11 +213,7 @@ export const GraphVisualization: React.FC = () => {
     );
 
     sim.on("tick", () => {
-      const now = performance.now();
-      if (now - lastRenderRef.current > 33) {
-        lastRenderRef.current = now;
-        setFrameVersion(v => v + 1);
-      }
+      setFrameVersion(v => v + 1);
     });
 
     sim.on("end", () => {
