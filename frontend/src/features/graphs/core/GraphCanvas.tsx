@@ -27,6 +27,7 @@ type Props = {
   setFocusNodeId: (id: string | null) => void;
   setSelectedNodeId: (id: string | null) => void;
   simulationRef: React.RefObject<Simulation<SimNode, SimLink> | null>;
+  autoZoomOnClick: boolean;
 };
 
 export const GraphCanvas: React.FC<Props> = ({
@@ -41,7 +42,8 @@ export const GraphCanvas: React.FC<Props> = ({
   nodeById,
   setFocusNodeId,
   setSelectedNodeId,
-  simulationRef
+  simulationRef,
+  autoZoomOnClick,
 }) => {
   const {
     camera,
@@ -50,8 +52,11 @@ export const GraphCanvas: React.FC<Props> = ({
     handleSvgPointerDown,
     handleSvgPointerMove,
     handleSvgPointerUp,
-    getWorldPointFromPointer
+    getWorldPointFromPointer,
+    focusOnWorldPoint,
   } = useZoomAndPan();
+
+  
 
   const {
     onNodePointerDown,
@@ -64,7 +69,9 @@ export const GraphCanvas: React.FC<Props> = ({
     nodeById,
     setFocusNodeId,
     setSelectedNodeId,
-    simulationRef
+    simulationRef,
+    autoZoomOnClick,
+    focusOnWorldPoint,
   });
 
   return (

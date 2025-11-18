@@ -1,3 +1,4 @@
+import { GraphLayoutMode } from " @/components/graph/helpers/graphLayout ";
 import {
   forceCenter,
   forceCollide,
@@ -46,7 +47,8 @@ export function createSimulation(
   nodes: SimNode[],
   links: SimLink[],
   physics: Physics,
-  timeline?: Record<string, { x: number; y: number }>
+  timeline?: Record<string, { x: number; y: number }>,
+  mode: GraphLayoutMode = "chaos",
 ) {
   nodes.forEach((n) => {
     if (isOrphan(n) && typeof n.x === "number" && typeof n.y === "number") {
@@ -84,20 +86,22 @@ export function createSimulation(
     .alphaDecay(0.002)
     .velocityDecay(0.86);
 
-  if (timeline) {
+  if (mode === "flow" && timeline) {
     sim.force(
       "timelineX",
       forceX<SimNode>(
         (n) => timeline[(n as SimNode).id]?.x ?? WIDTH / 2
-      ).strength(0.4)
+      ).strength(0.6)
     );
 
     sim.force(
       "timelineY",
       forceY<SimNode>(
         (n) => timeline[(n as SimNode).id]?.y ?? HEIGHT / 2
-      ).strength(0.4)
+      ).strength(0.25)
     );
+  } else {
+    sim.force("timelineX", null).force("timelineY", null);
   }
 
   return sim;

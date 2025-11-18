@@ -7,11 +7,15 @@ export function useGraphInteractions({
   setFocusNodeId,
   setSelectedNodeId,
   simulationRef,
+  autoZoomOnClick,
+  focusOnWorldPoint,
 }: {
   nodeById: Map<string, SimNode>;
   setFocusNodeId: (id: string | null) => void;
   setSelectedNodeId: (id: string | null) => void;
   simulationRef: React.RefObject<Simulation<SimNode, any> | null>;
+  autoZoomOnClick: boolean;
+  focusOnWorldPoint?: (x: number, y: number, opts?: { scale?: number }) => void;
 }) {
   const dragRef = useRef<{
     id: string;
@@ -88,8 +92,15 @@ export function useGraphInteractions({
   const onNodeDoubleClick = useCallback(
     (id: string) => {
       setSelectedNodeId(id);
+      if (!autoZoomOnClick || !focusOnWorldPoint) return;
+
+      const n = nodeById.get(id);
+      if (!n) return;
+      if (typeof n.x !== "number" || typeof n.y !== "number") return;
+
+      focusOnWorldPoint(n.x, n.y, { scale: 1.6 });
     },
-    [setSelectedNodeId]
+    [autoZoomOnClick, focusOnWorldPoint, nodeById, setSelectedNodeId]
   );
 
   return {

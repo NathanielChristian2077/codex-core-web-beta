@@ -10,6 +10,7 @@ import {
   type SimNode
 } from "./core/SimulationManager";
 
+import { GraphLayoutMode } from " @/components/graph/helpers/graphLayout ";
 import { GraphCanvas } from "./core/GraphCanvas";
 
 const WIDTH = 1600;
@@ -45,6 +46,7 @@ export const GraphVisualization: React.FC = () => {
   const [simNodes, setSimNodes] = useState<SimNode[]>([]);
   const [simLinks, setSimLinks] = useState<SimLink[]>([]);
   const [, setFrameVersion] = useState(0);
+  const [layoutMode, setLayoutMode] = useState<GraphLayoutMode>("chaos");
 
   const simulationRef = useRef<Simulation<SimNode, SimLink> | null>(null);
   const nodeByIdRef = useRef<Map<string, SimNode>>(new Map());
@@ -209,7 +211,8 @@ export const GraphVisualization: React.FC = () => {
         centerStrength: physicsSettings.centerStrength,
         collisionRadius: physicsSettings.collisionRadius
       },
-      timeline
+      timeline,
+      layoutMode,
     );
 
     sim.on("tick", () => {
@@ -306,6 +309,7 @@ export const GraphVisualization: React.FC = () => {
       setFocusNodeId={setFocusNodeId}
       setSelectedNodeId={setSelectedNodeId}
       simulationRef={simulationRef}
+      autoZoomOnClick={displaySettings.autoZoomOnClick}
     />
   );
 };
