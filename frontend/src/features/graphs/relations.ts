@@ -1,5 +1,3 @@
-// frontend/src/features/graphs/relations.ts
-
 export type RelationCategory =
   | "TEMPORAL"
   | "APPEARANCE"

@@ -83,7 +83,7 @@ export function createSimulation(
       )
     )
     .alpha(0.9)
-    .alphaDecay(0.002)
+    .alphaDecay(1.00) // 0.002 default, but for development I prefer 1.0 cz cpu...
     .velocityDecay(0.86);
 
   if (mode === "flow" && timeline) {

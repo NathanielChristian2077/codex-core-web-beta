@@ -25,6 +25,7 @@ type Props = {
   onNodeEnter: (id: string) => void;
   onNodeLeave: () => void;
   onNodeDoubleClick: (id: string) => void;
+  onNodeRightClick: (id: string) => void;
 };
 
 export const GraphNodes: React.FC<Props> = ({
@@ -39,7 +40,8 @@ export const GraphNodes: React.FC<Props> = ({
   onNodePointerUp,
   onNodeEnter,
   onNodeLeave,
-  onNodeDoubleClick
+  onNodeDoubleClick,
+  onNodeRightClick,
 }) => {
   const handlePointerDown = useCallback(
     (node: SimNode) =>
@@ -121,6 +123,11 @@ export const GraphNodes: React.FC<Props> = ({
             onPointerLeave={onNodeLeave}
             onPointerEnter={() => onNodeEnter(node.id)}
             onDoubleClick={() => onNodeDoubleClick(node.id)}
+            onContextMenu={(e) => {
+              e.preventDefault();
+              e.stopPropagation;
+              onNodeRightClick(node.id);
+            }}
             style={{ cursor: "grab" }}
           >
             {isSelected && (

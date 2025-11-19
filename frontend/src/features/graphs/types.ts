@@ -8,14 +8,11 @@ export interface GraphNode {
   type: GraphNodeType;
   description?: string | null;
 
-  // calculado a partir das arestas
   degree?: number;
 
-  // posições atuais
   x?: number;
   y?: number;
 
-  // posições "fixas" usadas por d3-force (fx/fy)
   fx?: number | null;
   fy?: number | null;
 }

@@ -65,6 +65,10 @@ export type GraphContextValue = {
   selectedNodeId: string | null;
   setSelectedNodeId: (id: string | null) => void;
 
+  /** right-click selected node */
+  editingNodeId: string | null;
+  setEditingNodeId: (id: string | null) => void;
+
   /** stored node positions (persistent) */
   nodePositions: NodePositions;
   setNodePositions: (positions: NodePositions) => void;
@@ -146,6 +150,9 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
   /** hovered/pointed node (used for highlight waves) */
   const [focusNodeId, setFocusNodeId] = useState<string | null>(null);
 
+  /** currently right-click selected node */
+  const [editingNodeId, setEditingNodeId] = useState<string | null>(null);
+
   /** internal real node positions */
   const [nodePositionsState, setNodePositionsState] = useState<NodePositions>(
     () => loadNodePositionsFromStorage(storageKey)
@@ -195,6 +202,9 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
       selectedNodeId,
       setSelectedNodeId,
 
+      editingNodeId,
+      setEditingNodeId,
+
       nodePositions: nodePositionsState,
       setNodePositions,
     }),
@@ -207,6 +217,7 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
       focusNodeId,
       nodePositionsState,
       selectedNodeId,
+      editingNodeId,
     ]
   );
 

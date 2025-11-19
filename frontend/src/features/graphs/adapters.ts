@@ -1,14 +1,14 @@
 import {
-    type CampaignGraphResponse,
-    type GraphEdgeDto,
-    type GraphNodeDto,
+  type CampaignGraphResponse,
+  type GraphEdgeDto,
+  type GraphNodeDto,
 } from "../campaigns/api";
 
 import {
-    type GraphData,
-    type GraphLink,
-    type GraphNode,
-    type GraphNodeType,
+  type GraphData,
+  type GraphLink,
+  type GraphNode,
+  type GraphNodeType,
 } from "./types";
 
 export function adaptCampaignGraphResponse(
@@ -28,7 +28,6 @@ export function adaptCampaignGraphResponse(
     type: e.kind,
   }));
 
-  // Calcula o grau de cada nó (número de arestas incidentes)
   const degreeMap: Record<string, number> = {};
 
   links.forEach((link) => {

@@ -49,33 +49,28 @@ export default function SideBar() {
         />
 
         <NavItem
-          to={
-            hasCampaign
-              ? `/campaigns/${currentCampaignId}/characters`
-              : "#"
-          }
+          to={hasCampaign ? `/campaigns/${currentCampaignId}/timeline` : "#"}
+          label="Timeline"
+          activeClass={loc.pathname.includes("/timeline") ? ACTIVE_CLS : ""}
+          disabled={!hasCampaign}
+        />
+
+        <NavItem
+          to={hasCampaign ? `/campaigns/${currentCampaignId}/characters` : "#"}
           label="Characters"
           activeClass={isCharacters ? ACTIVE_CLS : ""}
           disabled={!hasCampaign}
         />
 
         <NavItem
-          to={
-            hasCampaign
-              ? `/campaigns/${currentCampaignId}/locations`
-              : "#"
-          }
+          to={hasCampaign ? `/campaigns/${currentCampaignId}/locations` : "#"}
           label="Locations"
           activeClass={isLocations ? ACTIVE_CLS : ""}
           disabled={!hasCampaign}
         />
 
         <NavItem
-          to={
-            hasCampaign
-              ? `/campaigns/${currentCampaignId}/objects`
-              : "#"
-          }
+          to={hasCampaign ? `/campaigns/${currentCampaignId}/objects` : "#"}
           label="Objects"
           activeClass={isObjects ? ACTIVE_CLS : ""}
           disabled={!hasCampaign}

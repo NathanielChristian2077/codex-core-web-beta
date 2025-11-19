@@ -1,21 +1,21 @@
+// GraphPage.tsx
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 
-import {
-  getCampaign,
-  getCampaignGraph,
-} from "../features/campaigns/api";
+import { getCampaign } from "../features/campaigns/api";
 
-import { adaptCampaignGraphResponse } from "../features/graphs/adapters";
 import { GraphProvider, useGraph } from "../features/graphs/GraphContext";
 import GraphVisualization from "../features/graphs/GraphVisualization";
+import { loadGraphDataWithDescriptions } from "../features/graphs/loadGraphWithDescriptions";
 import type { GraphData } from "../features/graphs/types";
 
 type GraphPageContentProps = {
   campaignName: string;
 };
 
-const GraphPageContent: React.FC<GraphPageContentProps> = ({ campaignName }) => {
+const GraphPageContent: React.FC<GraphPageContentProps> = ({
+  campaignName,
+}) => {
   const {
     graphData,
     viewMode,
@@ -42,10 +42,13 @@ const GraphPageContent: React.FC<GraphPageContentProps> = ({ campaignName }) => 
 
     setFilters((prev) => ({
       ...prev,
-      relations: Array.from(relationsSet).reduce((acc, rel) => {
-        acc[rel] = true;
-        return acc;
-      }, {} as Record<string, boolean>),
+      relations: Array.from(relationsSet).reduce(
+        (acc, rel) => {
+          acc[rel] = true;
+          return acc;
+        },
+        {} as Record<string, boolean>
+      ),
     }));
   }, [graphData, filters.relations, setFilters]);
 
@@ -88,7 +91,7 @@ const GraphPageContent: React.FC<GraphPageContentProps> = ({ campaignName }) => 
           </div>
         </div>
 
-        {/* Search + view mode */}
+        {/* Search + view mode 
         <div className="pointer-events-none absolute right-4 top-4 z-20 flex flex-col items-end gap-2 text-xs text-slate-100">
           <div className="pointer-events-auto flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-950/85 px-3 py-2 shadow-lg backdrop-blur">
             <input
@@ -130,7 +133,7 @@ const GraphPageContent: React.FC<GraphPageContentProps> = ({ campaignName }) => 
               Timeline
             </button>
           </div>
-        </div>
+        </div>*/}
 
         {/* Floating controls buttons */}
         <div className="pointer-events-none absolute bottom-4 left-4 z-20 flex gap-2">
@@ -508,20 +511,19 @@ export const GraphPage: React.FC = () => {
         setLoading(true);
         setError(null);
 
-        const [graph, campaign] = await Promise.all([
-          getCampaignGraph(campaignId),
+        const [campaign, graphData] = await Promise.all([
           getCampaign(campaignId),
+          loadGraphDataWithDescriptions(campaignId),
         ]);
 
         setCampaignName(campaign.name ?? "");
-        const adapted = adaptCampaignGraphResponse(graph);
-        setGraphData(adapted);
+        setGraphData(graphData);
       } catch (err: any) {
         console.error(err);
         setError(
           err?.response?.data?.message ??
-          err?.message ??
-          "Unexpected error while loading graph"
+            err?.message ??
+            "Unexpected error while loading graph"
         );
       } finally {
         setLoading(false);
@@ -549,7 +551,8 @@ export const GraphPage: React.FC = () => {
   }
 
   return (
-    <GraphProvider initialData={graphData}
+    <GraphProvider
+      initialData={graphData}
       storageKey={
         campaignId ? `campaign:${campaignId}:graph-positions` : undefined
       }

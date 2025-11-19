@@ -1,11 +1,12 @@
 import type { Simulation } from "d3-force";
-import { useCallback, useRef } from "react";
+import React, { useCallback, useRef } from "react";
 import type { SimNode } from "../../../features/graphs/core/SimulationManager";
 
 export function useGraphInteractions({
   nodeById,
   setFocusNodeId,
   setSelectedNodeId,
+  setEditingNodeId,
   simulationRef,
   autoZoomOnClick,
   focusOnWorldPoint,
@@ -13,6 +14,7 @@ export function useGraphInteractions({
   nodeById: Map<string, SimNode>;
   setFocusNodeId: (id: string | null) => void;
   setSelectedNodeId: (id: string | null) => void;
+  setEditingNodeId: (id: string | null) => void;
   simulationRef: React.RefObject<Simulation<SimNode, any> | null>;
   autoZoomOnClick: boolean;
   focusOnWorldPoint?: (x: number, y: number, opts?: { scale?: number }) => void;
@@ -103,6 +105,22 @@ export function useGraphInteractions({
     [autoZoomOnClick, focusOnWorldPoint, nodeById, setSelectedNodeId]
   );
 
+  const onNodeRightClick = useCallback(
+    (id: string) => {
+      setSelectedNodeId(id);
+      setEditingNodeId(id);
+      setFocusNodeId(id);
+      if (!autoZoomOnClick || !focusOnWorldPoint) return;
+
+      const n = nodeById.get(id);
+      if (!n) return;
+      if (typeof n.x !== "number" || typeof n.y !== "number") return;
+
+      focusOnWorldPoint(n.x, n.y, { scale: 1.6 });
+    },
+    [setSelectedNodeId, setFocusNodeId, setEditingNodeId, nodeById, focusOnWorldPoint, autoZoomOnClick]
+  );
+
   return {
     onNodePointerDown,
     onNodeDragMove,
@@ -110,5 +128,6 @@ export function useGraphInteractions({
     onNodeEnter,
     onNodeLeave,
     onNodeDoubleClick,
+    onNodeRightClick,
   };
 }

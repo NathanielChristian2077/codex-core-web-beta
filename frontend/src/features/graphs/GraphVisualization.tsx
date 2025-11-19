@@ -7,17 +7,17 @@ import type { GraphLink, GraphNode } from "./types";
 import {
   createSimulation,
   type SimLink,
-  type SimNode
+  type SimNode,
 } from "./core/SimulationManager";
 
-import { GraphLayoutMode } from " @/components/graph/helpers/graphLayout ";
+import { GraphLayoutMode } from "../../components/graph/helpers/graphLayout";
+import { GraphSidePanels } from "../../components/graph/ui/GraphSidePanels";
 import { GraphCanvas } from "./core/GraphCanvas";
 
 const WIDTH = 1600;
 const HEIGHT = 900;
 const MAX_HIGHLIGHT_DEPTH = 3;
 
-// basic deterministic jitter
 function pseudo(id: string): number {
   let h = 0;
   for (let i = 0; i < id.length; i += 1) {
@@ -40,7 +40,9 @@ export const GraphVisualization: React.FC = () => {
     setFocusNodeId,
     selectedNodeId,
     setSelectedNodeId,
-    viewMode
+    viewMode,
+    editingNodeId,
+    setEditingNodeId,
   } = useGraph();
 
   const [simNodes, setSimNodes] = useState<SimNode[]>([]);
@@ -55,25 +57,22 @@ export const GraphVisualization: React.FC = () => {
 
   const [distanceById, setDistanceById] = useState<Record<string, number>>({});
 
-  // ------------------------------
-  // Filter nodes & links
-  // ------------------------------
   const { visibleNodes, visibleLinks } = useMemo(() => {
     if (!graphData) {
       return {
         visibleNodes: [] as GraphNode[],
-        visibleLinks: [] as GraphLink[]
+        visibleLinks: [] as GraphLink[],
       };
     }
 
     const allowedTypes = filters.types;
     const allowedRelations = filters.relations;
 
-    const nodesFiltered = graphData.nodes.filter(n => allowedTypes[n.type]);
-    const nodeSet = new Set(nodesFiltered.map(n => n.id));
+    const nodesFiltered = graphData.nodes.filter((n) => allowedTypes[n.type]);
+    const nodeSet = new Set(nodesFiltered.map((n) => n.id));
 
     const linksFiltered = graphData.links.filter(
-      l =>
+      (l) =>
         nodeSet.has(l.source) &&
         nodeSet.has(l.target) &&
         (allowedRelations[l.type] ?? true)
@@ -82,26 +81,23 @@ export const GraphVisualization: React.FC = () => {
     let finalNodes = nodesFiltered;
     if (filters.hideOrphans) {
       const connected = new Set<string>();
-      linksFiltered.forEach(l => {
+      linksFiltered.forEach((l) => {
         connected.add(l.source);
         connected.add(l.target);
       });
-      finalNodes = nodesFiltered.filter(n => connected.has(n.id));
+      finalNodes = nodesFiltered.filter((n) => connected.has(n.id));
     }
 
     return {
       visibleNodes: finalNodes,
-      visibleLinks: linksFiltered
+      visibleLinks: linksFiltered,
     };
   }, [graphData, filters]);
 
-  // ------------------------------
-  // Timeline positions (only in timeline mode)
-  // ------------------------------
   const timelinePositions: TimelinePositions = useMemo(() => {
     if (viewMode !== "timeline") return {};
 
-    const events = visibleNodes.filter(n => n.type === "EVENT");
+    const events = visibleNodes.filter((n) => n.type === "EVENT");
     if (!events.length) return {};
 
     const sorted = [...events].sort((a, b) =>
@@ -116,7 +112,7 @@ export const GraphVisualization: React.FC = () => {
 
     sorted.forEach((ev, index) => {
       const jitterSeed = pseudo(ev.id);
-      const jitterNorm = ((jitterSeed % 201) - 100) / 100; // [-1, 1]
+      const jitterNorm = ((jitterSeed % 201) - 100) / 100;
       const x = spacing * (index + 1);
       const y = baseY + jitterNorm * amplitude;
       positions[ev.id] = { x, y };
@@ -125,9 +121,6 @@ export const GraphVisualization: React.FC = () => {
     return positions;
   }, [viewMode, visibleNodes]);
 
-  // ------------------------------
-  // Build SimNodes / SimLinks when visible graph changes
-  // ------------------------------
   useEffect(() => {
     if (!visibleNodes.length) {
       setSimNodes([]);
@@ -138,36 +131,35 @@ export const GraphVisualization: React.FC = () => {
       return;
     }
 
-    const nodes: SimNode[] = visibleNodes.map(n => {
+    const nodes: SimNode[] = visibleNodes.map((n) => {
       const saved = nodePositions[n.id];
       return {
         ...n,
         x: saved?.x ?? Math.random() * WIDTH,
-        y: saved?.y ?? Math.random() * HEIGHT
+        y: saved?.y ?? Math.random() * HEIGHT,
       };
     });
 
     const nodeById = new Map<string, SimNode>();
-    nodes.forEach(n => nodeById.set(n.id, n));
+    nodes.forEach((n) => nodeById.set(n.id, n));
     nodeByIdRef.current = nodeById;
 
-    const links: SimLink[] = visibleLinks.map(l => {
+    const links: SimLink[] = visibleLinks.map((l) => {
       const source = nodeById.get(l.source);
       const target = nodeById.get(l.target);
       if (!source || !target) {
-        // should not happen after filtering, but keep safe
         throw new Error("Link with missing node after filtering");
       }
       return {
         id: l.id,
         type: l.type,
         source,
-        target
+        target,
       };
     });
 
     const neighbors: Record<string, string[]> = {};
-    links.forEach(l => {
+    links.forEach((l) => {
       const s = l.source.id;
       const t = l.target.id;
       (neighbors[s] ||= []).push(t);
@@ -179,9 +171,6 @@ export const GraphVisualization: React.FC = () => {
     setSimLinks(links);
   }, [visibleNodes, visibleLinks, nodePositions]);
 
-  // ------------------------------
-  // Start / restart simulation when nodes/links/physics change
-  // ------------------------------
   useEffect(() => {
     const nodes = simNodes;
     if (!nodes.length) {
@@ -192,14 +181,12 @@ export const GraphVisualization: React.FC = () => {
       return;
     }
 
-    // stop previous
     if (simulationRef.current) {
       simulationRef.current.stop();
       simulationRef.current = null;
     }
 
-    const timeline =
-      viewMode === "timeline" ? timelinePositions : undefined;
+    const timeline = viewMode === "timeline" ? timelinePositions : undefined;
 
     const sim = createSimulation(
       nodes,
@@ -209,19 +196,19 @@ export const GraphVisualization: React.FC = () => {
         linkDistance: physicsSettings.linkDistance,
         linkStrength: physicsSettings.linkStrength,
         centerStrength: physicsSettings.centerStrength,
-        collisionRadius: physicsSettings.collisionRadius
+        collisionRadius: physicsSettings.collisionRadius,
       },
       timeline,
-      layoutMode,
+      layoutMode
     );
 
     sim.on("tick", () => {
-      setFrameVersion(v => v + 1);
+      setFrameVersion((v) => v + 1);
     });
 
     sim.on("end", () => {
       const positions: Record<string, { x: number; y: number }> = {};
-      nodes.forEach(n => {
+      nodes.forEach((n) => {
         if (typeof n.x === "number" && typeof n.y === "number") {
           positions[n.id] = { x: n.x, y: n.y };
         }
@@ -244,12 +231,10 @@ export const GraphVisualization: React.FC = () => {
     physicsSettings.collisionRadius,
     viewMode,
     timelinePositions,
-    setNodePositions
+    setNodePositions,
+    layoutMode,
   ]);
 
-  // ------------------------------
-  // BFS highlight distance from focus node
-  // ------------------------------
   useEffect(() => {
     if (!focusNodeId) {
       setDistanceById({});
@@ -284,9 +269,6 @@ export const GraphVisualization: React.FC = () => {
     setDistanceById(dist);
   }, [focusNodeId, simNodes.length]);
 
-  // ------------------------------
-  // Render
-  // ------------------------------
   if (!graphData) {
     return (
       <div className="flex h-full items-center justify-center text-[11px] text-slate-500">
@@ -296,21 +278,32 @@ export const GraphVisualization: React.FC = () => {
   }
 
   return (
-    <GraphCanvas
-      nodes={simNodes}
-      links={simLinks}
-      focusNodeId={focusNodeId}
-      selectedNodeId={selectedNodeId}
-      distanceById={distanceById}
-      nodeSizeBase={displaySettings.nodeSizeBase}
-      edgeWidth={displaySettings.edgeWidth}
-      showArrows={displaySettings.showArrows}
-      nodeById={nodeByIdRef.current}
-      setFocusNodeId={setFocusNodeId}
-      setSelectedNodeId={setSelectedNodeId}
-      simulationRef={simulationRef}
-      autoZoomOnClick={displaySettings.autoZoomOnClick}
-    />
+    <div className="relative h-full w-full">
+      {/* grafo embaixo */}
+      <div className="h-full w-full">
+        <GraphCanvas
+          nodes={simNodes}
+          links={simLinks}
+          focusNodeId={focusNodeId}
+          selectedNodeId={selectedNodeId}
+          distanceById={distanceById}
+          nodeSizeBase={displaySettings.nodeSizeBase}
+          edgeWidth={displaySettings.edgeWidth}
+          showArrows={displaySettings.showArrows}
+          nodeById={nodeByIdRef.current}
+          setFocusNodeId={setFocusNodeId}
+          setSelectedNodeId={setSelectedNodeId}
+          setEditingNodeId={setEditingNodeId}
+          simulationRef={simulationRef}
+          autoZoomOnClick={displaySettings.autoZoomOnClick}
+        />
+      </div>
+
+      {/* painel sobreposto à direita */}
+      <div className="pointer-events-none absolute inset-0 flex justify-end">
+        <GraphSidePanels />
+      </div>
+    </div>
   );
 };
 
