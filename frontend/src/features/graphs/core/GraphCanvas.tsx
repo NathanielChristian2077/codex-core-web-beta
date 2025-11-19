@@ -1,12 +1,14 @@
 import type { Simulation } from "d3-force";
-import React from "react";
+import React, { CSSProperties, useEffect, useMemo, useState } from "react";
 
 import { useGraphInteractions } from "../../../components/graph/hooks/useGraphInteractions";
 import { useZoomAndPan } from "../../../components/graph/hooks/useZoomAndPan";
+import { NodeQuickView } from "../../../components/graph/NodeQuickView";
 
 import { GraphEdges } from "./GraphEdges";
 import { GraphNodes } from "./GraphNodes";
 import type { SimLink, SimNode } from "./SimulationManager";
+
 
 type Props = {
   nodes: SimNode[];
@@ -74,6 +76,59 @@ export const GraphCanvas: React.FC<Props> = ({
     focusOnWorldPoint,
   });
 
+  const selectedNode = selectedNodeId ? nodeById.get(selectedNodeId) ?? null : null;
+
+  const [popupOffset, setPopupOffset] = useState<{ dx: number; dy: number }>({
+    dx: 0,
+    dy: 0,
+  });
+
+  useEffect(() => {
+    setPopupOffset({ dx: 0, dy: 0 });
+  }, [selectedNodeId]);
+
+  const [svgSize, setSvgSize] = useState<{ width: number; height: number } | null>(null);
+
+  useEffect(() => {
+    const svgEl = svgRef.current;
+    if (!svgEl) return;
+
+    const updateSize = () => {
+      const rect = svgEl.getBoundingClientRect();
+      setSvgSize({ width: rect.width, height: rect.height });
+    };
+
+    updateSize();
+    window.addEventListener("resize", updateSize);
+    return () => window.removeEventListener("resize", updateSize);
+  }, [svgRef]);
+
+    const popupStyle: CSSProperties | undefined = useMemo(() => {
+    if (
+      !selectedNode ||
+      !svgSize ||
+      typeof selectedNode.x !== "number" ||
+      typeof selectedNode.y !== "number"
+    ) {
+      return undefined;
+    }
+
+    const { width, height } = svgSize;
+
+    const svgX = camera.x + selectedNode.x * camera.scale;
+    const svgY = camera.y + selectedNode.y * camera.scale;
+
+    const pxX = (svgX / 1600) * width;
+    const pxY = (svgY / 900) * height;
+
+    return {
+      position: "absolute",
+      left: pxX + 12 + popupOffset.dx, 
+      top: pxY - 12 + popupOffset.dy,  
+    };
+  }, [selectedNode, svgSize, camera, popupOffset]);
+
+
   return (
     <div
       ref={containerRef}
@@ -90,6 +145,11 @@ export const GraphCanvas: React.FC<Props> = ({
         onPointerMove={handleSvgPointerMove}
         onPointerUp={handleSvgPointerUp}
         onPointerLeave={handleSvgPointerUp}
+        onClick={(e) => {
+          if (e.target === e.currentTarget) {
+            setSelectedNodeId(null);
+          }
+        }}
       >
         {/* Arrow marker for temporal / directional links */}
         <defs>
@@ -134,6 +194,18 @@ export const GraphCanvas: React.FC<Props> = ({
           />
         </g>
       </svg>
+      {selectedNode && (
+        <NodeQuickView
+          node={selectedNode}
+          style={popupStyle}
+          onClose={() => setSelectedNodeId(null)}
+            onDrag={(dx, dy) => setPopupOffset(prev => ({
+              dx: prev.dx + dx,
+              dy: prev.dy + dy,
+            }))
+          }        
+        />
+      )}
     </div>
   );
 };
