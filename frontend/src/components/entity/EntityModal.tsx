@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import Spinner from "../../components/ui/Spinner";
 import { useToast } from "../../components/ui/ToastProvider";
+import { MarkdownEditor } from "../markdown/MarkdownEditor";
 
 type Props = {
   open: boolean;
@@ -12,7 +13,13 @@ type Props = {
   onSave: (payload: { name: string; description?: string | null }) => Promise<void>;
 };
 
-export default function EntityModal({ open, onClose, entityName, editing, onSave }: Props) {
+export default function EntityModal({
+  open,
+  onClose,
+  entityName,
+  editing,
+  onSave,
+}: Props) {
   const t = useToast();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -33,7 +40,10 @@ export default function EntityModal({ open, onClose, entityName, editing, onSave
     }
     try {
       setSaving(true);
-      await onSave({ name: name.trim(), description: description.trim() || null });
+      await onSave({
+        name: name.trim(),
+        description: description.trim() || null,
+      });
       t.show(`${entityName} saved`, "success");
       onClose();
     } catch {
@@ -56,18 +66,16 @@ export default function EntityModal({ open, onClose, entityName, editing, onSave
             <input
               className="rounded-md border border-zinc-300 bg-white px-3 py-2 dark:bg-zinc-900 dark:border-zinc-700"
               value={name}
-              onChange={e => setName(e.target.value)}
+              onChange={(e) => setName(e.target.value)}
             />
           </label>
 
-          <label className="grid gap-1">
-            <span className="text-sm">Description</span>
-            <textarea
-              className="min-h-[80px] rounded-md border border-zinc-300 bg-white px-3 py-2 dark:bg-zinc-900 dark:border-zinc-700"
-              value={description}
-              onChange={e => setDescription(e.target.value)}
-            />
-          </label>
+          <MarkdownEditor
+            value={description}
+            onChange={setDescription}
+            label="Description"
+            placeholder={`Describe this ${entityName.toLowerCase()} using markdown...`}
+          />
         </div>
 
         <div className="mt-5 flex justify-end gap-2">

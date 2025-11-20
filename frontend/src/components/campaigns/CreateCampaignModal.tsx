@@ -1,17 +1,19 @@
 import { useState } from "react";
+import { MarkdownEditor } from "../markdown/MarkdownEditor";
 
 type Props = {
   open: boolean;
   onClose: () => void;
   onCreate: (name: string, description: string) => Promise<void> | void;
-}
+};
 
 export default function CreateCampaignModal({ open, onClose, onCreate }: Props) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [saving, setSaving] = useState(false);
   const [coverUrl, setCoverUrl] = useState("");
-  if (!open) return null
+
+  if (!open) return null;
 
   async function submit() {
     if (!name.trim()) return;
@@ -23,7 +25,11 @@ export default function CreateCampaignModal({ open, onClose, onCreate }: Props) 
   }
 
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4" role="dialog" aria-modal="true">
+    <div
+      className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4"
+      role="dialog"
+      aria-modal="true"
+    >
       <div className="w-full max-w-lg rounded-xl border bg-white p-6 shadow-xl dark:border-zinc-800 dark:bg-zinc-900">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-lg font-semibold">Create campaign</h2>
@@ -47,15 +53,13 @@ export default function CreateCampaignModal({ open, onClose, onCreate }: Props) 
             />
           </label>
 
-          <label className="grid gap-1">
-            <span className="text-sm">descriptionription</span>
-            <textarea
-              className="min-h-[96px] rounded-md border border-zinc-300 bg-white px-3 py-2 outline-none focus:ring-2 focus:ring-blue-600 dark:border-zinc-700 dark:bg-zinc-900"
-              placeholder="Optional short pitch about the campaign"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-            />
-          </label>
+          <MarkdownEditor
+            value={description}
+            onChange={setDescription}
+            label="Description"
+            placeholder="Optional short pitch about the campaign (markdown supported)"
+          />
+
           <label className="grid gap-1">
             <span className="text-sm">Cover image URL (optional)</span>
             <input
@@ -68,10 +72,19 @@ export default function CreateCampaignModal({ open, onClose, onCreate }: Props) 
         </div>
 
         <div className="mt-5 flex items-center justify-end gap-2">
-          <button onClick={onClose} className="rounded border px-3 py-1.5 hover:bg-zinc-50 dark:hover:bg-zinc-800" type="button">
+          <button
+            onClick={onClose}
+            className="rounded border px-3 py-1.5 hover:bg-zinc-50 dark:hover:bg-zinc-800"
+            type="button"
+          >
             Cancel
           </button>
-          <button onClick={submit} disabled={saving || !name.trim()} className="rounded bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700" type="button">
+          <button
+            onClick={submit}
+            disabled={saving || !name.trim()}
+            className="rounded bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700 disabled:opacity-70"
+            type="button"
+          >
             {saving ? "Creating..." : "Create"}
           </button>
         </div>

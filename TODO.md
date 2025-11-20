@@ -61,7 +61,7 @@ Objetivo: GraphView / Timeline estáveis, usáveis e com interação sólida.
    - Criar entidade via backend.
    - Adicionar ao `graphData` e `nodePositions` de forma suave (sem quebrar layout atual).
 
-6. [ ] **Customize / cores por tipo (nodes & relações)**
+6. [x] **Customize / cores por tipo (nodes & relações)**
 
    - Criar painel `Customize` ou uma aba dentro de `Display`:
      1. **Cores de node por tipo (E/C/L/O)**:

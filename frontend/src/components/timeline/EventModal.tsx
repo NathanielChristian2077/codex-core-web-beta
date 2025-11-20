@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { MarkdownEditor } from "../../components/markdown/MarkdownEditor";
 import Spinner from "../../components/ui/Spinner";
 import { useToast } from "../../components/ui/ToastProvider";
 import {
@@ -98,12 +99,12 @@ export default function EventModal({
             />
           </label>
 
-          <label className="grid gap-1">
-            <span className="text-sm">Description</span>
-            <textarea
-              className="min-h-[96px] rounded-md border border-zinc-300 bg-white px-3 py-2 outline-none focus:ring-2 focus:ring-blue-600 dark:border-zinc-700 dark:bg-zinc-900"
+          <div className="grid gap-1">
+            <MarkdownEditor
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              onChange={setDescription}
+              label="Description"
+              placeholder="Event description with markdown and internal links..."
             />
             <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
               Use tokens like{" "}
@@ -124,7 +125,7 @@ export default function EventModal({
               </code>{" "}
               to create links between entities.
             </p>
-          </label>
+          </div>
         </div>
 
         <div className="mt-5 flex justify-end gap-2">

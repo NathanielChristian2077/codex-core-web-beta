@@ -5,6 +5,7 @@ import {
   getCampaign,
   updateCampaign,
 } from "../../features/campaigns/api";
+import { MarkdownEditor } from "../markdown/MarkdownEditor";
 import Spinner from "../ui/Spinner";
 import { useToast } from "../ui/ToastProvider";
 
@@ -52,7 +53,10 @@ export default function ManageCampaignModal({
     if (!campaignId) return;
     try {
       setSaving(true);
-      await updateCampaign(campaignId, { name: name.trim(), description: description.trim() || null });
+      await updateCampaign(campaignId, {
+        name: name.trim(),
+        description: description.trim() || null,
+      });
       toast.show("Campaign updated", "success");
       onUpdated?.();
       onClose();
@@ -95,9 +99,13 @@ export default function ManageCampaignModal({
     if (!campaignId) return;
     try {
       const camp = await getCampaign(campaignId);
-      const events = await (await import("../../features/campaigns/api")).listCampaignEvents(campaignId);
+      const events = await (
+        await import("../../features/campaigns/api")
+      ).listCampaignEvents(campaignId);
       const payload = { campaign: camp, events };
-      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+      const blob = new Blob([JSON.stringify(payload, null, 2)], {
+        type: "application/json",
+      });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -111,11 +119,21 @@ export default function ManageCampaignModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4" role="dialog" aria-modal="true">
+    <div
+      className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4"
+      role="dialog"
+      aria-modal="true"
+    >
       <div className="w-full max-w-xl rounded-xl border bg-white p-6 shadow-xl dark:border-zinc-800 dark:bg-zinc-900">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-lg font-semibold">Manage campaign</h2>
-          <button onClick={onClose} className="rounded p-1 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800" aria-label="Close">✕</button>
+          <button
+            onClick={onClose}
+            className="rounded p-1 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+            aria-label="Close"
+          >
+            ✕
+          </button>
         </div>
 
         {loading ? (
@@ -134,34 +152,54 @@ export default function ManageCampaignModal({
                 />
               </label>
 
-              <label className="grid gap-1">
-                <span className="text-sm">Description</span>
-                <textarea
-                  className="min-h-[96px] rounded-md border border-zinc-300 bg-white px-3 py-2 outline-none focus:ring-2 focus:ring-blue-600 dark:border-zinc-700 dark:bg-zinc-900"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                />
-              </label>
+              <MarkdownEditor
+                value={description}
+                onChange={setDescription}
+                label="Description"
+                placeholder="Campaign description (markdown supported)"
+              />
             </div>
 
             <div className="mt-5 flex items-center justify-between">
               <div className="flex gap-2">
-                <button onClick={handleExportJSON} className="rounded border px-3 py-1.5 text-sm hover:bg-zinc-50 dark:hover:bg-zinc-800" type="button">
+                <button
+                  onClick={handleExportJSON}
+                  className="rounded border px-3 py-1.5 text-sm hover:bg-zinc-50 dark:hover:bg-zinc-800"
+                  type="button"
+                >
                   Export JSON
                 </button>
-                <button onClick={handleDuplicate} disabled={dupLoading} className="rounded border px-3 py-1.5 text-sm hover:bg-zinc-50 disabled:opacity-70 dark:hover:bg-zinc-800" type="button">
+                <button
+                  onClick={handleDuplicate}
+                  disabled={dupLoading}
+                  className="rounded border px-3 py-1.5 text-sm hover:bg-zinc-50 disabled:opacity-70 dark:hover:bg-zinc-800"
+                  type="button"
+                >
                   {dupLoading ? "Duplicating..." : "Duplicate"}
                 </button>
               </div>
 
               <div className="flex gap-2">
-                <button onClick={onClose} className="rounded border px-3 py-1.5 hover:bg-zinc-50 dark:hover:bg-zinc-800" type="button">
+                <button
+                  onClick={onClose}
+                  className="rounded border px-3 py-1.5 hover:bg-zinc-50 dark:hover:bg-zinc-800"
+                  type="button"
+                >
                   Cancel
                 </button>
-                <button onClick={handleSave} disabled={saving} className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:opacity-70" type="button">
+                <button
+                  onClick={handleSave}
+                  disabled={saving}
+                  className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:opacity-70"
+                  type="button"
+                >
                   {saving ? "Saving..." : "Save changes"}
                 </button>
-                <button onClick={handleDelete} className="rounded border border-red-500 px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/20" type="button">
+                <button
+                  onClick={handleDelete}
+                  className="rounded border border-red-500 px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/20"
+                  type="button"
+                >
                   Delete
                 </button>
               </div>

@@ -1,5 +1,6 @@
 import React from "react";
 import type { GraphNode } from "../../../features/graphs/types";
+import { MarkdownRenderer } from "../../markdown/MarkdownRenderer";
 
 type NodeViewPanelProps = {
   node: GraphNode;
@@ -38,7 +39,8 @@ export const NodeViewPanel: React.FC<NodeViewPanelProps> = ({ node, onClose }) =
 
       {relationCount != null && (
         <p className="text-[10px] text-slate-400">
-          Relations: <span className="font-medium text-slate-200">{relationCount}</span>
+          Relations:{" "}
+          <span className="font-medium text-slate-200">{relationCount}</span>
         </p>
       )}
 
@@ -46,10 +48,14 @@ export const NodeViewPanel: React.FC<NodeViewPanelProps> = ({ node, onClose }) =
         <p className="mb-1 text-[10px] font-medium text-slate-300">
           Description
         </p>
-        {node.description && node.description.trim().length > 0 ? (
-          <p className="whitespace-pre-line text-[11px] text-slate-100/90">
-            {node.description}
-          </p>
+
+        {hasDescription ? (
+          <div className="max-h-64 overflow-y-auto text-[11px]">
+            <MarkdownRenderer
+              content={node.description as string}
+              className="prose prose-xs prose-invert max-w-none"
+            />
+          </div>
         ) : (
           <p className="text-[10px] italic text-slate-500">
             No description yet.

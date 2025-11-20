@@ -1,8 +1,8 @@
-// components/graph/NodeEditPanel.tsx
 import React from "react";
 import { nodeEditAdapters } from "../../../features/graphs/core/NodeEditAdapters";
 import { useGraph } from "../../../features/graphs/GraphContext";
 import type { GraphNodeType } from "../../../features/graphs/types";
+import { MarkdownEditor } from "../../markdown/MarkdownEditor";
 
 export const NodeEditPanel: React.FC = () => {
   const {
@@ -17,7 +17,8 @@ export const NodeEditPanel: React.FC = () => {
   const [title, setTitle] = React.useState("");
   const [description, setDescription] = React.useState("");
   const [initialTitle, setInitialTitle] = React.useState<string>("");
-  const [initialDescription, setInitialDescription] = React.useState<string>("");
+  const [initialDescription, setInitialDescription] =
+    React.useState<string>("");
   const [saving, setSaving] = React.useState(false);
   const [deleting, setDeleting] = React.useState(false);
 
@@ -161,42 +162,14 @@ export const NodeEditPanel: React.FC = () => {
         </div>
 
         <div>
-          <label className="mb-1 block text-[10px] font-medium text-slate-300">
-            Description
-          </label>
-          <textarea
-            className="h-24 w-full resize-none rounded border border-slate-700 bg-slate-900/70 px-2 py-1 text-[11px] text-slate-100 outline-none focus:border-slate-400"
+          <MarkdownEditor
             value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="Add a description for this node..."
+            onChange={setDescription}
+            label="Description"
+            placeholder="Add a description using markdown..."
+            className="space-y-1"
+            tone="dark"
           />
-        </div>
-      </div>
-
-      <div className="mt-3 flex items-center justify-between">
-        <button
-          className="rounded border border-red-500 px-3 py-1 text-[11px] text-red-300 hover:bg-red-500/10 disabled:opacity-60"
-          onClick={handleDelete}
-          disabled={deleting || saving}
-        >
-          {deleting ? "Deleting..." : "Delete"}
-        </button>
-
-        <div className="space-x-2">
-          <button
-            className="rounded border border-slate-600 px-3 py-1 text-[11px] text-slate-200 hover:bg-slate-700/60 disabled:opacity-60"
-            onClick={handleClose}
-            disabled={saving}
-          >
-            Cancel
-          </button>
-          <button
-            className="rounded bg-emerald-600 px-3 py-1 text-[11px] text-white hover:bg-emerald-500 disabled:opacity-60"
-            onClick={handleSave}
-            disabled={saving || deleting}
-          >
-            {saving ? "Saving..." : "Save"}
-          </button>
         </div>
       </div>
     </div>
