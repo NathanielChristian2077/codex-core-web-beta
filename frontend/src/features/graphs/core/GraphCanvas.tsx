@@ -1,5 +1,5 @@
 import type { Simulation } from "d3-force";
-import React from "react";
+import React, { useCallback } from "react";
 
 import { useGraphInteractions } from "../../../components/graph/hooks/useGraphInteractions";
 import { useZoomAndPan } from "../../../components/graph/hooks/useZoomAndPan";
@@ -7,6 +7,16 @@ import { useZoomAndPan } from "../../../components/graph/hooks/useZoomAndPan";
 import { GraphEdges } from "./GraphEdges";
 import { GraphNodes } from "./GraphNodes";
 import type { SimLink, SimNode } from "./SimulationManager";
+
+const WIDTH = 1600;
+const HEIGHT = 900;
+
+type BackgroundContextMenuPayload = {
+  screenX: number;
+  screenY: number;
+  worldX: number;
+  worldY: number;
+};
 
 type Props = {
   nodes: SimNode[];
@@ -26,6 +36,9 @@ type Props = {
   setEditingNodeId: (id: string | null) => void;
   simulationRef: React.RefObject<Simulation<SimNode, SimLink> | null>;
   autoZoomOnClick: boolean;
+
+  /** callback para clique direito no "vazio" do grafo */
+  onBackgroundContextMenu?: (payload: BackgroundContextMenuPayload) => void;
 };
 
 export const GraphCanvas: React.FC<Props> = ({
@@ -43,6 +56,7 @@ export const GraphCanvas: React.FC<Props> = ({
   setEditingNodeId,
   simulationRef,
   autoZoomOnClick,
+  onBackgroundContextMenu,
 }) => {
   const {
     camera,
@@ -73,6 +87,41 @@ export const GraphCanvas: React.FC<Props> = ({
     focusOnWorldPoint,
   });
 
+  const handleSvgContextMenu = useCallback(
+    (event: React.MouseEvent<SVGSVGElement>) => {
+      // sempre matar o menu padrão
+      event.preventDefault();
+
+      if (!onBackgroundContextMenu) return;
+
+      const container = containerRef.current;
+      const svg = svgRef.current;
+      if (!container || !svg) return;
+
+      // coordenadas locais dentro do container do grafo
+      const containerRect = container.getBoundingClientRect();
+      const localX = event.clientX - containerRect.left;
+      const localY = event.clientY - containerRect.top;
+
+      // converter para coords "SVG space"
+      const svgRect = svg.getBoundingClientRect();
+      const sx = ((event.clientX - svgRect.left) / svgRect.width) * WIDTH;
+      const sy = ((event.clientY - svgRect.top) / svgRect.height) * HEIGHT;
+
+      // converter para "world space" (após câmera)
+      const worldX = (sx - camera.x) / camera.scale;
+      const worldY = (sy - camera.y) / camera.scale;
+
+      onBackgroundContextMenu({
+        screenX: localX,
+        screenY: localY,
+        worldX,
+        worldY,
+      });
+    },
+    [onBackgroundContextMenu, containerRef, svgRef, camera]
+  );
+
   return (
     <div
       ref={containerRef}
@@ -89,6 +138,7 @@ export const GraphCanvas: React.FC<Props> = ({
         onPointerMove={handleSvgPointerMove}
         onPointerUp={handleSvgPointerUp}
         onPointerLeave={handleSvgPointerUp}
+        onContextMenu={handleSvgContextMenu}
       >
         <defs>
           <marker
@@ -135,3 +185,5 @@ export const GraphCanvas: React.FC<Props> = ({
     </div>
   );
 };
+
+export default GraphCanvas;

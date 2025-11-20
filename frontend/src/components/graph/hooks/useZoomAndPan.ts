@@ -5,9 +5,9 @@ const WIDTH = 1600;
 const HEIGHT = 900;
 
 type Camera = {
-  x: number; // world offset X
-  y: number; // world offset Y
-  scale: number; // zoom level
+  x: number;
+  y: number;
+  scale: number;
 };
 
 type PanState = {
@@ -79,22 +79,25 @@ export function useZoomAndPan() {
     animationStateRef.current = null;
   }, []);
 
-  // screen → SVG coords (0..WIDTH, 0..HEIGHT)
-  const getSvgCoords = useCallback((event: React.PointerEvent<Element>) => {
-    const svg = svgRef.current;
-    if (!svg) return null;
+  // screen -> svg coords (0..WIDTH, 0..HEIGHT)
+  const getSvgCoordsFromClient = useCallback(
+    (clientX: number, clientY: number) => {
+      const svg = svgRef.current;
+      if (!svg) return null;
 
-    const rect = svg.getBoundingClientRect();
-    const sx = ((event.clientX - rect.left) / rect.width) * WIDTH;
-    const sy = ((event.clientY - rect.top) / rect.height) * HEIGHT;
+      const rect = svg.getBoundingClientRect();
+      const sx = ((clientX - rect.left) / rect.width) * WIDTH;
+      const sy = ((clientY - rect.top) / rect.height) * HEIGHT;
 
-    return { sx, sy };
-  }, []);
+      return { sx, sy };
+    },
+    []
+  );
 
-  // screen → world coords
-  const getWorldPointFromPointer = useCallback(
-    (event: React.PointerEvent<Element>) => {
-      const coords = getSvgCoords(event);
+  // clientX/clientY → world coords
+  const getWorldPointFromClient = useCallback(
+    (clientX: number, clientY: number) => {
+      const coords = getSvgCoordsFromClient(clientX, clientY);
       if (!coords) return null;
 
       const { sx, sy } = coords;
@@ -104,7 +107,15 @@ export function useZoomAndPan() {
         y: (sy - camera.y) / camera.scale,
       };
     },
-    [camera, getSvgCoords]
+    [camera, getSvgCoordsFromClient]
+  );
+
+  // PointerEvent → world coords (backwards compatible)
+  const getWorldPointFromPointer = useCallback(
+    (event: React.PointerEvent<Element>) => {
+      return getWorldPointFromClient(event.clientX, event.clientY);
+    },
+    [getWorldPointFromClient]
   );
 
   const handleSvgPointerDown = useCallback(
@@ -127,7 +138,7 @@ export function useZoomAndPan() {
 
       event.currentTarget.setPointerCapture(event.pointerId);
     },
-    [camera]
+    [camera, stopCameraAnimation]
   );
 
   const handleSvgPointerMove = useCallback(
@@ -163,20 +174,18 @@ export function useZoomAndPan() {
 
   const focusOnWorldPoint = useCallback(
     (worldX: number, worldY: number, _opts?: { scale?: number }) => {
-      // cancela qualquer animação anterior
       stopCameraAnimation();
 
       const start: Camera = camera;
 
-      // zoom máximo
-      const targetScale = 3; // ou clampScale(999) se quiser ser dramático
+      const targetScale = 3;
       const target: Camera = {
         scale: targetScale,
         x: WIDTH / 2 - worldX * targetScale,
         y: HEIGHT / 2 - worldY * targetScale,
       };
 
-      const duration = 600; // ms
+      const duration = 600;
 
       animationStateRef.current = {
         start,
@@ -193,7 +202,6 @@ export function useZoomAndPan() {
         const tRaw = elapsed / state.duration;
         const t = tRaw >= 1 ? 1 : tRaw;
 
-        // easing: easeOutCubic
         const eased = 1 - Math.pow(1 - t, 3);
 
         setCamera({
@@ -250,6 +258,7 @@ export function useZoomAndPan() {
     handleSvgPointerMove,
     handleSvgPointerUp,
     getWorldPointFromPointer,
+    getWorldPointFromClient,
     focusOnWorldPoint,
   };
 }

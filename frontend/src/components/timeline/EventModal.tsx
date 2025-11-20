@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
 import Spinner from "../../components/ui/Spinner";
 import { useToast } from "../../components/ui/ToastProvider";
-import { createCampaignEvent, updateEvent } from "../../features/campaigns/api";
+import {
+  createCampaignEvent,
+  updateEvent,
+} from "../../features/campaigns/api";
 import type { EventItem } from "../../features/campaigns/types";
 
 type Props = {
@@ -10,9 +13,17 @@ type Props = {
   campaignId: string;
   editing?: EventItem | null;
   onSaved?: () => void;
+  onCreated?: (event: EventItem) => void;
 };
 
-export default function EventModal({ open, onClose, campaignId, editing, onSaved }: Props) {
+export default function EventModal({
+  open,
+  onClose,
+  campaignId,
+  editing,
+  onSaved,
+  onCreated,
+}: Props) {
   const t = useToast();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -37,12 +48,17 @@ export default function EventModal({ open, onClose, campaignId, editing, onSaved
       if (editing?.id) {
         await updateEvent(editing.id, { title, description });
         t.show("Event updated", "success");
+        onSaved?.();
       } else {
-        await createCampaignEvent(campaignId, { title, description });
+        const created = await createCampaignEvent(campaignId, {
+          title,
+          description,
+        });
         t.show("Event created", "success");
+        onSaved?.();
+        onCreated?.(created);
       }
 
-      onSaved?.();
       onClose();
     } catch {
       t.show("Failed to save event", "error");
@@ -52,7 +68,11 @@ export default function EventModal({ open, onClose, campaignId, editing, onSaved
   }
 
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4" role="dialog" aria-modal="true">
+    <div
+      className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4"
+      role="dialog"
+      aria-modal="true"
+    >
       <div className="w-full max-w-xl rounded-xl border bg-white p-6 shadow-xl dark:border-zinc-800 dark:bg-zinc-900">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-lg font-semibold">

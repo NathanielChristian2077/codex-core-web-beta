@@ -1,3 +1,12 @@
+import { CalendarDays, MapPin, Package2, User } from "lucide-react";
+import { AnimatePresence } from "motion/react";
+import {
+  RadialMenuOverlay,
+  type MenuItem as RadialMenuItem,
+} from "../../components/ui/radial-menu";
+import { useCurrentCampaign } from "../../store/useCurrentCampaign";
+import { useSession } from "../../store/useSession";
+
 import type { Simulation } from "d3-force";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
@@ -14,9 +23,43 @@ import { GraphLayoutMode } from "../../components/graph/helpers/graphLayout";
 import { GraphSidePanels } from "../../components/graph/ui/GraphSidePanels";
 import { GraphCanvas } from "./core/GraphCanvas";
 
+import { getCampaignGraph } from "../campaigns/api";
+import { adaptCampaignGraphResponse } from "./adapters";
+
+import EntityModal from "../../components/entity/EntityModal";
+import EventModal from "../../components/timeline/EventModal";
+
+import { createCharacter } from "../characters/api";
+import { createLocation } from "../locations/api";
+import { createObject } from "../objects/api";
+
 const WIDTH = 1600;
 const HEIGHT = 900;
 const MAX_HIGHLIGHT_DEPTH = 3;
+
+type TimelinePositions = Record<string, { x: number; y: number }>;
+
+const GRAPH_MENU_ITEMS: RadialMenuItem[] = [
+  { id: 1, label: "Create event", icon: CalendarDays },
+  { id: 2, label: "Create character", icon: User },
+  { id: 3, label: "Create location", icon: MapPin },
+  { id: 4, label: "Create object", icon: Package2 },
+];
+
+type GraphBackgroundAction = "event" | "character" | "location" | "object";
+
+const ACTION_BY_ID: Record<number, GraphBackgroundAction> = {
+  1: "event",
+  2: "character",
+  3: "location",
+  4: "object",
+};
+
+type CreateContext = {
+  kind: GraphBackgroundAction;
+  worldX: number;
+  worldY: number;
+};
 
 function pseudo(id: string): number {
   let h = 0;
@@ -26,11 +69,10 @@ function pseudo(id: string): number {
   return Math.abs(h);
 }
 
-type TimelinePositions = Record<string, { x: number; y: number }>;
-
 export const GraphVisualization: React.FC = () => {
   const {
     graphData,
+    setGraphDataFromOutside,
     filters,
     displaySettings,
     physicsSettings,
@@ -56,6 +98,26 @@ export const GraphVisualization: React.FC = () => {
   const lastRenderRef = useRef<number>(0);
 
   const [distanceById, setDistanceById] = useState<Record<string, number>>({});
+
+  const { isLogged } = useSession();
+  const { currentCampaignId } = useCurrentCampaign();
+  const canEditGraph = isLogged && !!currentCampaignId;
+
+  const [backgroundContextMenu, setBackgroundContextMenu] = useState<{
+    screenX: number;
+    screenY: number;
+    worldX: number;
+    worldY: number;
+  } | null>(null);
+
+  const [noPermissionTooltip, setNoPermissionTooltip] = useState<{
+    screenX: number;
+    screenY: number;
+  } | null>(null);
+
+  const [createContext, setCreateContext] = useState<CreateContext | null>(
+    null
+  );
 
   const { visibleNodes, visibleLinks } = useMemo(() => {
     if (!graphData) {
@@ -120,6 +182,43 @@ export const GraphVisualization: React.FC = () => {
 
     return positions;
   }, [viewMode, visibleNodes]);
+
+  function handleGraphBackgroundAction(
+    action: GraphBackgroundAction,
+    ctx: { worldX: number; worldY: number }
+  ) {
+    if (!currentCampaignId) {
+      setBackgroundContextMenu(null);
+      return;
+    }
+
+    setCreateContext({
+      kind: action,
+      worldX: ctx.worldX,
+      worldY: ctx.worldY,
+    });
+
+    setBackgroundContextMenu(null);
+  }
+
+  async function handleEntityCreated(entityId: string) {
+    if (!currentCampaignId || !createContext) return;
+
+    try {
+      const raw = await getCampaignGraph(currentCampaignId);
+      const adapted = adaptCampaignGraphResponse(raw);
+      setGraphDataFromOutside(adapted);
+
+      const { worldX, worldY } = createContext;
+      const mergedPositions = {
+        ...nodePositions,
+        [entityId]: { x: worldX, y: worldY },
+      };
+      setNodePositions(mergedPositions);
+    } finally {
+      setCreateContext(null);
+    }
+  }
 
   useEffect(() => {
     if (!visibleNodes.length) {
@@ -277,9 +376,18 @@ export const GraphVisualization: React.FC = () => {
     );
   }
 
+  const entityNameByKind: Record<
+    Exclude<GraphBackgroundAction, "event">,
+    string
+  > = {
+    character: "Character",
+    location: "Location",
+    object: "Object",
+  };
+
   return (
     <div className="relative h-full w-full">
-      {/* grafo embaixo */}
+      {/* graph underneath */}
       <div className="h-full w-full">
         <GraphCanvas
           nodes={simNodes}
@@ -296,13 +404,123 @@ export const GraphVisualization: React.FC = () => {
           setEditingNodeId={setEditingNodeId}
           simulationRef={simulationRef}
           autoZoomOnClick={displaySettings.autoZoomOnClick}
+          onBackgroundContextMenu={({ screenX, screenY, worldX, worldY }) => {
+            if (!canEditGraph) {
+              setBackgroundContextMenu(null);
+              setNoPermissionTooltip({ screenX, screenY });
+              window.setTimeout(() => setNoPermissionTooltip(null), 2000);
+              return;
+            }
+
+            setNoPermissionTooltip(null);
+            setBackgroundContextMenu({ screenX, screenY, worldX, worldY });
+          }}
         />
       </div>
 
-      {/* painel sobreposto à direita */}
+      {/* right side panels */}
       <div className="pointer-events-none absolute inset-0 flex justify-end">
         <GraphSidePanels />
       </div>
+
+      {/* radial context menu on background right-click */}
+      <AnimatePresence>
+        {backgroundContextMenu && canEditGraph && (
+          <div className="absolute inset-0 pointer-events-none">
+            <div
+              className="pointer-events-auto absolute -translate-x-1/2 -translate-y-1/2"
+              style={{
+                left: backgroundContextMenu.screenX,
+                top: backgroundContextMenu.screenY,
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <RadialMenuOverlay
+                menuItems={GRAPH_MENU_ITEMS}
+                onSelect={(item) => {
+                  if (item.id === -1) {
+                    setBackgroundContextMenu(null);
+                    return;
+                  }
+
+                  const action = ACTION_BY_ID[item.id];
+                  if (!action) return;
+                  handleGraphBackgroundAction(action, backgroundContextMenu);
+                }}
+              />
+            </div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* no-permission tooltip */}
+      {noPermissionTooltip && !canEditGraph && (
+        <div className="absolute inset-0 pointer-events-none">
+          <div
+            className="pointer-events-none absolute -translate-x-1/2 -translate-y-full rounded-md bg-zinc-900 px-3 py-1 text-xs text-white shadow-lg"
+            style={{
+              left: noPermissionTooltip.screenX,
+              top: noPermissionTooltip.screenY,
+            }}
+          >
+            You are not allowed to edit this graph.
+          </div>
+        </div>
+      )}
+
+      {/* Event creation modal (custom) */}
+      {createContext && currentCampaignId && createContext.kind === "event" && (
+        <EventModal
+          open
+          onClose={() => setCreateContext(null)}
+          campaignId={currentCampaignId}
+          editing={null}
+          onSaved={undefined}
+          onCreated={(ev) => handleEntityCreated(ev.id)}
+        />
+      )}
+
+      {/* Generic EntityModal for character / location / object */}
+      {createContext && currentCampaignId && createContext.kind !== "event" && (
+        <EntityModal
+          open
+          onClose={() => setCreateContext(null)}
+          entityName={entityNameByKind[createContext.kind]}
+          editing={null}
+          onSave={async (payload) => {
+            if (!currentCampaignId) return;
+
+            switch (createContext.kind) {
+              case "character": {
+                const created = await createCharacter(currentCampaignId, {
+                  name: payload.name,
+                  description: payload.description ?? null,
+                });
+                await handleEntityCreated(created.id);
+                break;
+              }
+              case "location": {
+                const created = await createLocation(currentCampaignId, {
+                  name: payload.name,
+                  description: payload.description ?? null,
+                });
+                await handleEntityCreated(created.id);
+                break;
+              }
+              case "object": {
+                const created = await createObject(currentCampaignId, {
+                  name: payload.name,
+                  description: payload.description ?? null,
+                });
+                await handleEntityCreated(created.id);
+                break;
+              }
+              default:
+                break;
+            }
+          }}
+        />
+      )}
     </div>
   );
 };
