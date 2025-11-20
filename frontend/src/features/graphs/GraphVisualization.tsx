@@ -85,6 +85,7 @@ export const GraphVisualization: React.FC = () => {
     viewMode,
     editingNodeId,
     setEditingNodeId,
+    graphStyle,
   } = useGraph();
 
   const [simNodes, setSimNodes] = useState<SimNode[]>([]);
@@ -404,6 +405,7 @@ export const GraphVisualization: React.FC = () => {
           setEditingNodeId={setEditingNodeId}
           simulationRef={simulationRef}
           autoZoomOnClick={displaySettings.autoZoomOnClick}
+          backgroundColor={graphStyle.background}
           onBackgroundContextMenu={({ screenX, screenY, worldX, worldY }) => {
             if (!canEditGraph) {
               setBackgroundContextMenu(null);

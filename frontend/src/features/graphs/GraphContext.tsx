@@ -33,6 +33,24 @@ type PhysicsSettingsState = {
 
 type NodePositions = Record<string, { x: number; y: number }>;
 
+/** Per-node-type color config */
+type NodeColorConfig = {
+  fill: string;
+  stroke: string;
+};
+
+/** Per-relation-type color config */
+type EdgeColorConfig = {
+  stroke: string;
+};
+
+/** Full style config for the graph */
+export type GraphStyleConfig = {
+  nodes: Record<GraphNodeType, NodeColorConfig>;
+  edges: Record<string, EdgeColorConfig>;
+  background: string;
+};
+
 export type GraphContextValue = {
   graphData: GraphData | null;
   setGraphDataFromOutside: (data: GraphData | null) => void;
@@ -50,6 +68,10 @@ export type GraphContextValue = {
   setDisplaySettings: React.Dispatch<
     React.SetStateAction<DisplaySettingsState>
   >;
+
+  /** per-type color customization for nodes & links */
+  graphStyle: GraphStyleConfig;
+  setGraphStyle: React.Dispatch<React.SetStateAction<GraphStyleConfig>>;
 
   /** physics configuration for d3-force */
   physicsSettings: PhysicsSettingsState;
@@ -100,11 +122,39 @@ const defaultPhysicsSettings: PhysicsSettingsState = {
   collisionRadius: 18,
 };
 
+/** Default style (mirroring the old hardcoded palette) */
+export const DEFAULT_GRAPH_STYLE: GraphStyleConfig = {
+  nodes: {
+    EVENT: {
+      fill: "#0ea5e9",
+      stroke: "#0ea5e9",
+    },
+    CHARACTER: {
+      fill: "#22c55e",
+      stroke: "#22c55e",
+    },
+    LOCATION: {
+      fill: "#f97316",
+      stroke: "#f97316",
+    },
+    OBJECT: {
+      fill: "#ec4899",
+      stroke: "#ec4899",
+    },
+  },
+  edges: {},
+  background: "#020617",
+};
+
+export const createDefaultGraphStyle = (): GraphStyleConfig =>
+  JSON.parse(JSON.stringify(DEFAULT_GRAPH_STYLE));
+
 const GraphContext = createContext<GraphContextValue | undefined>(undefined);
 
 type GraphProviderProps = {
   initialData: GraphData | null;
   storageKey?: string;
+  styleStorageKey?: string;
   children: ReactNode;
 };
 
@@ -122,9 +172,26 @@ function loadNodePositionsFromStorage(storageKey?: string): NodePositions {
   }
 }
 
+/** Safely load saved graph style from localStorage */
+function loadGraphStyleFromStorage(
+  styleStorageKey?: string
+): GraphStyleConfig | null {
+  if (!styleStorageKey) return null;
+  try {
+    const raw = localStorage.getItem(styleStorageKey);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object") return null;
+    return parsed as GraphStyleConfig;
+  } catch {
+    return null;
+  }
+}
+
 export const GraphProvider: React.FC<GraphProviderProps> = ({
   initialData,
   storageKey,
+  styleStorageKey,
   children,
 }) => {
   /** core graph data */
@@ -137,12 +204,20 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
   const [filters, setFilters] = useState<FiltersState>(defaultFilters);
 
   /** display settings (visual only) */
-  const [displaySettings, setDisplaySettings] =
-    useState<DisplaySettingsState>(defaultDisplaySettings);
+  const [displaySettings, setDisplaySettings] = useState<DisplaySettingsState>(
+    defaultDisplaySettings
+  );
+
+  /** per-type graph styling (nodes & edges) */
+  const [graphStyle, setGraphStyle] = useState<GraphStyleConfig>(() => {
+    const loaded = loadGraphStyleFromStorage(styleStorageKey);
+    return loaded ?? createDefaultGraphStyle();
+  });
 
   /** physics forces for d3-force */
-  const [physicsSettings, setPhysicsSettings] =
-    useState<PhysicsSettingsState>(defaultPhysicsSettings);
+  const [physicsSettings, setPhysicsSettings] = useState<PhysicsSettingsState>(
+    defaultPhysicsSettings
+  );
 
   /** currently double-click selected node */
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
@@ -166,6 +241,22 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
     const loaded = loadNodePositionsFromStorage(storageKey);
     setNodePositionsState(loaded);
   }, [initialData, storageKey]);
+
+  /** reload style when style storage key changes (campaign switch) */
+  useEffect(() => {
+    const loaded = loadGraphStyleFromStorage(styleStorageKey);
+    setGraphStyle(loaded ?? createDefaultGraphStyle());
+  }, [styleStorageKey]);
+
+  /** persist style to localStorage whenever it changes */
+  useEffect(() => {
+    if (!styleStorageKey) return;
+    try {
+      localStorage.setItem(styleStorageKey, JSON.stringify(graphStyle));
+    } catch {
+      // ignore write errors
+    }
+  }, [graphStyle, styleStorageKey]);
 
   /** setter that also persists to localStorage */
   const setNodePositions = (positions: NodePositions) => {
@@ -192,6 +283,9 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
 
       displaySettings,
       setDisplaySettings,
+
+      graphStyle,
+      setGraphStyle,
 
       physicsSettings,
       setPhysicsSettings,

@@ -1,5 +1,9 @@
 import React from "react";
-import { getLinkStroke, isEventToEvent } from "../../../components/graph/helpers/link";
+import {
+  getLinkStroke,
+  isEventToEvent,
+} from "../../../components/graph/helpers/link";
+import { useGraph } from "../GraphContext";
 import { getRelationMeta } from "../relations";
 import type { SimLink } from "./SimulationManager";
 
@@ -44,13 +48,15 @@ export const GraphEdges: React.FC<Props> = ({
   edgeWidth,
   showArrows,
   focusNodeId,
-  distanceById
+  distanceById,
 }) => {
+  const { graphStyle } = useGraph();
+
   if (!links.length) return null;
 
   return (
     <g>
-      {links.map(link => {
+      {links.map((link) => {
         const source = link.source;
         const target = link.target;
 
@@ -64,7 +70,10 @@ export const GraphEdges: React.FC<Props> = ({
         }
 
         const opacity = getLinkOpacity(link, focusNodeId, distanceById);
-        const stroke = getLinkStroke(link.type);
+
+        const customEdge = graphStyle.edges[link.type];
+        const stroke = customEdge?.stroke ?? getLinkStroke(link.type);
+
         const meta = getRelationMeta(link.type);
 
         const arrow =

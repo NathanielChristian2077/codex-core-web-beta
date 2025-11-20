@@ -4,7 +4,12 @@ import { useParams } from "react-router-dom";
 
 import { getCampaign } from "../features/campaigns/api";
 
-import { GraphProvider, useGraph } from "../features/graphs/GraphContext";
+import { getLinkStroke } from "../components/graph/helpers/link";
+import {
+  createDefaultGraphStyle,
+  GraphProvider,
+  useGraph,
+} from "../features/graphs/GraphContext";
 import GraphVisualization from "../features/graphs/GraphVisualization";
 import { loadGraphDataWithDescriptions } from "../features/graphs/loadGraphWithDescriptions";
 import type { GraphData } from "../features/graphs/types";
@@ -26,6 +31,8 @@ const GraphPageContent: React.FC<GraphPageContentProps> = ({
     setDisplaySettings,
     physicsSettings,
     setPhysicsSettings,
+    graphStyle,
+    setGraphStyle,
   } = useGraph();
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -51,6 +58,30 @@ const GraphPageContent: React.FC<GraphPageContentProps> = ({
       ),
     }));
   }, [graphData, filters.relations, setFilters]);
+
+  React.useEffect(() => {
+    if (!graphData) return;
+
+    const relationsSet = new Set<string>();
+    graphData.links.forEach((l) => relationsSet.add(l.type));
+
+    setGraphStyle((prev) => {
+      const nextEdges = { ...prev.edges };
+      let changed = false;
+
+      relationsSet.forEach((rel) => {
+        if (!nextEdges[rel]) {
+          nextEdges[rel] = {
+            stroke: getLinkStroke(rel),
+          };
+          changed = true;
+        }
+      });
+
+      if (!changed) return prev;
+      return { ...prev, edges: nextEdges };
+    });
+  }, [graphData, setGraphStyle]);
 
   const viewButtonClasses = (mode: "graph" | "timeline") =>
     [
@@ -251,11 +282,12 @@ const GraphPageContent: React.FC<GraphPageContentProps> = ({
                 className="text-[10px] text-slate-500 hover:text-slate-300"
                 onClick={() => setDisplayOpen(false)}
               >
-                close
+                X
               </button>
             </div>
 
             <div className="flex flex-col gap-3">
+              {/* Existing controls */}
               <label className="flex items-center justify-between gap-2">
                 <span className="text-[11px] text-slate-300">
                   hide orphan nodes
@@ -333,6 +365,205 @@ const GraphPageContent: React.FC<GraphPageContentProps> = ({
                   }
                 />
               </label>
+
+              {/* color customization */}
+              <div className="mt-2 border-t border-slate-800 pt-2">
+                <div className="mb-2 flex items-center justify-between">
+                  <span className="text-[11px] font-semibold tracking-wide text-slate-300">
+                    Colors
+                  </span>
+                  <button
+                    type="button"
+                    className="text-[10px] text-slate-500 hover:text-slate-300"
+                    onClick={() =>
+                      setGraphStyle(() => createDefaultGraphStyle())
+                    }
+                  >
+                    reset
+                  </button>
+                </div>
+
+                {/* Background color */}
+                <div className="mb-3">
+                  <h3 className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+                    background
+                  </h3>
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <span
+                        className="inline-flex h-4 w-8 rounded border border-slate-700"
+                        style={{ backgroundColor: graphStyle.background }}
+                      />
+                      <span className="text-[11px] text-slate-300">canvas</span>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="color"
+                        className="h-6 w-6 cursor-pointer rounded-full border border-slate-700 bg-slate-900"
+                        value={graphStyle.background}
+                        onChange={(e) => {
+                          const color = e.target.value;
+                          setGraphStyle((prev) => ({
+                            ...prev,
+                            background: color,
+                          }));
+                        }}
+                      />
+
+                      <input
+                        type="text"
+                        className="h-6 w-24 rounded border border-slate-700 bg-slate-900 px-1 text-[10px] text-slate-100 outline-none focus:border-sky-500"
+                        value={graphStyle.background}
+                        onChange={(e) => {
+                          const color = e.target.value;
+                          setGraphStyle((prev) => ({
+                            ...prev,
+                            background: color,
+                          }));
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Node colors */}
+                <div className="mb-2">
+                  <h3 className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+                    node types
+                  </h3>
+                  <div className="flex flex-col gap-2">
+                    {(
+                      ["EVENT", "CHARACTER", "LOCATION", "OBJECT"] as const
+                    ).map((type) => {
+                      const cfg = graphStyle.nodes[type];
+                      if (!cfg) return null;
+
+                      return (
+                        <div
+                          key={type}
+                          className="flex items-center justify-between gap-2"
+                        >
+                          <div className="flex items-center gap-2">
+                            <span
+                              className="inline-flex h-4 w-4 items-center justify-center rounded-full border border-slate-600"
+                              style={{
+                                backgroundColor: cfg.fill,
+                              }}
+                            />
+                            <span className="text-[10px] uppercase text-slate-400">
+                              {type.toLowerCase()}
+                            </span>
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="color"
+                              className="h-6 w-6 cursor-pointer rounded-full border border-slate-700 bg-slate-900"
+                              value={cfg.stroke}
+                              onChange={(e) => {
+                                const color = e.target.value;
+                                setGraphStyle((prev) => ({
+                                  ...prev,
+                                  nodes: {
+                                    ...prev.nodes,
+                                    [type]: {
+                                      fill: color,
+                                      stroke: color,
+                                    },
+                                  },
+                                }));
+                              }}
+                            />
+
+                            <input
+                              type="text"
+                              className="h-6 w-24 rounded border border-slate-700 bg-slate-900 px-1 text-[10px] text-slate-100 outline-none focus:border-sky-500"
+                              value={cfg.stroke}
+                              onChange={(e) => {
+                                const color = e.target.value;
+                                setGraphStyle((prev) => ({
+                                  ...prev,
+                                  nodes: {
+                                    ...prev.nodes,
+                                    [type]: {
+                                      ...prev.nodes[type],
+                                      stroke: color,
+                                      fill: color,
+                                    },
+                                  },
+                                }));
+                              }}
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Edge colors */}
+                <div>
+                  <h3 className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+                    relation types
+                  </h3>
+                  {Object.keys(graphStyle.edges).length === 0 && (
+                    <span className="text-[11px] text-slate-500">
+                      no relation styles yet
+                    </span>
+                  )}
+                  <div className="flex max-h-32 flex-col gap-1 overflow-auto pr-1">
+                    {Object.entries(graphStyle.edges).map(([rel, cfg]) => (
+                      <div
+                        key={rel}
+                        className="flex items-center justify-between gap-2"
+                      >
+                        <span className="truncate text-[11px] text-slate-300">
+                          {rel}
+                        </span>
+
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="color"
+                            className="h-5 w-5 cursor-pointer rounded-full border border-slate-700 bg-slate-900"
+                            value={cfg.stroke}
+                            onChange={(e) => {
+                              const color = e.target.value;
+                              setGraphStyle((prev) => ({
+                                ...prev,
+                                edges: {
+                                  ...prev.edges,
+                                  [rel]: {
+                                    stroke: color,
+                                  },
+                                },
+                              }));
+                            }}
+                          />
+
+                          <input
+                            type="text"
+                            className="h-6 w-24 rounded border border-slate-700 bg-slate-900 px-1 text-[10px] text-slate-100 outline-none focus:border-sky-500"
+                            value={cfg.stroke}
+                            onChange={(e) => {
+                              const color = e.target.value;
+                              setGraphStyle((prev) => ({
+                                ...prev,
+                                edges: {
+                                  ...prev.edges,
+                                  [rel]: {
+                                    stroke: color,
+                                  },
+                                },
+                              }));
+                            }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         )}
@@ -555,6 +786,9 @@ export const GraphPage: React.FC = () => {
       initialData={graphData}
       storageKey={
         campaignId ? `campaign:${campaignId}:graph-positions` : undefined
+      }
+      styleStorageKey={
+        campaignId ? `campaign:${campaignId}:graph-style` : undefined
       }
     >
       <GraphPageContent campaignName={campaignName} />

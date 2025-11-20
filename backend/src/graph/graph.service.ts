@@ -10,20 +10,40 @@ export class GraphService {
     if (!camp) throw new NotFoundException('Campaign not found');
     if (camp.userId !== userId) throw new ForbiddenException('Not permitted');
 
-    const [events, characters, locations, objects, relations] = await Promise.all([
-      this.prisma.event.findMany({ where: { campaignId }, select: { id: true, title: true } }),
-      this.prisma.character.findMany({ where: { campaignId }, select: { id: true, name: true } }),
-      this.prisma.location.findMany({ where: { campaignId }, select: { id: true, name: true } }),
-      this.prisma.objectModel.findMany({ where: { campaignId }, select: { id: true, name: true } }),
-      this.prisma.relation.findMany({
-        where: {
-          OR: [
-            { fromType: 'EVENT', fromId: { in: (await this.prisma.event.findMany({ where: { campaignId }, select: { id: true } })).map(e => e.id) } },
-            { toType: 'EVENT', toId: { in: (await this.prisma.event.findMany({ where: { campaignId }, select: { id: true } })).map(e => e.id) } },
-          ],
-        },
+    const [events, characters, locations, objects] = await Promise.all([
+      this.prisma.event.findMany({
+        where: { campaignId },
+        select: { id: true, title: true },
+      }),
+      this.prisma.character.findMany({
+        where: { campaignId },
+        select: { id: true, name: true },
+      }),
+      this.prisma.location.findMany({
+        where: { campaignId },
+        select: { id: true, name: true },
+      }),
+      this.prisma.objectModel.findMany({
+        where: { campaignId },
+        select: { id: true, name: true },
       }),
     ]);
+
+    const eventIds = events.map(e => e.id);
+    const charIds = characters.map(c => c.id);
+    const locIds = locations.map(l => l.id);
+    const objIds = objects.map(o => o.id);
+
+    const allNodeIds = [...eventIds, ...charIds, ...locIds, ...objIds];
+
+    const relations = await this.prisma.relation.findMany({
+      where: {
+        OR: [
+          { fromId: { in: allNodeIds } },
+          { toId: { in: allNodeIds } },
+        ],
+      },
+    });
 
     const nodes = [
       ...events.map(e => ({ id: e.id, type: 'EVENT', label: e.title })),

@@ -1,9 +1,9 @@
 import React, { useCallback } from "react";
-import { getNodeColor } from "../../../components/graph/helpers/colors";
 import {
   getNodeRadius,
-  opacityForDistance
+  opacityForDistance,
 } from "../../../components/graph/helpers/node";
+import { useGraph } from "../GraphContext";
 import type { SimNode } from "./SimulationManager";
 
 type Props = {
@@ -19,7 +19,13 @@ type Props = {
   ) => { x: number; y: number } | null;
 
   // interaction callbacks from useGraphInteractions
-  onNodePointerDown: (id: string, nodeX: number, nodeY: number, wx: number, wy: number) => void;
+  onNodePointerDown: (
+    id: string,
+    nodeX: number,
+    nodeY: number,
+    wx: number,
+    wy: number
+  ) => void;
   onNodeDragMove: (wx: number, wy: number) => void;
   onNodePointerUp: () => void;
   onNodeEnter: (id: string) => void;
@@ -44,26 +50,25 @@ export const GraphNodes: React.FC<Props> = ({
   onNodeRightClick,
 }) => {
   const handlePointerDown = useCallback(
-    (node: SimNode) =>
-      (event: React.PointerEvent<SVGGElement>) => {
-        event.stopPropagation();
-        event.preventDefault();
+    (node: SimNode) => (event: React.PointerEvent<SVGGElement>) => {
+      event.stopPropagation();
+      event.preventDefault();
 
-        // convert pointer → world coords
-        const world = getWorldPointFromPointer(event);
-        if (!world) return;
+      // convert pointer → world coords
+      const world = getWorldPointFromPointer(event);
+      if (!world) return;
 
-        try {
-          event.currentTarget.setPointerCapture(event.pointerId);
-        } catch {
-          // ignore
-        }
+      try {
+        event.currentTarget.setPointerCapture(event.pointerId);
+      } catch {
+        // ignore
+      }
 
-        // pass id + node current position + world pointer
-        if (typeof node.x === "number" && typeof node.y === "number") {
-          onNodePointerDown(node.id, node.x, node.y, world.x, world.y);
-        }
-      },
+      // pass id + node current position + world pointer
+      if (typeof node.x === "number" && typeof node.y === "number") {
+        onNodePointerDown(node.id, node.x, node.y, world.x, world.y);
+      }
+    },
     [getWorldPointFromPointer, onNodePointerDown]
   );
 
@@ -94,22 +99,25 @@ export const GraphNodes: React.FC<Props> = ({
     [onNodePointerUp]
   );
 
+  const { graphStyle } = useGraph();
+
   if (!nodes.length) return null;
 
   return (
     <g>
-      {nodes.map(node => {
+      {nodes.map((node) => {
         if (typeof node.x !== "number" || typeof node.y !== "number") {
           return null;
         }
 
         const r = getNodeRadius(node, nodeSizeBase);
-        const color = getNodeColor(node.type);
+        const colorCfg = graphStyle.nodes[node.type] ?? {
+          fill: "rgba(148,163,184,0.2)",
+          stroke: "rgba(148,163,184,0.9)",
+        };
 
         const distance = distanceById[node.id];
-        const baseOpacity = focusNodeId
-          ? opacityForDistance(distance)
-          : 1;
+        const baseOpacity = focusNodeId ? opacityForDistance(distance) : 1;
 
         const isSelected = selectedNodeId === node.id;
 
@@ -142,8 +150,8 @@ export const GraphNodes: React.FC<Props> = ({
 
             <circle
               r={r}
-              fill={color.fill}
-              stroke={color.stroke}
+              fill={colorCfg.fill}
+              stroke={colorCfg.stroke}
               strokeWidth={isSelected ? 2 : 1.2}
               opacity={baseOpacity}
             />

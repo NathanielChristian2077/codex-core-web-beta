@@ -36,9 +36,8 @@ type Props = {
   setEditingNodeId: (id: string | null) => void;
   simulationRef: React.RefObject<Simulation<SimNode, SimLink> | null>;
   autoZoomOnClick: boolean;
-
-  /** callback para clique direito no "vazio" do grafo */
   onBackgroundContextMenu?: (payload: BackgroundContextMenuPayload) => void;
+  backgroundColor?: string;
 };
 
 export const GraphCanvas: React.FC<Props> = ({
@@ -57,6 +56,7 @@ export const GraphCanvas: React.FC<Props> = ({
   simulationRef,
   autoZoomOnClick,
   onBackgroundContextMenu,
+  backgroundColor,
 }) => {
   const {
     camera,
@@ -89,8 +89,11 @@ export const GraphCanvas: React.FC<Props> = ({
 
   const handleSvgContextMenu = useCallback(
     (event: React.MouseEvent<SVGSVGElement>) => {
-      // sempre matar o menu padrão
       event.preventDefault();
+
+      if (event.target !== event.currentTarget) {
+        return;
+      }
 
       if (!onBackgroundContextMenu) return;
 
@@ -98,17 +101,14 @@ export const GraphCanvas: React.FC<Props> = ({
       const svg = svgRef.current;
       if (!container || !svg) return;
 
-      // coordenadas locais dentro do container do grafo
       const containerRect = container.getBoundingClientRect();
       const localX = event.clientX - containerRect.left;
       const localY = event.clientY - containerRect.top;
 
-      // converter para coords "SVG space"
       const svgRect = svg.getBoundingClientRect();
-      const sx = ((event.clientX - svgRect.left) / svgRect.width) * WIDTH;
-      const sy = ((event.clientY - svgRect.top) / svgRect.height) * HEIGHT;
+      const sx = ((event.clientX - svgRect.left) / svgRect.width) * 1600;
+      const sy = ((event.clientY - svgRect.top) / svgRect.height) * 900;
 
-      // converter para "world space" (após câmera)
       const worldX = (sx - camera.x) / camera.scale;
       const worldY = (sy - camera.y) / camera.scale;
 
@@ -139,6 +139,7 @@ export const GraphCanvas: React.FC<Props> = ({
         onPointerUp={handleSvgPointerUp}
         onPointerLeave={handleSvgPointerUp}
         onContextMenu={handleSvgContextMenu}
+        style={{ backgroundColor: backgroundColor ?? "transparent" }}
       >
         <defs>
           <marker

@@ -4,9 +4,9 @@ import {
   ForbiddenException,
   Injectable,
   NotFoundException,
-} from '@nestjs/common';
-import { NodeType, Prisma, RelationType } from '@prisma/client';
-import { PrismaService } from '../common/prisma.service';
+} from "@nestjs/common";
+import { NodeType, Prisma, RelationType } from "@prisma/client";
+import { PrismaService } from "../common/prisma.service";
 
 type CreateEventDto = {
   title: string;
@@ -17,7 +17,7 @@ type UpdateEventDto = Partial<CreateEventDto>;
 
 const LINK_REGEX = /<<([ECLO]):([^>]+)>>/g;
 
-const TYPE_MAP: Record<'E' | 'C' | 'L' | 'O', NodeType> = {
+const TYPE_MAP: Record<"E" | "C" | "L" | "O", NodeType> = {
   E: NodeType.EVENT,
   C: NodeType.CHARACTER,
   L: NodeType.LOCATION,
@@ -33,8 +33,8 @@ export class EventsService {
       where: { id: campaignId },
       select: { id: true, userId: true },
     });
-    if (!camp) throw new NotFoundException('Campaign not found');
-    if (camp.userId !== userId) throw new ForbiddenException('Not permitted');
+    if (!camp) throw new NotFoundException("Campaign not found");
+    if (camp.userId !== userId) throw new ForbiddenException("Not permitted");
   }
 
   private async getEventWithOwner(eventId: string) {
@@ -42,20 +42,16 @@ export class EventsService {
       where: { id: eventId },
       include: { campaign: { select: { id: true, userId: true } } },
     });
-    if (!ev) throw new NotFoundException('Event not found');
+    if (!ev) throw new NotFoundException("Event not found");
     return ev;
   }
 
-  /**
-   * Lê a descrição do evento, encontra tokens `<<X:Name>>`
-   * e sincroniza as Relations LINK correspondentes.
-   */
   private async syncDescriptionLinksForEvent(event: {
     id: string;
     campaignId: string;
     description?: string | null;
   }) {
-    const description = event.description ?? '';
+    const description = event.description ?? "";
 
     await this.prisma.relation.deleteMany({
       where: {
@@ -67,12 +63,13 @@ export class EventsService {
 
     if (!description) return;
 
-    const tokens: { type: 'E' | 'C' | 'L' | 'O'; name: string }[] = [];
+    const tokens: { type: "E" | "C" | "L" | "O"; name: string }[] = [];
     let match: RegExpExecArray | null;
+    LINK_REGEX.lastIndex = 0;
 
     while ((match = LINK_REGEX.exec(description)) !== null) {
       const [, t, rawName] = match;
-      const type = t as 'E' | 'C' | 'L' | 'O';
+      const type = t as "E" | "C" | "L" | "O";
       const name = rawName.trim();
       if (!name) continue;
       tokens.push({ type, name });
@@ -154,13 +151,14 @@ export class EventsService {
     await this.assertCampaignOwnership(campaignId, userId);
     return this.prisma.event.findMany({
       where: { campaignId },
-      orderBy: { createdAt: 'asc' },
+      orderBy: { createdAt: "asc" },
     });
   }
 
   async getOne(eventId: string, userId: string) {
     const ev = await this.getEventWithOwner(eventId);
-    if (ev.campaign.userId !== userId) throw new ForbiddenException('Not permitted');
+    if (ev.campaign.userId !== userId)
+      throw new ForbiddenException("Not permitted");
     const { campaign, ...rest } = ev;
     return rest;
   }
@@ -168,7 +166,7 @@ export class EventsService {
   async create(campaignId: string, userId: string, dto: CreateEventDto) {
     await this.assertCampaignOwnership(campaignId, userId);
     if (!dto?.title || !dto.title.trim()) {
-      throw new BadRequestException('Title is required');
+      throw new BadRequestException("Title is required");
     }
 
     try {
@@ -176,7 +174,10 @@ export class EventsService {
         data: {
           campaignId,
           title: dto.title.trim(),
-          description: dto.description?.trim() || null,
+          description:
+            dto.description !== undefined
+              ? dto.description?.trim() || null
+              : undefined,
         },
       });
 
@@ -184,9 +185,12 @@ export class EventsService {
 
       return created;
     } catch (e) {
-      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
+      if (
+        e instanceof Prisma.PrismaClientKnownRequestError &&
+        e.code === "P2002"
+      ) {
         throw new ConflictException(
-          'An event with this title already exists in this campaign',
+          "An event with this title already exists in this campaign"
         );
       }
       throw e;
@@ -195,10 +199,11 @@ export class EventsService {
 
   async update(eventId: string, userId: string, dto: UpdateEventDto) {
     const ev = await this.getEventWithOwner(eventId);
-    if (ev.campaign.userId !== userId) throw new ForbiddenException('Not permitted');
+    if (ev.campaign.userId !== userId)
+      throw new ForbiddenException("Not permitted");
 
     if (dto.title !== undefined && !dto.title.trim()) {
-      throw new BadRequestException('Title cannot be empty');
+      throw new BadRequestException("Title cannot be empty");
     }
 
     try {
@@ -217,9 +222,12 @@ export class EventsService {
 
       return updated;
     } catch (e) {
-      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
+      if (
+        e instanceof Prisma.PrismaClientKnownRequestError &&
+        e.code === "P2002"
+      ) {
         throw new ConflictException(
-          'An event with this title already exists in this campaign',
+          "An event with this title already exists in this campaign"
         );
       }
       throw e;
@@ -228,7 +236,8 @@ export class EventsService {
 
   async remove(eventId: string, userId: string) {
     const ev = await this.getEventWithOwner(eventId);
-    if (ev.campaign.userId !== userId) throw new ForbiddenException('Not permitted');
+    if (ev.campaign.userId !== userId)
+      throw new ForbiddenException("Not permitted");
 
     await this.prisma.relation.deleteMany({
       where: {
