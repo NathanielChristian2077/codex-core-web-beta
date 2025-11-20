@@ -1,5 +1,8 @@
+// components/graph/ui/GraphSidePanels.tsx
 import React from "react";
 import { useGraph } from "../../../features/graphs/GraphContext";
+import type { GraphNode, GraphNodeType } from "../../../features/graphs/types";
+import type { InternalLink } from "../../../lib/internalLinks";
 import { NodeEditPanel } from "./NodeEditPanel";
 import { NodeViewPanel } from "./NodeQuickView";
 
@@ -12,13 +15,54 @@ type PanelEntry = {
   title: string;
 };
 
-export const GraphSidePanels: React.FC = () => {
+type GraphSidePanelsProps = {
+  onCreateFromInternalLink?: (link: InternalLink) => void;
+};
+
+function kindToNodeType(kind: InternalLink["kind"]): GraphNodeType | null {
+  switch (kind) {
+    case "E":
+      return "EVENT";
+    case "C":
+      return "CHARACTER";
+    case "L":
+      return "LOCATION";
+    case "O":
+      return "OBJECT";
+    default:
+      return null;
+  }
+}
+
+function resolveInternalLinkInGraph(
+  link: InternalLink,
+  nodes: GraphNode[]
+): GraphNode | null {
+  const targetType = kindToNodeType(link.kind);
+  if (!targetType) return null;
+
+  const normalizedName = link.name.trim().toLowerCase();
+
+  return (
+    nodes.find(
+      (n) =>
+        n.type === targetType &&
+        (n.label ?? "").trim().toLowerCase() === normalizedName
+    ) ?? null
+  );
+}
+
+export const GraphSidePanels: React.FC<GraphSidePanelsProps> = ({
+  onCreateFromInternalLink,
+}) => {
   const {
     selectedNodeId,
     editingNodeId,
     graphData,
     setSelectedNodeId,
     setEditingNodeId,
+    setFocusNodeId,
+    zoomToNodeRef,
   } = useGraph();
 
   const [openPanels, setOpenPanels] = React.useState<PanelEntry[]>([]);
@@ -75,17 +119,12 @@ export const GraphSidePanels: React.FC = () => {
 
   React.useEffect(() => {
     setOpenPanels((prev) =>
-      prev.filter((panel) =>
-        graphData.nodes.some((n) => n.id === panel.nodeId)
-      )
+      prev.filter((panel) => graphData.nodes.some((n) => n.id === panel.nodeId))
     );
   }, [graphData]);
 
   const hasPanels = openPanels.length > 0;
-
-  if (!hasPanels) {
-    return null;
-  }
+  if (!hasPanels) return null;
 
   const containerClasses = [
     "pointer-events-auto flex h-full flex-col overflow-y-auto",
@@ -112,10 +151,43 @@ export const GraphSidePanels: React.FC = () => {
     if (panel.kind === "view" && selectedNodeId === panel.nodeId) {
       setSelectedNodeId(null);
     }
-
     if (panel.kind === "edit" && editingNodeId === panel.nodeId) {
       setEditingNodeId(null);
     }
+  };
+
+  const handleInternalLinkClick = (link: InternalLink) => {
+    const target = resolveInternalLinkInGraph(link, graphData.nodes);
+
+    if (target) {
+      const panelId = `view-${target.id}`;
+
+      setOpenPanels((prev) => {
+        const exists = prev.some((p) => p.id === panelId);
+        if (!exists) {
+          return [
+            ...prev,
+            {
+              id: panelId,
+              kind: "view",
+              nodeId: target.id,
+              title: target.label ?? target.id,
+            },
+          ];
+        }
+        return prev;
+      });
+
+      setSelectedNodeId(target.id);
+      setFocusNodeId?.(target.id);
+      bringToTop(panelId);
+
+      // zoom suave via ref global
+      zoomToNodeRef.current?.(target.id);
+      return;
+    }
+
+    onCreateFromInternalLink?.(link);
   };
 
   return (
@@ -135,9 +207,7 @@ export const GraphSidePanels: React.FC = () => {
               isTop ? "max-h-[70vh]" : "max-h-9 cursor-pointer",
             ].join(" ")}
             onClick={() => {
-              if (!isTop) {
-                bringToTop(panel.id);
-              }
+              if (!isTop) bringToTop(panel.id);
             }}
           >
             <div className="flex items-center justify-between gap-2 px-3 py-2">
@@ -167,6 +237,7 @@ export const GraphSidePanels: React.FC = () => {
                 <NodeViewPanel
                   node={node as any}
                   onClose={() => handleClosePanel(panel)}
+                  onInternalLinkClick={handleInternalLinkClick}
                 />
               )}
 

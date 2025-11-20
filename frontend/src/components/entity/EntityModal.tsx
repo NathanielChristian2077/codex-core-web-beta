@@ -6,11 +6,13 @@ import { MarkdownEditor } from "../markdown/MarkdownEditor";
 type Props = {
   open: boolean;
   onClose: () => void;
-
   entityName: string; // "Character"
   editing?: { id: string; name: string; description?: string | null } | null;
-
-  onSave: (payload: { name: string; description?: string | null }) => Promise<void>;
+  onSave: (payload: {
+    name: string;
+    description?: string | null;
+  }) => Promise<void>;
+  initialName?: string;
 };
 
 export default function EntityModal({
@@ -19,6 +21,7 @@ export default function EntityModal({
   entityName,
   editing,
   onSave,
+  initialName,
 }: Props) {
   const t = useToast();
   const [name, setName] = useState("");
@@ -27,9 +30,9 @@ export default function EntityModal({
 
   useEffect(() => {
     if (!open) return;
-    setName(editing?.name ?? "");
+    setName(editing?.name ?? initialName ?? "");
     setDescription(editing?.description ?? "");
-  }, [open, editing]);
+  }, [open, editing, initialName]);
 
   if (!open) return null;
 

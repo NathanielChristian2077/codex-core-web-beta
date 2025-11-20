@@ -15,6 +15,7 @@ type Props = {
   editing?: EventItem | null;
   onSaved?: () => void;
   onCreated?: (event: EventItem) => void;
+  initialTitle?: string;
 };
 
 export default function EventModal({
@@ -24,6 +25,7 @@ export default function EventModal({
   editing,
   onSaved,
   onCreated,
+  initialTitle,
 }: Props) {
   const t = useToast();
   const [title, setTitle] = useState("");
@@ -32,9 +34,10 @@ export default function EventModal({
 
   useEffect(() => {
     if (!open) return;
-    setTitle(editing?.title ?? "");
+
+    setTitle(editing?.title ?? initialTitle ?? "");
     setDescription(editing?.description ?? "");
-  }, [open, editing]);
+  }, [open, editing, initialTitle]);
 
   if (!open) return null;
 

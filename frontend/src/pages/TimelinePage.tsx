@@ -1,11 +1,29 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import EventModal from "../components/timeline/EventModal";
 import Timeline from "../components/timeline/Timeline";
 import Spinner from "../components/ui/Spinner";
 import { useToast } from "../components/ui/ToastProvider";
-import { deleteEvent, getCampaign, listCampaignEvents } from "../features/campaigns/api";
+import {
+  deleteEvent,
+  getCampaign,
+  listCampaignEvents,
+} from "../features/campaigns/api";
 import type { EventItem } from "../features/campaigns/types";
+import type { InternalLink } from "../lib/internalLinks";
+
+function pathForKind(kind: "E" | "C" | "L" | "O", campaignId: string): string {
+  switch (kind) {
+    case "E":
+      return `/campaigns/${campaignId}/timeline`;
+    case "C":
+      return `/campaigns/${campaignId}/characters`;
+    case "L":
+      return `/campaigns/${campaignId}/locations`;
+    case "O":
+      return `/campaigns/${campaignId}/objects`;
+  }
+}
 
 export default function TimelinePage() {
   const { id } = useParams<{ id: string }>();
@@ -14,13 +32,18 @@ export default function TimelinePage() {
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<EventItem | null>(null);
+  const [initialTitle, setInitialTitle] = useState<string | undefined>();
   const t = useToast();
+  const navigate = useNavigate();
 
   async function fetchAll() {
     if (!id) return;
     try {
       setLoading(true);
-      const [camp, evs] = await Promise.all([getCampaign(id), listCampaignEvents(id)]);
+      const [camp, evs] = await Promise.all([
+        getCampaign(id),
+        listCampaignEvents(id),
+      ]);
       setCampaignName(camp.name);
       setEvents(evs);
     } catch {
@@ -45,11 +68,41 @@ export default function TimelinePage() {
     }
   }
 
+  const handleInternalLinkClick = (link: InternalLink) => {
+    if (!id) return;
+
+    if (link.kind !== "E") {
+      // outro tipo → manda pra página daquele tipo
+      const path = pathForKind(link.kind, id);
+      navigate(path);
+      return;
+    }
+
+    // evento → tenta abrir/criar
+    const normalized = link.name.trim().toLowerCase();
+    const found = events.find(
+      (ev) => ev.title.trim().toLowerCase() === normalized
+    );
+
+    if (found) {
+      setEditing(found);
+      setInitialTitle(undefined);
+      setModalOpen(true);
+      return;
+    }
+
+    setEditing(null);
+    setInitialTitle(link.name);
+    setModalOpen(true);
+  };
+
   return (
     <div className="mx-auto max-w-3xl">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold">{campaignName || "Timeline"}</h1>
+          <h1 className="text-2xl font-semibold">
+            {campaignName || "Timeline"}
+          </h1>
           <p className="text-sm text-zinc-600 dark:text-zinc-400">
             Events listed in creation order
           </p>
@@ -64,6 +117,7 @@ export default function TimelinePage() {
           <button
             onClick={() => {
               setEditing(null);
+              setInitialTitle(undefined);
               setModalOpen(true);
             }}
             className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
@@ -82,9 +136,11 @@ export default function TimelinePage() {
           events={events}
           onEdit={(ev) => {
             setEditing(ev);
+            setInitialTitle(undefined);
             setModalOpen(true);
           }}
           onDelete={onDelete}
+          onInternalLinkClick={handleInternalLinkClick}
         />
       )}
 
@@ -94,6 +150,7 @@ export default function TimelinePage() {
           onClose={() => setModalOpen(false)}
           campaignId={id}
           editing={editing}
+          initialTitle={initialTitle}
           onSaved={fetchAll}
         />
       )}

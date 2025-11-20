@@ -1,3 +1,4 @@
+// features/graphs/GraphVisualization.tsx
 import { CalendarDays, MapPin, Package2, User } from "lucide-react";
 import { AnimatePresence } from "motion/react";
 import {
@@ -29,6 +30,7 @@ import { adaptCampaignGraphResponse } from "./adapters";
 import EntityModal from "../../components/entity/EntityModal";
 import EventModal from "../../components/timeline/EventModal";
 
+import type { InternalLink } from "../../lib/internalLinks";
 import { createCharacter } from "../characters/api";
 import { createLocation } from "../locations/api";
 import { createObject } from "../objects/api";
@@ -55,11 +57,19 @@ const ACTION_BY_ID: Record<number, GraphBackgroundAction> = {
   4: "object",
 };
 
-type CreateContext = {
-  kind: GraphBackgroundAction;
-  worldX: number;
-  worldY: number;
-};
+type CreateContext =
+  | {
+      kind: "event";
+      worldX: number;
+      worldY: number;
+      initialTitle?: string;
+    }
+  | {
+      kind: "character" | "location" | "object";
+      worldX: number;
+      worldY: number;
+      initialName?: string;
+    };
 
 function pseudo(id: string): number {
   let h = 0;
@@ -220,6 +230,46 @@ export const GraphVisualization: React.FC = () => {
       setCreateContext(null);
     }
   }
+
+  const handleCreateFromInternalLink = (link: InternalLink) => {
+    const worldX = WIDTH / 2;
+    const worldY = HEIGHT / 2;
+
+    switch (link.kind) {
+      case "E":
+        setCreateContext({
+          kind: "event",
+          worldX,
+          worldY,
+          initialTitle: link.name,
+        });
+        break;
+      case "C":
+        setCreateContext({
+          kind: "character",
+          worldX,
+          worldY,
+          initialName: link.name,
+        });
+        break;
+      case "L":
+        setCreateContext({
+          kind: "location",
+          worldX,
+          worldY,
+          initialName: link.name,
+        });
+        break;
+      case "O":
+        setCreateContext({
+          kind: "object",
+          worldX,
+          worldY,
+          initialName: link.name,
+        });
+        break;
+    }
+  };
 
   useEffect(() => {
     if (!visibleNodes.length) {
@@ -413,7 +463,6 @@ export const GraphVisualization: React.FC = () => {
               window.setTimeout(() => setNoPermissionTooltip(null), 2000);
               return;
             }
-
             setNoPermissionTooltip(null);
             setBackgroundContextMenu({ screenX, screenY, worldX, worldY });
           }}
@@ -422,7 +471,9 @@ export const GraphVisualization: React.FC = () => {
 
       {/* right side panels */}
       <div className="pointer-events-none absolute inset-0 flex justify-end">
-        <GraphSidePanels />
+        <GraphSidePanels
+          onCreateFromInternalLink={handleCreateFromInternalLink}
+        />
       </div>
 
       {/* radial context menu on background right-click */}
@@ -477,6 +528,7 @@ export const GraphVisualization: React.FC = () => {
           onClose={() => setCreateContext(null)}
           campaignId={currentCampaignId}
           editing={null}
+          initialTitle={createContext.initialTitle}
           onSaved={undefined}
           onCreated={(ev) => handleEntityCreated(ev.id)}
         />
@@ -489,6 +541,7 @@ export const GraphVisualization: React.FC = () => {
           onClose={() => setCreateContext(null)}
           entityName={entityNameByKind[createContext.kind]}
           editing={null}
+          initialName={createContext.initialName}
           onSave={async (payload) => {
             if (!currentCampaignId) return;
 

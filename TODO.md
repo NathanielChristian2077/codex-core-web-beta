@@ -93,9 +93,9 @@ Objetivo: GraphView / Timeline estáveis, usáveis e com interação sólida.
 
 ### 2.1. Markdown como formato padrão de descrição
 
-- Backend:
+- [x] Backend:
   - Continuar guardando `description` como texto, agora tratado como markdown.
-- Frontend:
+- [x] Frontend:
   - Editor de markdown (pode começar como textarea + preview).
   - Renderer de markdown nos lugares de leitura:
     - TimelinePage,

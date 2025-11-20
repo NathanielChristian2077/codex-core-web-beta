@@ -3,6 +3,7 @@ import React, {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -94,6 +95,13 @@ export type GraphContextValue = {
   /** stored node positions (persistent) */
   nodePositions: NodePositions;
   setNodePositions: (positions: NodePositions) => void;
+
+  /**
+   * Global "zoom to node" hook:
+   * GraphCanvas registra a função real,
+   * outros chamam zoomToNodeRef.current?.(nodeId)
+   */
+  zoomToNodeRef: React.MutableRefObject<((id: string) => void) | null>;
 };
 
 const defaultFilters: FiltersState = {
@@ -233,6 +241,9 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
     () => loadNodePositionsFromStorage(storageKey)
   );
 
+  /** global "zoom to node" function holder (GraphCanvas preenche) */
+  const zoomToNodeRef = useRef<((id: string) => void) | null>(null);
+
   /** reload positions when campaign or storage key changes */
   useEffect(() => {
     setGraphData(initialData);
@@ -301,6 +312,8 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
 
       nodePositions: nodePositionsState,
       setNodePositions,
+
+      zoomToNodeRef,
     }),
     [
       graphData,
@@ -312,6 +325,7 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
       nodePositionsState,
       selectedNodeId,
       editingNodeId,
+      zoomToNodeRef,
     ]
   );
 

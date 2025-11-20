@@ -1,9 +1,11 @@
+// GraphCanvas
 import type { Simulation } from "d3-force";
-import React, { useCallback } from "react";
+import React, { useCallback, useEffect } from "react";
 
 import { useGraphInteractions } from "../../../components/graph/hooks/useGraphInteractions";
 import { useZoomAndPan } from "../../../components/graph/hooks/useZoomAndPan";
 
+import { useGraph } from "../GraphContext";
 import { GraphEdges } from "./GraphEdges";
 import { GraphNodes } from "./GraphNodes";
 import type { SimLink, SimNode } from "./SimulationManager";
@@ -21,15 +23,12 @@ type BackgroundContextMenuPayload = {
 type Props = {
   nodes: SimNode[];
   links: SimLink[];
-
   focusNodeId: string | null;
   selectedNodeId: string | null;
   distanceById: Record<string, number>;
-
   nodeSizeBase: number;
   edgeWidth: number;
   showArrows: boolean;
-
   nodeById: Map<string, SimNode>;
   setFocusNodeId: (id: string | null) => void;
   setSelectedNodeId: (id: string | null) => void;
@@ -69,6 +68,19 @@ export const GraphCanvas: React.FC<Props> = ({
     focusOnWorldPoint,
   } = useZoomAndPan();
 
+  const { zoomToNodeRef } = useGraph();
+
+  useEffect(() => {
+    zoomToNodeRef.current = (id: string) => {
+      const node = nodeById.get(id);
+      if (!node) return;
+
+      if (typeof node.x !== "number" || typeof node.y !== "number") return;
+
+      focusOnWorldPoint(node.x, node.y, { scale: 1.6 });
+    };
+  }, [zoomToNodeRef, nodeById, focusOnWorldPoint]);
+
   const {
     onNodePointerDown,
     onNodeDragMove,
@@ -91,10 +103,7 @@ export const GraphCanvas: React.FC<Props> = ({
     (event: React.MouseEvent<SVGSVGElement>) => {
       event.preventDefault();
 
-      if (event.target !== event.currentTarget) {
-        return;
-      }
-
+      if (event.target !== event.currentTarget) return;
       if (!onBackgroundContextMenu) return;
 
       const container = containerRef.current;
@@ -106,8 +115,8 @@ export const GraphCanvas: React.FC<Props> = ({
       const localY = event.clientY - containerRect.top;
 
       const svgRect = svg.getBoundingClientRect();
-      const sx = ((event.clientX - svgRect.left) / svgRect.width) * 1600;
-      const sy = ((event.clientY - svgRect.top) / svgRect.height) * 900;
+      const sx = ((event.clientX - svgRect.left) / svgRect.width) * WIDTH;
+      const sy = ((event.clientY - svgRect.top) / svgRect.height) * HEIGHT;
 
       const worldX = (sx - camera.x) / camera.scale;
       const worldY = (sy - camera.y) / camera.scale;

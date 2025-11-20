@@ -1,9 +1,15 @@
+import { MarkdownRenderer } from "../../components/markdown/MarkdownRenderer";
 import type { EventItem } from "../../features/campaigns/types";
+import {
+  INTERNAL_LINK_PROTOCOL,
+  type InternalLink,
+} from "../../lib/internalLinks";
 
 type Props = {
   event: EventItem;
   onEdit: (ev: EventItem) => void;
   onDelete: (id: string) => void;
+  onInternalLinkClick?: (link: InternalLink) => void;
 };
 
 function formatCreatedAt(s?: string) {
@@ -16,8 +22,68 @@ function formatCreatedAt(s?: string) {
   return `${yyyy}-${mm}-${dd}`;
 }
 
-export default function EventRow({ event, onEdit, onDelete }: Props) {
+function parseInternalLinkFromHref(hrefRaw: string | null): InternalLink | null {
+  if (!hrefRaw) return null;
+  const href = hrefRaw.trim();
+  if (!href || !href.includes(INTERNAL_LINK_PROTOCOL)) return null;
+
+  const idx = href.indexOf(INTERNAL_LINK_PROTOCOL);
+  const rest = href.slice(idx + INTERNAL_LINK_PROTOCOL.length);
+  const colonIndex = rest.indexOf(":");
+  if (colonIndex <= 0) return null;
+
+  const kindRaw = rest.slice(0, colonIndex).toUpperCase();
+  const rawName = rest.slice(colonIndex + 1);
+
+  if (!["E", "C", "L", "O"].includes(kindRaw)) return null;
+
+  let decodedName = rawName;
+  try {
+    decodedName = decodeURIComponent(rawName);
+  } catch {
+    
+  }
+
+  const name = decodedName.trim();
+  if (!name) return null;
+
+  return {
+    kind: kindRaw as InternalLink["kind"],
+    name,
+  };
+}
+
+export default function EventRow({
+  event,
+  onEdit,
+  onDelete,
+  onInternalLinkClick,
+}: Props) {
   const createdLabel = formatCreatedAt(event.createdAt);
+  const hasDesc =
+    typeof event.description === "string" &&
+    event.description.trim().length > 0;
+
+  const handleDescriptionClickCapture = (
+    e: React.MouseEvent<HTMLDivElement>
+  ) => {
+    const target = e.target as HTMLElement | null;
+    if (!target) return;
+
+    const anchor = target.closest("a") as HTMLAnchorElement | null;
+    if (!anchor) return;
+
+    const hrefAttr = anchor.getAttribute("href");
+    const href = (hrefAttr && hrefAttr.trim()) || (anchor.href ?? "").trim();
+
+    const link = parseInternalLinkFromHref(href);
+    if (!link) return;
+
+    e.preventDefault();
+    e.stopPropagation();
+
+    onInternalLinkClick?.(link);
+  };
 
   return (
     <li className="group relative rounded-lg border border-zinc-200 bg-white/70 p-3 hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900/70 dark:hover:bg-zinc-900">
@@ -28,13 +94,34 @@ export default function EventRow({ event, onEdit, onDelete }: Props) {
               Created at {createdLabel}
             </div>
           )}
-          <h4 className="line-clamp-1 text-sm font-semibold">{event.title}</h4>
-          {event.description && (
-            <p className="mt-0.5 line-clamp-2 text-sm text-zinc-600 dark:text-zinc-300">
-              {event.description}
+          <h4 className="line-clamp-1 text-sm font-semibold">
+            {event.title}
+          </h4>
+
+          {hasDesc ? (
+            <div
+              className="mt-0.5"
+              onClickCapture={handleDescriptionClickCapture}
+            >
+              <MarkdownRenderer
+                content={event.description!}
+                className="
+                  prose prose-sm dark:prose-invert max-w-none
+                  line-clamp-2
+                  prose-a:text-emerald-400
+                  prose-a:underline
+                  prose-a:underline-offset-2
+                  hover:prose-a:text-emerald-300
+                "
+              />
+            </div>
+          ) : (
+            <p className="mt-0.5 line-clamp-2 text-sm italic text-zinc-500 dark:text-zinc-400">
+              No description.
             </p>
           )}
         </div>
+
         <div className="flex shrink-0 gap-2">
           <button
             onClick={() => onEdit(event)}

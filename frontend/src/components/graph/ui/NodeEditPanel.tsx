@@ -17,8 +17,7 @@ export const NodeEditPanel: React.FC = () => {
   const [title, setTitle] = React.useState("");
   const [description, setDescription] = React.useState("");
   const [initialTitle, setInitialTitle] = React.useState<string>("");
-  const [initialDescription, setInitialDescription] =
-    React.useState<string>("");
+  const [initialDescription, setInitialDescription] = React.useState<string>("");
   const [saving, setSaving] = React.useState(false);
   const [deleting, setDeleting] = React.useState(false);
 
@@ -170,6 +169,33 @@ export const NodeEditPanel: React.FC = () => {
             className="space-y-1"
             tone="dark"
           />
+        </div>
+      </div>
+
+      <div className="mt-3 flex items-center justify-between">
+        <button
+          className="rounded border border-red-500 px-3 py-1 text-[11px] text-red-300 hover:bg-red-500/10 disabled:opacity-60"
+          onClick={handleDelete}
+          disabled={deleting || saving}
+        >
+          {deleting ? "Deleting..." : "Delete"}
+        </button>
+
+        <div className="space-x-2">
+          <button
+            className="rounded border border-slate-600 px-3 py-1 text-[11px] text-slate-200 hover:bg-slate-700/60 disabled:opacity-60"
+            onClick={handleClose}
+            disabled={saving}
+          >
+            Cancel
+          </button>
+          <button
+            className="rounded bg-emerald-600 px-3 py-1 text-[11px] text-white hover:bg-emerald-500 disabled:opacity-60"
+            onClick={handleSave}
+            disabled={saving || deleting}
+          >
+            {saving ? "Saving..." : "Save"}
+          </button>
         </div>
       </div>
     </div>
