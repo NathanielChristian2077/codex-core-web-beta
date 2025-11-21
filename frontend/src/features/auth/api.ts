@@ -1,17 +1,31 @@
 import api from "../../lib/apiClient";
 
-export type RegisterPayload = {
-  name: string;
+export type AuthPayload = {
   email: string;
   password: string;
 };
 
-export async function registerUser({ name, email, password }: RegisterPayload) {
-  const { data } = await api.post("/auth/register", { name, email, password: password });
+export type AuthResponse = {
+  accessToken: string;
+  user?: {
+    id: string;
+    email: string;
+    role: "GM" | "PLAYER" | string;
+  };
+};
+
+export async function registerUser({ email, password }: AuthPayload) {
+  const { data } = await api.post<AuthResponse>("/auth/register", {
+    email,
+    password,
+  });
   return data;
 }
 
-export async function loginUser({ email, password }: { email: string; password: string }) {
-  const { data } = await api.post("/auth/login", { email, password: password });
-  return data as { accessToken: string };
+export async function loginUser({ email, password }: AuthPayload) {
+  const { data } = await api.post<AuthResponse>("/auth/login", {
+    email,
+    password,
+  });
+  return data;
 }

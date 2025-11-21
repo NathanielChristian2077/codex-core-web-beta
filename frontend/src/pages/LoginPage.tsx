@@ -17,32 +17,32 @@ export default function LoginPage() {
 
   const [mode, setMode] = useState<"signin" | "signup">("signin");
 
-  const [email, setEmail] = useState("mestre@ex.com");
-  const [password, setPassword] = useState("123456");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
-
-  const [name, setName] = useState("");
-  const [confirm, setConfirm] = useState("");
 
   const validEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   const canLogin = validEmail && password.length >= 6;
   const canSignup =
-    name.trim().length >= 2 && validEmail && password.length >= 6 && password === confirm;
+    validEmail && password.length >= 6 && password === confirm;
 
   async function onSignIn(e: FormEvent) {
     e.preventDefault();
     if (!canLogin || loading) return;
     setErr("");
     setLoading(true);
+
     try {
       const res = await loginUser({ email: email.trim(), password });
       if (!res?.accessToken) throw new Error("No token received");
+
       setToken(res.accessToken);
       t.show("Signed in", "success");
       window.location.assign("/dashboard");
     } catch (e: any) {
-      setErr(e?.response?.data?.message || e?.message || "Invalid credentials");
+      setErr(e?.response?.data?.message || "Invalid credentials");
       t.show("Invalid credentials", "error");
     } finally {
       setLoading(false);
@@ -54,9 +54,15 @@ export default function LoginPage() {
     if (!canSignup || loading) return;
     setErr("");
     setLoading(true);
+
     try {
-      const reg = await registerUser({ name: name.trim(), email: email.trim(), password });
-      const token = (reg as any)?.accessToken as string | undefined;
+      const reg = await registerUser({
+        email: email.trim(),
+        password,
+      });
+
+      const token = (reg as any)?.accessToken;
+
       if (token) {
         setToken(token);
       } else {
@@ -64,10 +70,11 @@ export default function LoginPage() {
         if (!res?.accessToken) throw new Error("No token after signup");
         setToken(res.accessToken);
       }
+
       t.show("Account created. Welcome!", "success");
       window.location.assign("/dashboard");
     } catch (e: any) {
-      setErr(e?.response?.data?.message || e?.message || "Failed to create account");
+      setErr(e?.response?.data?.message || "Failed to create account");
       t.show("Failed to create account", "error");
     } finally {
       setLoading(false);
@@ -96,6 +103,7 @@ export default function LoginPage() {
               className="w-full max-w-sm rounded-2xl border bg-white/70 p-6 shadow dark:border-zinc-800 dark:bg-zinc-900/70"
             >
               <h1 className="mb-4 text-xl font-semibold">Sign in</h1>
+
               <form onSubmit={onSignIn} className="grid gap-3">
                 <label className="grid gap-1">
                   <span className="text-sm">Email</span>
@@ -107,6 +115,7 @@ export default function LoginPage() {
                     required
                   />
                 </label>
+
                 <label className="grid gap-1">
                   <span className="text-sm">Password</span>
                   <input
@@ -139,11 +148,6 @@ export default function LoginPage() {
                   Create account
                 </button>
               </p>
-
-              <p className="mt-6 text-center text-xs text-zinc-500">
-                Demo: <code className="rounded bg-zinc-100 px-1 dark:bg-zinc-800">mestre@ex.com</code>{" "}
-                / <code className="rounded bg-zinc-100 px-1 dark:bg-zinc-800">123456</code>
-              </p>
             </motion.div>
           ) : (
             <motion.div
@@ -156,16 +160,8 @@ export default function LoginPage() {
               className="w-full max-w-sm rounded-2xl border bg-white/70 p-6 shadow dark:border-zinc-800 dark:bg-zinc-900/70"
             >
               <h1 className="mb-4 text-xl font-semibold">Create account</h1>
+
               <form onSubmit={onSignUp} className="grid gap-3">
-                <label className="grid gap-1">
-                  <span className="text-sm">Name</span>
-                  <input
-                    className="rounded-md border border-zinc-300 bg-white px-3 py-2 outline-none focus:ring-2 focus:ring-blue-600 dark:border-zinc-700 dark:bg-zinc-900"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    required
-                  />
-                </label>
                 <label className="grid gap-1">
                   <span className="text-sm">Email</span>
                   <input
@@ -176,6 +172,7 @@ export default function LoginPage() {
                     required
                   />
                 </label>
+
                 <label className="grid gap-1">
                   <span className="text-sm">Password</span>
                   <input
@@ -186,6 +183,7 @@ export default function LoginPage() {
                     required
                   />
                 </label>
+
                 <label className="grid gap-1">
                   <span className="text-sm">Confirm password</span>
                   <input
