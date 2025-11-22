@@ -4,7 +4,11 @@ import { MarkdownEditor } from "../markdown/MarkdownEditor";
 type Props = {
   open: boolean;
   onClose: () => void;
-  onCreate: (name: string, description: string) => Promise<void> | void;
+  onCreate: (
+    name: string,
+    description: string,
+    imageUrl?: string | null
+  ) => Promise<void> | void;
 };
 
 export default function CreateCampaignModal({ open, onClose, onCreate }: Props) {
@@ -16,12 +20,17 @@ export default function CreateCampaignModal({ open, onClose, onCreate }: Props) 
   if (!open) return null;
 
   async function submit() {
-    if (!name.trim()) return;
+    if (!name.trim() || saving) return;
     setSaving(true);
-    await onCreate(name, description);
+    await onCreate(
+      name,
+      description,
+      coverUrl.trim() ? coverUrl.trim() : null
+    );
     setSaving(false);
     setName("");
     setDescription("");
+    setCoverUrl("");
   }
 
   return (

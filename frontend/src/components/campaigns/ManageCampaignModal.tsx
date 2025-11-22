@@ -26,6 +26,7 @@ export default function ManageCampaignModal({
 }: Props) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [coverUrl, setCoverUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [dupLoading, setDupLoading] = useState(false);
@@ -39,6 +40,8 @@ export default function ManageCampaignModal({
         const c = await getCampaign(campaignId);
         setName(c.name);
         setDescription(c.description ?? "");
+        // imageUrl may or may not exist in the type depending on your definitions
+        setCoverUrl((c as any).imageUrl ?? "");
       } catch {
         toast.show("Failed to load campaign", "error");
       } finally {
@@ -56,7 +59,8 @@ export default function ManageCampaignModal({
       await updateCampaign(campaignId, {
         name: name.trim(),
         description: description.trim() || null,
-      });
+        imageUrl: coverUrl.trim() ? coverUrl.trim() : null,
+      } as any);
       toast.show("Campaign updated", "success");
       onUpdated?.();
       onClose();
@@ -158,6 +162,16 @@ export default function ManageCampaignModal({
                 label="Description"
                 placeholder="Campaign description (markdown supported)"
               />
+
+              <label className="grid gap-1">
+                <span className="text-sm">Cover image URL (optional)</span>
+                <input
+                  className="rounded-md border border-zinc-300 bg-white px-3 py-2 outline-none focus:ring-2 focus:ring-blue-600 dark:border-zinc-700 dark:bg-zinc-900"
+                  placeholder="https://…"
+                  value={coverUrl}
+                  onChange={(e) => setCoverUrl(e.target.value)}
+                />
+              </label>
             </div>
 
             <div className="mt-5 flex items-center justify-between">

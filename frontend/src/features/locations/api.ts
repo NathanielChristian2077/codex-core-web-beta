@@ -1,9 +1,15 @@
 import api from "../../lib/apiClient";
 import type { LocationEntity } from "./types";
 
-type Payload = { name: string; description?: string | null };
+type Payload = {
+  name: string;
+  description?: string | null;
+  imageUrl?: string | null;
+};
 
-export const listLocations = (campaignId: string): Promise<LocationEntity[]> =>
+export const listLocations = (
+  campaignId: string,
+): Promise<LocationEntity[]> =>
   api.get(`/campaigns/${campaignId}/locations`).then((r) => r.data);
 
 export const createLocation = (campaignId: string, p: Payload) =>

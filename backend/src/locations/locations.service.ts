@@ -1,3 +1,4 @@
+// locations.service
 import {
   BadRequestException,
   ConflictException,
@@ -16,7 +17,12 @@ const TYPE_MAP: Record<"E" | "C" | "L" | "O", NodeType> = {
   O: NodeType.OBJECT,
 };
 
-type CreateLocationDto = { name: string; description?: string };
+type CreateLocationDto = {
+  name: string;
+  description?: string;
+  imageUrl?: string | null;
+};
+
 type UpdateLocationDto = Partial<CreateLocationDto>;
 
 @Injectable()
@@ -157,6 +163,10 @@ export class LocationsService {
             dto.description !== undefined
               ? dto.description?.trim() || null
               : undefined,
+          imageUrl:
+            dto.imageUrl !== undefined
+              ? dto.imageUrl?.trim() || null
+              : undefined,
         },
       });
 
@@ -190,6 +200,10 @@ export class LocationsService {
           description:
             dto.description !== undefined
               ? dto.description?.trim() || null
+              : undefined,
+          imageUrl:
+            dto.imageUrl !== undefined
+              ? dto.imageUrl?.trim() || null
               : undefined,
         },
       });

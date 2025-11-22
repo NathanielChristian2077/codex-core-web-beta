@@ -421,7 +421,7 @@ export const GraphVisualization: React.FC = () => {
 
   if (!graphData) {
     return (
-      <div className="flex h-full items-center justify-center text-[11px] text-slate-500">
+      <div className="flex h-full items-center justify-center text-[11px] text-zinc-500">
         no graph data
       </div>
     );

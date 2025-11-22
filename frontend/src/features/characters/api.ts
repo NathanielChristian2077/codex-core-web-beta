@@ -1,9 +1,15 @@
 import api from "../../lib/apiClient";
 import type { Character } from "./types";
 
-type Payload = { name: string; description?: string | null };
+type Payload = {
+  name: string;
+  description?: string | null;
+  imageUrl?: string | null;
+};
 
-export const listCharacters = (campaignId: string): Promise<Character[]> =>
+export const listCharacters = (
+  campaignId: string,
+): Promise<Character[]> =>
   api.get(`/campaigns/${campaignId}/characters`).then((r) => r.data);
 
 export const createCharacter = (campaignId: string, p: Payload) =>

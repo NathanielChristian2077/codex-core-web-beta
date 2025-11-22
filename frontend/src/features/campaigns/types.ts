@@ -2,6 +2,7 @@ export type Campaign = {
   id: string;
   name: string;
   description?: string | null;
+  imageUrl: string | null;
   createdAt?: string;
   updatedAt?: string;
   _count?: { events?: number };
@@ -18,4 +19,5 @@ export type EventItem = {
   description?: string | null;
   createdAt?: string;
   updatedAt?: string;
+  imageUrl?: string | null;
 };

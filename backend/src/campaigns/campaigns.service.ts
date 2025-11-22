@@ -8,7 +8,12 @@ import {
 import { Prisma } from "@prisma/client";
 import { PrismaService } from "../common/prisma.service";
 
-type CreateCampaignDto = { name: string; description?: string | null };
+type CreateCampaignDto = {
+  name: string;
+  description?: string | null;
+  imageUrl?: string | null;
+};
+
 type UpdateCampaignDto = Partial<CreateCampaignDto>;
 
 @Injectable()
@@ -22,6 +27,7 @@ export class CampaignsService {
         id: true,
         name: true,
         description: true,
+        imageUrl: true,
         _count: { select: { events: true } },
       },
       orderBy: { name: "asc" },
@@ -31,7 +37,13 @@ export class CampaignsService {
   async getOne(id: string, userId: string) {
     const c = await this.prisma.campaign.findUnique({
       where: { id },
-      select: { id: true, name: true, description: true, userId: true },
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        imageUrl: true,
+        userId: true,
+      },
     });
     if (!c) throw new NotFoundException("Campaign not found");
     if (c.userId !== userId) throw new ForbiddenException("Not permitted");
@@ -51,8 +63,17 @@ export class CampaignsService {
             dto.description !== undefined
               ? dto.description?.trim() || null
               : undefined,
+          imageUrl:
+            dto.imageUrl !== undefined
+              ? dto.imageUrl?.trim() || null
+              : undefined,
         },
-        select: { id: true, name: true, description: true },
+        select: {
+          id: true,
+          name: true,
+          description: true,
+          imageUrl: true,
+        },
       });
     } catch (e: any) {
       // no unique on name by design, but leaving pattern for consistency
@@ -87,8 +108,17 @@ export class CampaignsService {
             dto.description !== undefined
               ? dto.description?.trim() || null
               : undefined,
+          imageUrl:
+            dto.imageUrl !== undefined
+              ? dto.imageUrl?.trim() || null
+              : undefined,
         },
-        select: { id: true, name: true, description: true },
+        select: {
+          id: true,
+          name: true,
+          description: true,
+          imageUrl: true,
+        },
       });
     } catch (e: any) {
       if (

@@ -30,6 +30,7 @@ export default function EventModal({
   const t = useToast();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -37,6 +38,7 @@ export default function EventModal({
 
     setTitle(editing?.title ?? initialTitle ?? "");
     setDescription(editing?.description ?? "");
+    setImageUrl(editing?.imageUrl ?? "");
   }, [open, editing, initialTitle]);
 
   if (!open) return null;
@@ -46,17 +48,25 @@ export default function EventModal({
       t.show("Title is required", "error");
       return;
     }
+
+    const normalizedImageUrl = imageUrl.trim() || undefined;
+
     try {
       setSaving(true);
 
       if (editing?.id) {
-        await updateEvent(editing.id, { title, description });
+        await updateEvent(editing.id, {
+          title,
+          description,
+          imageUrl: normalizedImageUrl,
+        });
         t.show("Event updated", "success");
         onSaved?.();
       } else {
         const created = await createCampaignEvent(campaignId, {
           title,
           description,
+          imageUrl: normalizedImageUrl,
         });
         t.show("Event created", "success");
         onSaved?.();
@@ -99,6 +109,16 @@ export default function EventModal({
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               autoFocus
+            />
+          </label>
+
+          <label className="grid gap-1">
+            <span className="text-sm">Image URL (optional)</span>
+            <input
+              className="rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-600 dark:border-zinc-700 dark:bg-zinc-900"
+              value={imageUrl}
+              onChange={(e) => setImageUrl(e.target.value)}
+              placeholder="https://example.com/event-cover.jpg"
             />
           </label>
 

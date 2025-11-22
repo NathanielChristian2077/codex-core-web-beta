@@ -3,14 +3,22 @@ import Spinner from "../../components/ui/Spinner";
 import { useToast } from "../../components/ui/ToastProvider";
 import { MarkdownEditor } from "../markdown/MarkdownEditor";
 
+type EditingEntity = {
+  id: string;
+  name: string;
+  description?: string | null;
+  imageUrl?: string | null;
+};
+
 type Props = {
   open: boolean;
   onClose: () => void;
   entityName: string; // "Character"
-  editing?: { id: string; name: string; description?: string | null } | null;
+  editing?: EditingEntity | null;
   onSave: (payload: {
     name: string;
     description?: string | null;
+    imageUrl?: string | null;
   }) => Promise<void>;
   initialName?: string;
 };
@@ -26,12 +34,14 @@ export default function EntityModal({
   const t = useToast();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!open) return;
     setName(editing?.name ?? initialName ?? "");
     setDescription(editing?.description ?? "");
+    setImageUrl(editing?.imageUrl ?? "");
   }, [open, editing, initialName]);
 
   if (!open) return null;
@@ -46,6 +56,7 @@ export default function EntityModal({
       await onSave({
         name: name.trim(),
         description: description.trim() || null,
+        imageUrl: imageUrl.trim() ? imageUrl.trim() : null,
       });
       t.show(`${entityName} saved`, "success");
       onClose();
@@ -79,6 +90,16 @@ export default function EntityModal({
             label="Description"
             placeholder={`Describe this ${entityName.toLowerCase()} using markdown...`}
           />
+
+          <label className="grid gap-1">
+            <span className="text-sm">Image URL (optional)</span>
+            <input
+              className="rounded-md border border-zinc-300 bg-white px-3 py-2 dark:bg-zinc-900 dark:border-zinc-700"
+              placeholder="https://…"
+              value={imageUrl}
+              onChange={(e) => setImageUrl(e.target.value)}
+            />
+          </label>
         </div>
 
         <div className="mt-5 flex justify-end gap-2">
@@ -88,7 +109,7 @@ export default function EntityModal({
           <button
             onClick={handleSave}
             disabled={saving}
-            className="rounded bg-blue-600 px-4 py-2 text-white disabled:opacity-60"
+            className="flex items-center gap-2 rounded bg-blue-600 px-4 py-2 text-white disabled:opacity-60"
           >
             {saving ? <Spinner size={16} /> : "Save"}
           </button>

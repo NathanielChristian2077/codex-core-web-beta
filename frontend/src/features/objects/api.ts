@@ -1,9 +1,15 @@
 import api from "../../lib/apiClient";
 import type { ObjectEntity } from "./types";
 
-type Payload = { name: string; description?: string | null };
+type Payload = {
+  name: string;
+  description?: string | null;
+  imageUrl?: string | null;
+};
 
-export const listObjects = (campaignId: string): Promise<ObjectEntity[]> =>
+export const listObjects = (
+  campaignId: string,
+): Promise<ObjectEntity[]> =>
   api.get(`/campaigns/${campaignId}/objects`).then((r) => r.data);
 
 export const createObject = (campaignId: string, p: Payload) =>

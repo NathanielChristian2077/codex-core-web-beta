@@ -1,3 +1,4 @@
+// events.service
 import {
   BadRequestException,
   ConflictException,
@@ -11,6 +12,7 @@ import { PrismaService } from "../common/prisma.service";
 type CreateEventDto = {
   title: string;
   description?: string;
+  imageUrl?: string | null;
 };
 
 type UpdateEventDto = Partial<CreateEventDto>;
@@ -178,6 +180,10 @@ export class EventsService {
             dto.description !== undefined
               ? dto.description?.trim() || null
               : undefined,
+          imageUrl:
+            dto.imageUrl !== undefined
+              ? dto.imageUrl?.trim() || null
+              : undefined,
         },
       });
 
@@ -214,6 +220,10 @@ export class EventsService {
           description:
             dto.description !== undefined
               ? dto.description.trim() || null
+              : undefined,
+          imageUrl:
+            dto.imageUrl !== undefined
+              ? dto.imageUrl?.trim() || null
               : undefined,
         },
       });

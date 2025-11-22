@@ -6,7 +6,7 @@ type Props = {
   name: string;
   description?: string | null;
   eventsCount?: number;
-  coverUrl?: string | null; // opcional, tenho que adicionar depois
+  coverUrl?: string | null;
   onManage?: (id: string) => void;
 };
 

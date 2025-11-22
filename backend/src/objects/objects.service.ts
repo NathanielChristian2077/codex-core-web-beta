@@ -1,3 +1,4 @@
+// objects.service
 import {
   BadRequestException,
   ConflictException,
@@ -16,7 +17,12 @@ const TYPE_MAP: Record<"E" | "C" | "L" | "O", NodeType> = {
   O: NodeType.OBJECT,
 };
 
-type CreateObjectDto = { name: string; description?: string };
+type CreateObjectDto = {
+  name: string;
+  description?: string;
+  imageUrl?: string | null;
+};
+
 type UpdateObjectDto = Partial<CreateObjectDto>;
 
 @Injectable()
@@ -61,7 +67,6 @@ export class ObjectsService {
     const tokens: { type: "E" | "C" | "L" | "O"; name: string }[] = [];
     let match: RegExpExecArray | null;
     LINK_REGEX.lastIndex = 0;
-
 
     while ((match = LINK_REGEX.exec(desc)) !== null) {
       const [, t, raw] = match;
@@ -158,6 +163,10 @@ export class ObjectsService {
             dto.description !== undefined
               ? dto.description?.trim() || null
               : undefined,
+          imageUrl:
+            dto.imageUrl !== undefined
+              ? dto.imageUrl?.trim() || null
+              : undefined,
         },
       });
 
@@ -191,6 +200,10 @@ export class ObjectsService {
           description:
             dto.description !== undefined
               ? dto.description?.trim() || null
+              : undefined,
+          imageUrl:
+            dto.imageUrl !== undefined
+              ? dto.imageUrl?.trim() || null
               : undefined,
         },
       });

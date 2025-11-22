@@ -1,3 +1,4 @@
+// characters.service
 import {
   BadRequestException,
   ConflictException,
@@ -16,7 +17,12 @@ const TYPE_MAP: Record<"E" | "C" | "L" | "O", NodeType> = {
   O: NodeType.OBJECT,
 };
 
-export type CreateCharacterDto = { name: string; description?: string };
+export type CreateCharacterDto = {
+  name: string;
+  description?: string;
+  imageUrl?: string | null;
+};
+
 export type UpdateCharacterDto = Partial<CreateCharacterDto>;
 
 @Injectable()
@@ -61,7 +67,6 @@ export class CharactersService {
     const tokens: { type: "E" | "C" | "L" | "O"; name: string }[] = [];
     let match: RegExpExecArray | null;
     LINK_REGEX.lastIndex = 0;
-
 
     while ((match = LINK_REGEX.exec(desc)) !== null) {
       const [, t, raw] = match;
@@ -160,6 +165,10 @@ export class CharactersService {
             dto.description !== undefined
               ? dto.description?.trim() || null
               : undefined,
+          imageUrl:
+            dto.imageUrl !== undefined
+              ? dto.imageUrl?.trim() || null
+              : undefined,
         },
       });
 
@@ -193,6 +202,10 @@ export class CharactersService {
           description:
             dto.description !== undefined
               ? dto.description?.trim() || null
+              : undefined,
+          imageUrl:
+            dto.imageUrl !== undefined
+              ? dto.imageUrl?.trim() || null
               : undefined,
         },
       });

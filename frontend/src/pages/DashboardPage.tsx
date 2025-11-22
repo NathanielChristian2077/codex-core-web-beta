@@ -105,6 +105,7 @@ export default function DashboardPage() {
               name={c.name}
               description={c.description ?? undefined}
               eventsCount={c._count?.events}
+              coverUrl={c.imageUrl ?? undefined}
               onManage={setManageId}
             />
           ))}
