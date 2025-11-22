@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 import { MarkdownEditor } from "../../components/markdown/MarkdownEditor";
-import Spinner from "../../components/ui/Spinner";
-import { useToast } from "../../components/ui/ToastProvider";
 import {
-  createCampaignEvent,
-  updateEvent,
+    createCampaignEvent,
+    updateEvent,
 } from "../../features/campaigns/api";
 import type { EventItem } from "../../features/campaigns/types";
+import Spinner from "../layout/Spinner";
+import { useToast } from "../layout/ToastProvider";
 
 type Props = {
   open: boolean;

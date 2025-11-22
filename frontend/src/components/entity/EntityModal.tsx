@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import Spinner from "../../components/ui/Spinner";
-import { useToast } from "../../components/ui/ToastProvider";
+import Spinner from "../layout/Spinner";
+import { useToast } from "../layout/ToastProvider";
 import { MarkdownEditor } from "../markdown/MarkdownEditor";
 
 type EditingEntity = {

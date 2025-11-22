@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
+import Spinner from "../components/layout/Spinner";
+import { useToast } from "../components/layout/ToastProvider";
 import EventModal from "../components/timeline/EventModal";
 import Timeline from "../components/timeline/Timeline";
-import Spinner from "../components/ui/Spinner";
-import { useToast } from "../components/ui/ToastProvider";
 import {
-  deleteEvent,
-  getCampaign,
-  listCampaignEvents,
+    deleteEvent,
+    getCampaign,
+    listCampaignEvents,
 } from "../features/campaigns/api";
 import type { EventItem } from "../features/campaigns/types";
 import type { InternalLink } from "../lib/internalLinks";

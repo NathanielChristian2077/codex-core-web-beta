@@ -3,8 +3,8 @@ import CampaignCard from "../components/campaigns/CampaignCard";
 import CreateCampaignModal from "../components/campaigns/CreateCampaignModal";
 import EmptyState from "../components/campaigns/EmptyState";
 import ManageCampaignModal from "../components/campaigns/ManageCampaignModal";
-import Spinner from "../components/ui/Spinner";
-import { useToast } from "../components/ui/ToastProvider";
+import Spinner from "../components/layout/Spinner";
+import { useToast } from "../components/layout/ToastProvider";
 import { createCampaign, importCampaign, listCampaigns } from "../features/campaigns/api";
 import type { Campaign, CampaignExport } from "../features/campaigns/types";
 

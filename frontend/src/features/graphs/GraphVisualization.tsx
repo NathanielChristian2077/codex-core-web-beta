@@ -2,9 +2,9 @@
 import { CalendarDays, MapPin, Package2, User } from "lucide-react";
 import { AnimatePresence } from "motion/react";
 import {
-  RadialMenuOverlay,
-  type MenuItem as RadialMenuItem,
-} from "../../components/ui/radial-menu";
+    RadialMenuOverlay,
+    type MenuItem as RadialMenuItem,
+} from "../../components/layout/radial-menu";
 import { useCurrentCampaign } from "../../store/useCurrentCampaign";
 import { useSession } from "../../store/useSession";
 
@@ -15,9 +15,9 @@ import { useGraph } from "./GraphContext";
 import type { GraphLink, GraphNode } from "./types";
 
 import {
-  createSimulation,
-  type SimLink,
-  type SimNode,
+    createSimulation,
+    type SimLink,
+    type SimNode,
 } from "./core/SimulationManager";
 
 import { GraphLayoutMode } from "../../components/graph/helpers/graphLayout";

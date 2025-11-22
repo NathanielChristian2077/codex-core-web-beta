@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
 import {
-  deleteCampaign,
-  duplicateCampaign,
-  getCampaign,
-  updateCampaign,
+    deleteCampaign,
+    duplicateCampaign,
+    getCampaign,
+    updateCampaign,
 } from "../../features/campaigns/api";
+import Spinner from "../layout/Spinner";
+import { useToast } from "../layout/ToastProvider";
 import { MarkdownEditor } from "../markdown/MarkdownEditor";
-import Spinner from "../ui/Spinner";
-import { useToast } from "../ui/ToastProvider";
 
 type Props = {
   open: boolean;

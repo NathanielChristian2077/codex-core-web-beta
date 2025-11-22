@@ -1,7 +1,7 @@
 import { createBrowserRouter } from "react-router-dom";
 
-import AppShell from "../components/ui/AppShell";
-import RequireAuth from "../components/ui/RequireAuth";
+import AppShell from "../components/layout/AppShell";
+import RequireAuth from "../components/layout/RequireAuth";
 
 import CharactersPage from "../pages/CharactersPage";
 import DashboardPage from "../pages/DashboardPage";

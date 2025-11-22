@@ -1,5 +1,5 @@
 import { RouterProvider } from "react-router-dom";
-import { ToastProvider } from "../components/ui/ToastProvider";
+import { ToastProvider } from "../components/layout/ToastProvider";
 import { router } from "./router";
 
 export function AppProviders() {

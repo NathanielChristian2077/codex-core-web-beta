@@ -2,8 +2,8 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import EntityList, { EntityBase } from "../components/entity/EntityList";
 import EntityModal from "../components/entity/EntityModal";
-import Spinner from "../components/ui/Spinner";
-import { useToast } from "../components/ui/ToastProvider";
+import Spinner from "../components/layout/Spinner";
+import { useToast } from "../components/layout/ToastProvider";
 import type { InternalLink } from "../lib/internalLinks";
 
 type EntityPayload = {

@@ -1,7 +1,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { FormEvent, useState } from "react";
-import AppHeader from "../components/ui/AppHeader";
-import { useToast } from "../components/ui/ToastProvider";
+import AppHeader from "../components/layout/AppHeader";
+import { useToast } from "../components/layout/ToastProvider";
 import { loginUser, registerUser } from "../features/auth/api";
 import { useSession } from "../store/useSession";
 

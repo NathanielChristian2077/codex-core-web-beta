@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import AppHeader from "../components/ui/AppHeader";
+import AppHeader from "../components/layout/AppHeader";
 
 export default function LandingPage() {
     return (
