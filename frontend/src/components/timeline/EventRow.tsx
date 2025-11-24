@@ -85,15 +85,36 @@ export default function EventRow({
     onInternalLinkClick?.(link);
   };
 
+  const imageUrl = (event as any).imageUrl as string | undefined;
+  const hasImage = !!imageUrl;
+
   return (
-    <li className="group relative rounded-lg border border-zinc-200 bg-white/70 p-3 hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900/70 dark:hover:bg-zinc-900">
-      <div className="flex items-start justify-between gap-3">
+    <li className="group relative overflow-hidden rounded-lg border border-zinc-200 bg-white/70 hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900/70 dark:hover:bg-zinc-900">
+      {hasImage && (
+        <div className="pointer-events-none absolute inset-y-0 left-0 w-40">
+          <img
+            src={imageUrl}
+            alt={event.title}
+            className="h-full w-full object-cover"
+            loading="lazy"
+          />
+          <div className="absolute inset-y-0 right-0 w-16 bg-gradient-to-r from-transparent via-white/60 to-white dark:via-zinc-900/70 dark:to-zinc-900" />
+        </div>
+      )}
+
+      <div
+        className={
+          "relative flex items-start justify-between gap-3 p-3 " +
+          (hasImage ? "pl-44" : "")
+        }
+      >
         <div className="min-w-0">
           {createdLabel && (
             <div className="text-xs text-zinc-500 dark:text-zinc-400">
               Created at {createdLabel}
             </div>
           )}
+
           <h4 className="line-clamp-1 text-sm font-semibold">
             {event.title}
           </h4>

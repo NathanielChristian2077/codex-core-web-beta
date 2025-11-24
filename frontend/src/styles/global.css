@@ -128,17 +128,12 @@ body {
   }
 }
 
-/* ---------------------------------------------------------- */
-/* Internal Codex Links – estilo seguro, não interfere no app */
-/* ---------------------------------------------------------- */
-
 .prose a[href^="codex://"]
 {
   text-decoration: underline;
   text-underline-offset: 0.15em;
   font-weight: 500;
 
-  /* emerald-400 aproximado */
   color: rgb(52 211 153);
 }
 
