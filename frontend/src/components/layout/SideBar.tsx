@@ -50,8 +50,6 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
   SidebarRail,
-  SidebarSeparator,
-  SidebarTrigger,
 } from "../animate-ui/components/radix/sidebar";
 
 import { useSession } from "../../store/useSession";
@@ -72,6 +70,8 @@ type AuthUser = {
 export default function SideBar() {
   const location = useLocation();
   const navigate = useNavigate();
+
+  const { isLogged } = useSession();
 
   const [user, setUser] = useState<AuthUser | null>(null);
   const [userLoading, setUserLoading] = useState(true);
@@ -94,32 +94,40 @@ export default function SideBar() {
   const isCharacters = pathname.includes("/characters");
   const isLocations = pathname.includes("/locations");
   const isObjects = pathname.includes("/objects");
-  const [profileOpen, setProfileOpen] = useState(false);
 
+  const [profileOpen, setProfileOpen] = useState(false);
   const isMobile = useIsMobile();
 
-  const displayName = user?.name || "Game Master";
+  const displayName = userLoading ? "Loading..." : user?.name || "Game Master";
   const displayEmail = user?.email || "";
 
   useEffect(() => {
     let ignore = false;
 
     async function fetchMe() {
+      const token = localStorage.getItem("accessToken");
+      if (!isLogged || !token) {
+        if (!ignore) {
+          setUser(null);
+          setUserLoading(false);
+        }
+        return;
+      }
+
       try {
         setUserLoading(true);
         const { data } = await api.get<AuthUser>("/auth/me");
-        if (!ignore) setUser(data);
+        if (!ignore) {
+          setUser(data);
+        }
       } catch {
         if (!ignore) {
-          setUser({
-            id: "unknown",
-            email: "unknown@example.com",
-            name: "Game Master",
-            avatarUrl: null,
-          });
+          setUser(null);
         }
       } finally {
-        if (!ignore) setUserLoading(false);
+        if (!ignore) {
+          setUserLoading(false);
+        }
       }
     }
 
@@ -128,7 +136,7 @@ export default function SideBar() {
     return () => {
       ignore = true;
     };
-  }, []);
+  }, [isLogged]);
 
   useEffect(() => {
     let ignore = false;
@@ -170,18 +178,20 @@ export default function SideBar() {
 
   return (
     <Sidebar collapsible="icon">
-      <SidebarHeader className="flex items-center justify-between gap-2">
-        <div className="flex flex-col">
+      <SidebarHeader className="flex flex-col gap-1 px-2">
+        <div className="flex items-center justify-between">
           <button
             type="button"
             onClick={() => go("/dashboard")}
-            className="text-sm font-semibold tracking-tight text-left"
+            className="flex items-center justify-center"
           >
-            Codex Core
+            <img
+              src="/CodexCoreB.svg"
+              alt="Codex Core Logo"
+              className="h-8 w-8 cursor-pointer"
+            />
           </button>
-          <span className="text-[11px] text-zinc-500">Campaign manager</span>
         </div>
-        <SidebarTrigger className="shrink-0" />
       </SidebarHeader>
 
       <SidebarContent>
@@ -430,8 +440,6 @@ export default function SideBar() {
             </Collapsible>
           </SidebarMenu>
         </SidebarGroup>
-
-        <SidebarSeparator />
       </SidebarContent>
 
       <SidebarFooter>
@@ -538,7 +546,6 @@ export default function SideBar() {
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
-
       <SidebarRail />
     </Sidebar>
   );

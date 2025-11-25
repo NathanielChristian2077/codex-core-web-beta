@@ -8,47 +8,81 @@ import {
   Post,
   Put,
   Req,
+  UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '../auth/auth.guard';
 import { CampaignsService } from './campaigns.service';
+
+type AuthedRequest = {
+  user?: {
+    id: string;
+    email: string;
+    role?: string | null;
+    name?: string | null;
+    avatarUrl?: string | null;
+  };
+};
 
 @UseGuards(AuthGuard)
 @Controller('campaigns')
 export class CampaignsController {
   constructor(private readonly svc: CampaignsService) {}
 
+  private getUserId(req: AuthedRequest): string {
+    const userId = req.user?.id;
+    if (!userId) {
+      throw new UnauthorizedException('User not authenticated');
+    }
+    return userId;
+  }
+
   @Get()
-  listMine(@Req() req: any) {
-    const userId: string = req.user?.sub;
+  listMine(@Req() req: AuthedRequest) {
+    const userId = this.getUserId(req);
     return this.svc.listMine(userId);
   }
 
   @Get(':id')
-  getOne(@Param('id', new ParseUUIDPipe()) id: string, @Req() req: any) {
-    const userId: string = req.user?.sub;
+  getOne(
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @Req() req: AuthedRequest,
+  ) {
+    const userId = this.getUserId(req);
     return this.svc.getOne(id, userId);
   }
 
   @Post()
-  create(@Body() dto: { name: string; description?: string | null }, @Req() req: any) {
-    const userId: string = req.user?.sub;
+  create(
+    @Body()
+    dto: { name: string; description?: string | null; imageUrl?: string | null },
+    @Req() req: AuthedRequest,
+  ) {
+    const userId = this.getUserId(req);
     return this.svc.create(userId, dto);
   }
 
   @Put(':id')
   update(
     @Param('id', new ParseUUIDPipe()) id: string,
-    @Body() dto: { name?: string; description?: string | null },
-    @Req() req: any,
+    @Body()
+    dto: {
+      name?: string;
+      description?: string | null;
+      imageUrl?: string | null;
+    },
+    @Req() req: AuthedRequest,
   ) {
-    const userId: string = req.user?.sub;
+    const userId = this.getUserId(req);
     return this.svc.update(id, userId, dto);
   }
 
   @Delete(':id')
-  remove(@Param('id', new ParseUUIDPipe()) id: string, @Req() req: any) {
-    const userId: string = req.user?.sub;
+  remove(
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @Req() req: AuthedRequest,
+  ) {
+    const userId = this.getUserId(req);
     return this.svc.remove(id, userId);
   }
 }

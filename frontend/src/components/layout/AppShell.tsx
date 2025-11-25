@@ -1,10 +1,32 @@
+import React from "react";
 import { Outlet } from "react-router-dom";
+
 import SideBar from "./SideBar";
 
+import { cn } from "../../lib/utils";
 import {
   SidebarInset,
   SidebarProvider,
+  SidebarTrigger,
+  useSidebar,
 } from "../animate-ui/components/radix/sidebar";
+
+function FloatingSidebarTrigger() {
+  const { state } = useSidebar(); 
+
+  return (
+    <SidebarTrigger
+      className={cn(
+        "fixed top-4 z-40 flex h-9 w-9 items-center justify-center",
+        "rounded-md border bg-white shadow-sm",
+        "transition-[left] duration-200",
+        "dark:bg-zinc-900 dark:border-zinc-700",
+        "cursor-pointer",
+        state === "expanded" ? "left-[18.5rem]" : "left-14"
+      )}
+    />
+  );
+}
 
 export default function AppShell() {
   return (
@@ -19,8 +41,10 @@ export default function AppShell() {
     >
       <SideBar />
 
+      <FloatingSidebarTrigger />
+
       <SidebarInset className="flex-1">
-        <main className="h-full w-full px-6 py-8 lg:px-10">
+        <main className="mx-auto max-w-6xl px-4 py-8">
           <Outlet />
         </main>
       </SidebarInset>

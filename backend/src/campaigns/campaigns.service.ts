@@ -4,9 +4,9 @@ import {
   ForbiddenException,
   Injectable,
   NotFoundException,
-} from "@nestjs/common";
-import { Prisma } from "@prisma/client";
-import { PrismaService } from "../common/prisma.service";
+} from '@nestjs/common';
+import { Prisma } from '@prisma/client';
+import { PrismaService } from '../common/prisma.service';
 
 type CreateCampaignDto = {
   name: string;
@@ -30,7 +30,7 @@ export class CampaignsService {
         imageUrl: true,
         _count: { select: { events: true } },
       },
-      orderBy: { name: "asc" },
+      orderBy: { name: 'asc' },
     });
   }
 
@@ -45,15 +45,17 @@ export class CampaignsService {
         userId: true,
       },
     });
-    if (!c) throw new NotFoundException("Campaign not found");
-    if (c.userId !== userId) throw new ForbiddenException("Not permitted");
+    if (!c) throw new NotFoundException('Campaign not found');
+    if (c.userId !== userId) throw new ForbiddenException('Not permitted');
     const { userId: _u, ...rest } = c;
     return rest;
   }
 
   async create(userId: string, dto: CreateCampaignDto) {
-    if (!dto?.name || !dto.name.trim())
-      throw new BadRequestException("Name is required");
+    if (!dto?.name || !dto.name.trim()) {
+      throw new BadRequestException('Name is required');
+    }
+
     try {
       return await this.prisma.campaign.create({
         data: {
@@ -76,12 +78,13 @@ export class CampaignsService {
         },
       });
     } catch (e: any) {
-      // no unique on name by design, but leaving pattern for consistency
       if (
         e instanceof (Prisma as any).PrismaClientKnownRequestError &&
-        e.code === "P2002"
+        e.code === 'P2002'
       ) {
-        throw new ConflictException("A campaign with this name already exists");
+        throw new ConflictException(
+          'A campaign with this name already exists',
+        );
       }
       throw e;
     }
@@ -92,11 +95,11 @@ export class CampaignsService {
       where: { id },
       select: { userId: true },
     });
-    if (!c) throw new NotFoundException("Campaign not found");
-    if (c.userId !== userId) throw new ForbiddenException("Not permitted");
+    if (!c) throw new NotFoundException('Campaign not found');
+    if (c.userId !== userId) throw new ForbiddenException('Not permitted');
 
     if (dto.name !== undefined && !dto.name.trim()) {
-      throw new BadRequestException("Name cannot be empty");
+      throw new BadRequestException('Name cannot be empty');
     }
 
     try {
@@ -123,9 +126,11 @@ export class CampaignsService {
     } catch (e: any) {
       if (
         e instanceof (Prisma as any).PrismaClientKnownRequestError &&
-        e.code === "P2002"
+        e.code === 'P2002'
       ) {
-        throw new ConflictException("A campaign with this name already exists");
+        throw new ConflictException(
+          'A campaign with this name already exists',
+        );
       }
       throw e;
     }
@@ -136,8 +141,9 @@ export class CampaignsService {
       where: { id },
       select: { userId: true },
     });
-    if (!c) throw new NotFoundException("Campaign not found");
-    if (c.userId !== userId) throw new ForbiddenException("Not permitted");
+    if (!c) throw new NotFoundException('Campaign not found');
+    if (c.userId !== userId) throw new ForbiddenException('Not permitted');
+
     await this.prisma.campaign.delete({ where: { id } });
     return { ok: true };
   }

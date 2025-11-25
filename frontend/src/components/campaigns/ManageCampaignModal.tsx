@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import {
-    deleteCampaign,
-    duplicateCampaign,
-    getCampaign,
-    updateCampaign,
+  deleteCampaign,
+  duplicateCampaign,
+  getCampaign,
+  updateCampaign,
 } from "../../features/campaigns/api";
 import Spinner from "../layout/Spinner";
 import { useToast } from "../layout/ToastProvider";
@@ -40,7 +40,6 @@ export default function ManageCampaignModal({
         const c = await getCampaign(campaignId);
         setName(c.name);
         setDescription(c.description ?? "");
-        // imageUrl may or may not exist in the type depending on your definitions
         setCoverUrl((c as any).imageUrl ?? "");
       } catch {
         toast.show("Failed to load campaign", "error");

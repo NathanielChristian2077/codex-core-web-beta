@@ -1,6 +1,8 @@
+import { Clock3, Settings2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useCurrentCampaign } from "../../store/useCurrentCampaign";
 import GlareHover from "../layout/GlareHover";
+
 type Props = {
   id: string;
   name: string;
@@ -26,22 +28,21 @@ export default function CampaignCard({
   }
 
   return (
-    <li className="list-none" onClick={selectCampaign}>
+    <li className="list-none h-full" onClick={selectCampaign}>
       <GlareHover
         width="100%"
         height="100%"
         background="transparent"
-        borderRadius="0.75rem" // ~ rounded-xl
-        borderColor="rgba(228,228,231,1)" // zinc-200
+        borderRadius="0.75rem"
+        borderColor="rgba(228,228,231,1)"
         glareColor="#ffffff"
         glareOpacity={0.5}
         glareAngle={-45}
         glareSize={250}
         transitionDuration={650}
-        className="relative cursor-pointer overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg dark:border-zinc-800 dark:bg-zinc-900"
-        style={{}}
+        className="relative flex h-full w-full cursor-pointer overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg dark:border-zinc-800 dark:bg-zinc-900"
       >
-        <div className="relative h-32 w-full">
+        <div className="relative h-40 w-full">
           {coverUrl ? (
             <img
               src={coverUrl}
@@ -63,7 +64,7 @@ export default function CampaignCard({
         </div>
 
         <div className="w-full p-4">
-          <h3 className="line-clamp-1 text-base font-semibold tracking-tight">
+          <h3 className="line-clamp-1 text-lg font-semibold tracking-tight">
             {name}
           </h3>
 
@@ -80,9 +81,10 @@ export default function CampaignCard({
                 selectCampaign();
                 navigate(`/campaigns/${id}/timeline`);
               }}
-              className="inline-flex items-center rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500/60"
+              className="cursor-pointer inline-flex items-center gap-2 rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500/60"
               type="button"
             >
+              <Clock3 className="h-4 w-4" />
               Open timeline
             </button>
 
@@ -92,15 +94,15 @@ export default function CampaignCard({
                 selectCampaign();
                 onManage?.(id);
               }}
-              className="inline-flex items-center rounded-md border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-900 hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-zinc-300/60 dark:border-zinc-700 dark:text-zinc-100 dark:hover:bg-zinc-800 dark:focus:ring-zinc-600/50"
+              className="cursor-pointer inline-flex items-center gap-2 rounded-md border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-900 hover:bg-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-300/60 dark:border-zinc-700 dark:text-zinc-100 dark:hover:bg-zinc-800 dark:focus:ring-zinc-600/50"
               type="button"
             >
+              <Settings2 className="h-4 w-4" />
               Manage
             </button>
           </div>
         </div>
 
-        {/* outline leve no hover, mantendo o estilo antigo */}
         <div className="pointer-events-none absolute inset-0 ring-0 ring-blue-500/0 transition group-hover:ring-2 group-hover:ring-blue-500/20" />
       </GlareHover>
     </li>

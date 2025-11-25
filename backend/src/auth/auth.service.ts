@@ -29,7 +29,14 @@ export class AuthService {
   async login(email: string, password: string) {
     const user = await this.validateUser(email, password);
 
-    const payload = { sub: user.id, email: user.email, role: user.role };
+    const payload = {
+      sub: user.id,
+      email: user.email,
+      role: user.role,
+      name: user.name ?? null,
+      avatarUrl: (user as any).avatarUrl ?? null,
+    };
+
     const accessToken = await this.jwt.signAsync(payload);
 
     return {
@@ -38,6 +45,8 @@ export class AuthService {
         id: user.id,
         email: user.email,
         role: user.role,
+        name: user.name ?? null,
+        avatarUrl: (user as any).avatarUrl ?? null,
       },
     };
   }
@@ -68,10 +77,18 @@ export class AuthService {
         password: passwordHash,
         role: 'GM', // default for Codex Core 1.0
         name: defaultName,
+        // avatarUrl: null,
       },
     });
 
-    const payload = { sub: user.id, email: user.email, role: user.role };
+    const payload = {
+      sub: user.id,
+      email: user.email,
+      role: user.role,
+      name: user.name ?? null,
+      avatarUrl: (user as any).avatarUrl ?? null,
+    };
+
     const accessToken = await this.jwt.signAsync(payload);
 
     return {
@@ -80,6 +97,8 @@ export class AuthService {
         id: user.id,
         email: user.email,
         role: user.role,
+        name: user.name ?? null,
+        avatarUrl: (user as any).avatarUrl ?? null,
       },
     };
   }
