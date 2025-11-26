@@ -98,14 +98,12 @@ export default function EntityPage({
     const pageKind = inferKindFromTitle(title);
     if (!pageKind) return;
 
-    // se o link é de OUTRO tipo → navega pra página daquele tipo
     if (link.kind !== pageKind) {
       const path = pathForKind(link.kind, campaignId);
       navigate(path);
       return;
     }
 
-    // mesmo tipo da página → abre/cria modal
     const normalized = link.name.trim().toLowerCase();
     const found = items.find(
       (item) => item.name.trim().toLowerCase() === normalized
@@ -133,7 +131,7 @@ export default function EntityPage({
 
   return (
     <div className="mx-auto max-w-3xl">
-      <div className="mb-6 flex justify-between">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-semibold">{title}</h1>
         <button
           className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"

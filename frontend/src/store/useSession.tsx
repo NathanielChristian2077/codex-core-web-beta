@@ -1,5 +1,4 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
 
 type SessionState = {
   token: string | null;
@@ -8,24 +7,34 @@ type SessionState = {
   logout: () => void;
 };
 
-export const useSession = create<SessionState>()(
-  persist(
-    (set) => ({
-      token: localStorage.getItem("accessToken"),
-      isLogged: !!localStorage.getItem("accessToken"),
+function readTokenFromStorage(): string | null {
+  try {
+    return localStorage.getItem("accessToken");
+  } catch {
+    return null;
+  }
+}
 
-      setToken: (token) => {
-        if (token) localStorage.setItem("accessToken", token);
-        else localStorage.removeItem("accessToken");
-        set({ token, isLogged: !!token });
-      },
+export const useSession = create<SessionState>((set) => {
+  const initialToken = readTokenFromStorage();
 
-      logout: () => {
+  return {
+    token: initialToken,
+    isLogged: !!initialToken,
+
+    setToken: (token) => {
+      if (token) {
+        localStorage.setItem("accessToken", token);
+      } else {
         localStorage.removeItem("accessToken");
-        set({ token: null, isLogged: false });
-        window.location.assign("/login");
-      },
-    }),
-    { name: "session" }
-  )
-);
+      }
+      set({ token, isLogged: !!token });
+    },
+
+    logout: () => {
+      localStorage.removeItem("accessToken");
+      set({ token: null, isLogged: false });
+      window.location.assign("/login");
+    },
+  };
+});

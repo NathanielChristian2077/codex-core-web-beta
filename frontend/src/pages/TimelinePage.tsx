@@ -5,9 +5,9 @@ import { useToast } from "../components/layout/ToastProvider";
 import EventModal from "../components/timeline/EventModal";
 import Timeline from "../components/timeline/Timeline";
 import {
-    deleteEvent,
-    getCampaign,
-    listCampaignEvents,
+  deleteEvent,
+  getCampaign,
+  listCampaignEvents,
 } from "../features/campaigns/api";
 import type { EventItem } from "../features/campaigns/types";
 import type { InternalLink } from "../lib/internalLinks";
@@ -72,13 +72,11 @@ export default function TimelinePage() {
     if (!id) return;
 
     if (link.kind !== "E") {
-      // outro tipo → manda pra página daquele tipo
       const path = pathForKind(link.kind, id);
       navigate(path);
       return;
     }
 
-    // evento → tenta abrir/criar
     const normalized = link.name.trim().toLowerCase();
     const found = events.find(
       (ev) => ev.title.trim().toLowerCase() === normalized

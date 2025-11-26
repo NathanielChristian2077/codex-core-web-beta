@@ -503,7 +503,7 @@ export default function SideBar() {
                       className={cn(
                         "flex items-center gap-2 px-2 py-1.5 text-sm rounded-md outline-hidden ring-sidebar-ring",
                         "text-sidebar-foreground",
-                        "[&:not([data-highlight])]:hover:bg-sidebar-accent [&:not([data-highlight])]:hover:text-sidebar-accent-foreground",
+                        "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
                         "active:bg-sidebar-accent active:text-sidebar-accent-foreground",
                         "focus-visible:ring-2",
                         "cursor-pointer hover:opacity-95 active:opacity-80"
@@ -525,7 +525,7 @@ export default function SideBar() {
                     className={cn(
                       "flex items-center gap-2 px-2 py-1.5 text-sm rounded-md outline-hidden ring-sidebar-ring",
                       "text-sidebar-foreground",
-                      "[&:not([data-highlight])]:hover:bg-sidebar-accent [&:not([data-highlight])]:hover:text-sidebar-accent-foreground",
+                      "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
                       "active:bg-sidebar-accent active:text-sidebar-accent-foreground",
                       "focus-visible:ring-2",
                       "cursor-pointer hover:opacity-95 active:opcity-80"
