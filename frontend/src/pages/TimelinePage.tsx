@@ -1,3 +1,4 @@
+import { GitBranch, Plus } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import Spinner from "../components/layout/Spinner";
@@ -95,32 +96,36 @@ export default function TimelinePage() {
   };
 
   return (
-    <div className="mx-auto max-w-3xl">
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+    <div className="mx-auto w-full max-w-4xl px-4 lg:px-6">
+      <div className="mb-8 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold">
+          <h1 className="text-3xl font-bold tracking-tight">
             {campaignName || "Timeline"}
           </h1>
           <p className="text-sm text-zinc-600 dark:text-zinc-400">
             Events listed in creation order
           </p>
         </div>
+
         <div className="flex gap-2">
           <Link
             to={`/campaigns/${id}/graph`}
-            className="rounded border px-3 py-2 text-sm hover:bg-zinc-50 dark:hover:bg-zinc-800"
+            className="inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm hover:bg-zinc-50 dark:hover:bg-zinc-800"
           >
-            Open graph
+            <GitBranch className="h-4 w-4" />
+            <span>Open graph</span>
           </Link>
+
           <button
             onClick={() => {
               setEditing(null);
               setInitialTitle(undefined);
               setModalOpen(true);
             }}
-            className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+            className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700"
           >
-            New event
+            <Plus className="h-4 w-4" />
+            <span>New event</span>
           </button>
         </div>
       </div>

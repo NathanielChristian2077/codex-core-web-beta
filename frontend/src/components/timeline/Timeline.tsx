@@ -23,7 +23,7 @@ export default function Timeline({
   });
 
   return (
-    <ul className="space-y-2">
+    <ul className="w-full space-y-4">
       <AnimatePresence>
         {sorted.map((ev, index) => (
           <motion.li

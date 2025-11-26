@@ -1,3 +1,4 @@
+import { Pencil, Trash2 } from "lucide-react";
 import { MarkdownRenderer } from "../../components/markdown/MarkdownRenderer";
 import {
   INTERNAL_LINK_PROTOCOL,
@@ -13,7 +14,9 @@ type Props = {
   onInternalLinkClick?: (link: InternalLink) => void;
 };
 
-function parseInternalLinkFromHref(hrefRaw: string | null): InternalLink | null {
+function parseInternalLinkFromHref(
+  hrefRaw: string | null
+): InternalLink | null {
   if (!hrefRaw) return null;
   const href = hrefRaw.trim();
   if (!href || !href.includes(INTERNAL_LINK_PROTOCOL)) return null;
@@ -50,11 +53,16 @@ export default function EntityRow({
   onDelete,
   onInternalLinkClick,
 }: Props) {
-  const hasDesc = typeof description === "string" && description.trim().length > 0;
+  const hasDesc =
+    typeof description === "string" && description.trim().length > 0;
   const hasImage = !!imageUrl;
 
-  const handleDescriptionClickCapture = (e: React.MouseEvent<HTMLDivElement>) => {
-    const anchor = (e.target as HTMLElement)?.closest("a") as HTMLAnchorElement | null;
+  const handleDescriptionClickCapture = (
+    e: React.MouseEvent<HTMLDivElement>
+  ) => {
+    const anchor = (e.target as HTMLElement)?.closest(
+      "a"
+    ) as HTMLAnchorElement | null;
     if (!anchor) return;
 
     const hrefAttr = anchor.getAttribute("href");
@@ -69,26 +77,37 @@ export default function EntityRow({
   };
 
   return (
-    <li className="group relative overflow-hidden rounded-lg border border-zinc-200 bg-white/70 hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900/70 dark:hover:bg-zinc-900">
-
+    <div
+      className="
+        relative w-full overflow-hidden rounded-xl
+        border border-zinc-200 bg-white/80 shadow-sm
+        transition hover:bg-zinc-50 hover:shadow-md
+        dark:border-zinc-800 dark:bg-zinc-900/80 dark:hover:bg-zinc-900
+        min-h-[150px]
+      "
+    >
       {hasImage && (
-        <div className="pointer-events-none absolute inset-y-0 left-0 w-32 sm:w-40">
+        <div className="pointer-events-none absolute inset-y-0 left-0 w-40 sm:w-48">
           <img
             src={imageUrl!}
             alt={name}
             className="h-full w-full object-cover"
             loading="lazy"
           />
-          <div className="absolute inset-y-0 right-0 w-16 bg-gradient-to-r from-transparent via-white/60 to-white dark:via-zinc-900/70 dark:to-zinc-900" />
+          <div className="absolute inset-y-0 right-0 w-20 bg-gradient-to-r from-transparent via-white/60 to-white dark:via-zinc-900/70 dark:to-zinc-900" />
         </div>
       )}
 
-      <div className={`relative p-4 flex flex-col gap-2 ${hasImage ? "pl-36 sm:pl-44" : ""}`}>
-        <h4 className="text-sm font-semibold line-clamp-1">{name}</h4>
+      <div
+        className={`relative flex h-full flex-col gap-2 p-5 pr-40 ${
+          hasImage ? "pl-40 sm:pl-48" : ""
+        }`}
+      >
+        <h4 className="text-lg font-semibold line-clamp-1">{name}</h4>
 
         {hasDesc ? (
           <div
-            className="text-sm text-zinc-600 dark:text-zinc-300"
+            className="mt-1 text-base text-zinc-700 dark:text-zinc-300"
             onClickCapture={handleDescriptionClickCapture}
           >
             <MarkdownRenderer
@@ -96,33 +115,45 @@ export default function EntityRow({
               className="
                 prose prose-sm max-w-none dark:prose-invert
                 line-clamp-3
-                prose-a:text-emerald-400
+                prose-a:text-blue-500
                 prose-a:underline
                 prose-a:underline-offset-2
-                hover:prose-a:text-emerald-300
+                hover:prose-a:text-blue-400
               "
             />
           </div>
         ) : (
-          <p className="text-sm italic text-zinc-500 dark:text-zinc-400">No description.</p>
+          <p className="mt-1 text-sm italic text-zinc-500 dark:text-zinc-400">
+            No description.
+          </p>
         )}
-
-        <div className="mt-2 flex gap-2">
-          <button
-            className="rounded border px-3 py-1 text-sm hover:bg-zinc-50 dark:border-zinc-700 dark:hover:bg-zinc-800"
-            onClick={onEdit}
-          >
-            Edit
-          </button>
-
-          <button
-            className="rounded border border-red-500 px-3 py-1 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/20"
-            onClick={onDelete}
-          >
-            Delete
-          </button>
-        </div>
       </div>
-    </li>
+
+      <div className="absolute right-4 top-4 flex gap-2">
+        <button
+          onClick={onEdit}
+          className="
+            cursor-pointer inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5
+            text-xs font-medium hover:bg-zinc-100
+            dark:border-zinc-700 dark:hover:bg-zinc-800
+          "
+        >
+          <Pencil className="h-4 w-4" />
+          <span>Edit</span>
+        </button>
+
+        <button
+          onClick={onDelete}
+          className="
+            cursor-pointer inline-flex items-center gap-1.5 rounded-lg border border-red-500 px-3 py-1.5
+            text-xs font-medium text-red-600 hover:bg-red-50
+            dark:text-red-400 dark:hover:bg-red-950/20
+          "
+        >
+          <Trash2 className="h-4 w-4" />
+          <span>Delete</span>
+        </button>
+      </div>
+    </div>
   );
 }

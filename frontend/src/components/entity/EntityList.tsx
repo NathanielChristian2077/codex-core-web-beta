@@ -22,7 +22,7 @@ export default function EntityList({
   onInternalLinkClick,
 }: Props) {
   return (
-    <ul className="space-y-3">
+    <ul className="w-full space-y-4">
       <AnimatePresence>
         {items.map((item, index) => (
           <motion.li

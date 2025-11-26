@@ -1,3 +1,4 @@
+import { Plus } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import EntityList, { EntityBase } from "../components/entity/EntityList";
@@ -130,31 +131,35 @@ export default function EntityPage({
   }
 
   return (
-    <div className="mx-auto max-w-3xl">
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold">{title}</h1>
+    <div className="mx-auto w-full max-w-4xl px-4 lg:px-6">
+      <div className="mb-8 flex items-center justify-between">
+        <h1 className="text-3xl font-bold tracking-tight">{title}</h1>
+
         <button
-          className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+          className="cursor-pointer inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700"
           onClick={() => {
             setEditing(null);
             setInitialName(undefined);
             setModalOpen(true);
           }}
         >
+          <Plus className="h-4 w-4"/>
           New
         </button>
       </div>
 
-      <EntityList
-        items={items}
-        onEdit={(item) => {
-          setEditing(item);
-          setInitialName(undefined);
-          setModalOpen(true);
-        }}
-        onDelete={handleDelete}
-        onInternalLinkClick={handleInternalLinkClick}
-      />
+      <div className="w-full">
+        <EntityList
+          items={items}
+          onEdit={(item) => {
+            setEditing(item);
+            setInitialName(undefined);
+            setModalOpen(true);
+          }}
+          onDelete={handleDelete}
+          onInternalLinkClick={handleInternalLinkClick}
+        />
+      </div>
 
       <EntityModal
         open={modalOpen}
