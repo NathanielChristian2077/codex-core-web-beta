@@ -1,3 +1,4 @@
+import { Copy, Image as ImageIcon, Save, Trash2, Upload } from "lucide-react";
 import { useEffect, useState } from "react";
 import {
   deleteCampaign,
@@ -5,6 +6,13 @@ import {
   getCampaign,
   updateCampaign,
 } from "../../features/campaigns/api";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "../animate-ui/components/radix/dialog";
 import Spinner from "../layout/Spinner";
 import { useToast } from "../layout/ToastProvider";
 import { MarkdownEditor } from "../markdown/MarkdownEditor";
@@ -48,8 +56,6 @@ export default function ManageCampaignModal({
       }
     })();
   }, [open, campaignId, toast]);
-
-  if (!open) return null;
 
   async function handleSave() {
     if (!campaignId) return;
@@ -122,22 +128,21 @@ export default function ManageCampaignModal({
   }
 
   return (
-    <div
-      className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4"
-      role="dialog"
-      aria-modal="true"
+    <Dialog
+      open={open}
+      onOpenChange={(isOpen) => {
+        if (!isOpen) onClose();
+      }}
     >
-      <div className="w-full max-w-xl rounded-xl border bg-white p-6 shadow-xl dark:border-zinc-800 dark:bg-zinc-900">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Manage campaign</h2>
-          <button
-            onClick={onClose}
-            className="rounded p-1 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800"
-            aria-label="Close"
-          >
-            ✕
-          </button>
-        </div>
+      <DialogContent from="bottom" className="sm:max-w-xl">
+        <DialogHeader className="mb-3 flex flex-row items-center justify-between gap-2">
+          <div>
+            <DialogTitle>Manage campaign</DialogTitle>
+            <DialogDescription>
+              Update metadata, duplicate or export this campaign.
+            </DialogDescription>
+          </div>
+        </DialogHeader>
 
         {loading ? (
           <div className="flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-300">
@@ -163,7 +168,10 @@ export default function ManageCampaignModal({
               />
 
               <label className="grid gap-1">
-                <span className="text-sm">Cover image URL (optional)</span>
+                <span className="flex items-center gap-2 text-sm">
+                  <ImageIcon className="h-4 w-4 text-zinc-500" />
+                  Cover image URL (optional)
+                </span>
                 <input
                   className="rounded-md border border-zinc-300 bg-white px-3 py-2 outline-none focus:ring-2 focus:ring-blue-600 dark:border-zinc-700 dark:bg-zinc-900"
                   placeholder="https://…"
@@ -173,53 +181,60 @@ export default function ManageCampaignModal({
               </label>
             </div>
 
-            <div className="mt-5 flex items-center justify-between">
-              <div className="flex gap-2">
+            <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+              <div className="flex flex-col gap-2">
                 <button
-                  onClick={handleExportJSON}
-                  className="rounded border px-3 py-1.5 text-sm hover:bg-zinc-50 dark:hover:bg-zinc-800"
                   type="button"
+                  onClick={handleExportJSON}
+                  className="inline-flex cursor-pointer items-center gap-2 rounded border px-3 py-1.5 text-sm hover:bg-zinc-50 dark:border-zinc-700 dark:hover:bg-zinc-800"
                 >
+                  <Upload className="h-4 w-4" />
                   Export JSON
                 </button>
+
                 <button
+                  type="button"
                   onClick={handleDuplicate}
                   disabled={dupLoading}
-                  className="rounded border px-3 py-1.5 text-sm hover:bg-zinc-50 disabled:opacity-70 dark:hover:bg-zinc-800"
-                  type="button"
+                  className="inline-flex cursor-pointer items-center gap-2 rounded border px-3 py-1.5 text-sm hover:bg-zinc-50 disabled:opacity-70 dark:border-zinc-700 dark:hover:bg-zinc-800"
                 >
+                  <Copy className="h-4 w-4" />
                   {dupLoading ? "Duplicating..." : "Duplicate"}
                 </button>
               </div>
 
-              <div className="flex gap-2">
+              <div className="flex flex-col gap-2 sm:items-end">
                 <button
-                  onClick={onClose}
-                  className="rounded border px-3 py-1.5 hover:bg-zinc-50 dark:hover:bg-zinc-800"
                   type="button"
+                  onClick={onClose}
+                  className="inline-flex cursor-pointer items-center gap-2 rounded border px-3 py-1.5 text-sm hover:bg-zinc-50 dark:border-zinc-700 dark:hover:bg-zinc-800"
                 >
                   Cancel
                 </button>
+
                 <button
+                  type="button"
                   onClick={handleSave}
                   disabled={saving}
-                  className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:opacity-70"
-                  type="button"
+                  className="inline-flex cursor-pointer items-center gap-2 rounded bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700 disabled:opacity-70"
                 >
+                  <Save className="h-4 w-4" />
                   {saving ? "Saving..." : "Save changes"}
                 </button>
+
                 <button
-                  onClick={handleDelete}
-                  className="rounded border border-red-500 px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/20"
                   type="button"
+                  onClick={handleDelete}
+                  className="inline-flex cursor-pointer items-center gap-2 rounded border border-red-500 px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:border-red-500 dark:text-red-400 dark:hover:bg-red-950/20"
                 >
+                  <Trash2 className="h-4 w-4" />
                   Delete
                 </button>
               </div>
             </div>
           </>
         )}
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

@@ -1,4 +1,13 @@
+import { Image as ImageIcon, Save } from "lucide-react";
 import { useEffect, useState } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "../animate-ui/components/radix/dialog";
 import Spinner from "../layout/Spinner";
 import { useToast } from "../layout/ToastProvider";
 import { MarkdownEditor } from "../markdown/MarkdownEditor";
@@ -44,8 +53,6 @@ export default function EntityModal({
     setImageUrl(editing?.imageUrl ?? "");
   }, [open, editing, initialName]);
 
-  if (!open) return null;
-
   async function handleSave() {
     if (!name.trim()) {
       t.show("Name is required", "error");
@@ -68,17 +75,29 @@ export default function EntityModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4">
-      <div className="w-full max-w-xl rounded-xl border bg-white p-6 shadow-xl dark:bg-zinc-900 dark:border-zinc-800">
-        <h2 className="mb-4 text-lg font-semibold">
-          {editing ? `Edit ${entityName}` : `New ${entityName}`}
-        </h2>
+    <Dialog
+      open={open}
+      onOpenChange={(isOpen) => {
+        if (!isOpen) onClose();
+      }}
+    >
+      <DialogContent from="bottom" className="sm:max-w-xl">
+        <DialogHeader className="mb-3 flex flex-row items-center justify-between gap-2">
+          <div>
+            <DialogTitle>
+              {editing ? `Edit ${entityName}` : `New ${entityName}`}
+            </DialogTitle>
+            <DialogDescription>
+              Manage the details of this {entityName.toLowerCase()}.
+            </DialogDescription>
+          </div>
+        </DialogHeader>
 
         <div className="grid gap-3">
           <label className="grid gap-1">
             <span className="text-sm">Name</span>
             <input
-              className="rounded-md border border-zinc-300 bg-white px-3 py-2 dark:bg-zinc-900 dark:border-zinc-700"
+              className="rounded-md border border-zinc-300 bg-white px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
               value={name}
               onChange={(e) => setName(e.target.value)}
             />
@@ -92,9 +111,12 @@ export default function EntityModal({
           />
 
           <label className="grid gap-1">
-            <span className="text-sm">Image URL (optional)</span>
+            <span className="flex items-center gap-2 text-sm">
+              <ImageIcon className="h-4 w-4 text-zinc-500" />
+              Image URL (optional)
+            </span>
             <input
-              className="rounded-md border border-zinc-300 bg-white px-3 py-2 dark:bg-zinc-900 dark:border-zinc-700"
+              className="rounded-md border border-zinc-300 bg-white px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
               placeholder="https://…"
               value={imageUrl}
               onChange={(e) => setImageUrl(e.target.value)}
@@ -102,19 +124,36 @@ export default function EntityModal({
           </label>
         </div>
 
-        <div className="mt-5 flex justify-end gap-2">
-          <button onClick={onClose} className="rounded border px-3 py-1.5">
-            Cancel
+        <DialogFooter className="mt-5 flex justify-end gap-2">
+          <button
+            type="button"
+            onClick={onClose}
+            className="cursor-pointer rounded border px-3 py-1.5 text-sm hover:bg-zinc-50 dark:border-zinc-700 dark:hover:bg-zinc-800"
+          >
+            <span className="inline-flex items-center gap-2">
+              Cancel
+            </span>
           </button>
           <button
+            type="button"
             onClick={handleSave}
             disabled={saving}
-            className="flex items-center gap-2 rounded bg-blue-600 px-4 py-2 text-white disabled:opacity-60"
+            className="flex cursor-pointer items-center gap-2 rounded bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700 disabled:opacity-60"
           >
-            {saving ? <Spinner size={16} /> : "Save"}
+            {saving ? (
+              <>
+                <Spinner size={16} />
+                Saving...
+              </>
+            ) : (
+              <>
+                <Save className="h-4 w-4" />
+                Save
+              </>
+            )}
           </button>
-        </div>
-      </div>
-    </div>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

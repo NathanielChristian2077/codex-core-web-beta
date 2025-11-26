@@ -1,10 +1,19 @@
+import { Image as ImageIcon, Save } from "lucide-react";
 import { useEffect, useState } from "react";
 import { MarkdownEditor } from "../../components/markdown/MarkdownEditor";
 import {
-    createCampaignEvent,
-    updateEvent,
+  createCampaignEvent,
+  updateEvent,
 } from "../../features/campaigns/api";
 import type { EventItem } from "../../features/campaigns/types";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "../animate-ui/components/radix/dialog";
 import Spinner from "../layout/Spinner";
 import { useToast } from "../layout/ToastProvider";
 
@@ -40,8 +49,6 @@ export default function EventModal({
     setDescription(editing?.description ?? "");
     setImageUrl(editing?.imageUrl ?? "");
   }, [open, editing, initialTitle]);
-
-  if (!open) return null;
 
   async function handleSave() {
     if (!title.trim()) {
@@ -82,30 +89,29 @@ export default function EventModal({
   }
 
   return (
-    <div
-      className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4"
-      role="dialog"
-      aria-modal="true"
+    <Dialog
+      open={open}
+      onOpenChange={(isOpen) => {
+        if (!isOpen) onClose();
+      }}
     >
-      <div className="w-full max-w-xl rounded-xl border bg-white p-6 shadow-xl dark:border-zinc-800 dark:bg-zinc-900">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-semibold">
-            {editing ? "Edit event" : "New event"}
-          </h2>
-          <button
-            onClick={onClose}
-            className="rounded p-1 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800"
-            aria-label="Close"
-          >
-            ✕
-          </button>
-        </div>
+      <DialogContent from="bottom" className="sm:max-w-xl">
+        <DialogHeader className="mb-3 flex flex-row items-center justify-between gap-2">
+          <div>
+            <DialogTitle>
+              {editing ? "Edit event" : "New event"}
+            </DialogTitle>
+            <DialogDescription>
+              Create or edit an event with description and internal links.
+            </DialogDescription>
+          </div>
+        </DialogHeader>
 
         <div className="grid gap-3">
           <label className="grid gap-1">
             <span className="text-sm">Title</span>
             <input
-              className="rounded-md border border-zinc-300 bg-white px-3 py-2 outline-none focus:ring-2 focus:ring-blue-600 dark:border-zinc-700 dark:bg-zinc-900"
+              className="rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-600 dark:border-zinc-700 dark:bg-zinc-900"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               autoFocus
@@ -113,7 +119,10 @@ export default function EventModal({
           </label>
 
           <label className="grid gap-1">
-            <span className="text-sm">Image URL (optional)</span>
+            <span className="flex items-center gap-2 text-sm">
+              <ImageIcon className="h-4 w-4 text-zinc-500" />
+              Image URL (optional)
+            </span>
             <input
               className="rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-600 dark:border-zinc-700 dark:bg-zinc-900"
               value={imageUrl}
@@ -151,30 +160,35 @@ export default function EventModal({
           </div>
         </div>
 
-        <div className="mt-5 flex justify-end gap-2">
+        <DialogFooter className="mt-5 flex justify-end gap-2">
           <button
-            onClick={onClose}
-            className="rounded border px-3 py-1.5 hover:bg-zinc-50 dark:hover:bg-zinc-800"
             type="button"
+            onClick={onClose}
+            className="cursor-pointer rounded border px-3 py-1.5 text-sm hover:bg-zinc-50 dark:border-zinc-700 dark:hover:bg-zinc-800"
           >
-            Cancel
+            <span className="inline-flex items-center gap-2">
+              Cancel
+            </span>
           </button>
           <button
+            type="button"
             onClick={handleSave}
             disabled={saving}
-            className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:opacity-70"
-            type="button"
+            className="rounded bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700 disabled:opacity-70"
           >
             {saving ? (
-              <span className="inline-flex items-center gap-1">
+              <span className="inline-flex items-center gap-2">
                 <Spinner size={16} /> Saving...
               </span>
             ) : (
-              "Save"
+              <span className="inline-flex items-center gap-2">
+                <Save className="h-4 w-4" />
+                Save
+              </span>
             )}
           </button>
-        </div>
-      </div>
-    </div>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

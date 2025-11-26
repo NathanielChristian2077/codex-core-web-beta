@@ -1,4 +1,13 @@
+import { Image as ImageIcon, PlusCircle } from "lucide-react";
 import { useState } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "../animate-ui/components/radix/dialog";
 import { MarkdownEditor } from "../markdown/MarkdownEditor";
 
 type Props = {
@@ -17,8 +26,6 @@ export default function CreateCampaignModal({ open, onClose, onCreate }: Props) 
   const [saving, setSaving] = useState(false);
   const [coverUrl, setCoverUrl] = useState("");
 
-  if (!open) return null;
-
   async function submit() {
     if (!name.trim() || saving) return;
     setSaving(true);
@@ -34,24 +41,23 @@ export default function CreateCampaignModal({ open, onClose, onCreate }: Props) 
   }
 
   return (
-    <div
-      className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4"
-      role="dialog"
-      aria-modal="true"
+    <Dialog
+      open={open}
+      onOpenChange={(isOpen) => {
+        if (!isOpen) onClose();
+      }}
     >
-      <div className="w-full max-w-lg rounded-xl border bg-white p-6 shadow-xl dark:border-zinc-800 dark:bg-zinc-900">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Create campaign</h2>
-          <button
-            onClick={onClose}
-            className="rounded p-1 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800"
-            aria-label="Close"
-          >
-            ✕
-          </button>
-        </div>
+      <DialogContent from="bottom" className="sm:max-w-lg">
+        <DialogHeader className="mb-2 flex flex-row items-center justify-between gap-2">
+          <div>
+            <DialogTitle>Create campaign</DialogTitle>
+            <DialogDescription>
+              Set up a new campaign with a name, description and optional cover.
+            </DialogDescription>
+          </div>
+        </DialogHeader>
 
-        <div className="grid gap-3">
+        <div className="grid gap-3 pt-1">
           <label className="grid gap-1">
             <span className="text-sm">Name</span>
             <input
@@ -70,7 +76,10 @@ export default function CreateCampaignModal({ open, onClose, onCreate }: Props) 
           />
 
           <label className="grid gap-1">
-            <span className="text-sm">Cover image URL (optional)</span>
+            <span className="flex items-center gap-2 text-sm">
+              <ImageIcon className="h-4 w-4 text-zinc-500" />
+              Cover image URL (optional)
+            </span>
             <input
               className="rounded-md border border-zinc-300 bg-white px-3 py-2 outline-none focus:ring-2 focus:ring-blue-600 dark:border-zinc-700 dark:bg-zinc-900"
               placeholder="https://…"
@@ -80,24 +89,25 @@ export default function CreateCampaignModal({ open, onClose, onCreate }: Props) 
           </label>
         </div>
 
-        <div className="mt-5 flex items-center justify-end gap-2">
+        <DialogFooter className="mt-5 flex items-center justify-end gap-2">
           <button
-            onClick={onClose}
-            className="rounded border px-3 py-1.5 hover:bg-zinc-50 dark:hover:bg-zinc-800"
             type="button"
+            onClick={onClose}
+            className="cursor-pointer rounded border px-3 py-1.5 text-sm hover:bg-zinc-50 dark:border-zinc-700 dark:hover:bg-zinc-800"
           >
             Cancel
           </button>
           <button
+            type="button"
             onClick={submit}
             disabled={saving || !name.trim()}
-            className="rounded bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700 disabled:opacity-70"
-            type="button"
+            className="inline-flex cursor-pointer items-center gap-2 rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-70"
           >
+            <PlusCircle className="h-4 w-4" />
             {saving ? "Creating..." : "Create"}
           </button>
-        </div>
-      </div>
-    </div>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
