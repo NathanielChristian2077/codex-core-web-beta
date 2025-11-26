@@ -1,3 +1,4 @@
+// SideBar.tsx
 "use client";
 
 import api from "../../lib/apiClient";
@@ -42,7 +43,6 @@ import {
   SidebarFooter,
   SidebarGroup,
   SidebarHeader,
-  SidebarInput,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -59,6 +59,7 @@ import {
   CollapsibleTrigger,
 } from "../animate-ui/primitives/radix/collapsible";
 import { EditProfileDialog } from "./EditProfileDialog";
+import { SidebarSearch } from "./SideBarSearch";
 
 type AuthUser = {
   id: string;
@@ -117,22 +118,15 @@ export default function SideBar() {
       try {
         setUserLoading(true);
         const { data } = await api.get<AuthUser>("/auth/me");
-        if (!ignore) {
-          setUser(data);
-        }
+        if (!ignore) setUser(data);
       } catch {
-        if (!ignore) {
-          setUser(null);
-        }
+        if (!ignore) setUser(null);
       } finally {
-        if (!ignore) {
-          setUserLoading(false);
-        }
+        if (!ignore) setUserLoading(false);
       }
     }
 
     fetchMe();
-
     return () => {
       ignore = true;
     };
@@ -153,16 +147,13 @@ export default function SideBar() {
     }
 
     fetchCampaigns();
-
     return () => {
       ignore = true;
     };
   }, []);
 
   useEffect(() => {
-    if (currentCampaignId) {
-      setToolsOpen(true);
-    }
+    if (currentCampaignId) setToolsOpen(true);
   }, [currentCampaignId]);
 
   function go(path: string, disabled?: boolean) {
@@ -214,16 +205,6 @@ export default function SideBar() {
 
                 <CollapsibleContent>
                   <SidebarMenuSub>
-                    {campaigns.length > 4 && (
-                      <SidebarMenuSubItem>
-                        <SidebarInput
-                          placeholder="Search campaigns..."
-                          className="h-7 text-xs"
-                          readOnly
-                        />
-                      </SidebarMenuSubItem>
-                    )}
-
                     {loadingCampaigns && (
                       <SidebarMenuSubItem>
                         <span className="text-[11px] text-zinc-500">
@@ -267,7 +248,7 @@ export default function SideBar() {
                           onClick={() => go("/dashboard")}
                           className="flex w-full items-center gap-2 text-xs font-medium"
                         >
-                          <span className="h-4 w-4 rounded-md border border-dashed border-zinc-500/60 text-[10px] flex items-center justify-center">
+                          <span className="flex h-4 w-4 items-center justify-center rounded-md border border-dashed border-zinc-500/60 text-[10px]">
                             +
                           </span>
                           <span>New campaign</span>
@@ -312,7 +293,7 @@ export default function SideBar() {
 
                   <SidebarMenuSub
                     className={cn(
-                      !hasCampaign && "opacity-40 pointer-events-none"
+                      !hasCampaign && "pointer-events-none opacity-40"
                     )}
                   >
                     <SidebarMenuSubItem>
@@ -443,6 +424,10 @@ export default function SideBar() {
       </SidebarContent>
 
       <SidebarFooter>
+        <div className="px-2 pb-2">
+          <SidebarSearch />
+        </div>
+
         <SidebarMenu>
           <SidebarMenuItem>
             <DropdownMenu>
@@ -470,7 +455,7 @@ export default function SideBar() {
 
               <DropdownMenuPortal>
                 <DropdownMenuContent
-                  className="z-50 min-w-56 rounded-lg w-[--radix-dropdown-menu-trigger-width] origin-top-right bg-zinc-200"
+                  className="z-50 w-[--radix-dropdown-menu-trigger-width] min-w-56 origin-top-right rounded-lg bg-zinc-200"
                   side={isMobile ? "bottom" : "top"}
                   align="end"
                   sideOffset={6}
@@ -501,7 +486,7 @@ export default function SideBar() {
                     <DropdownMenuItem
                       onClick={() => setProfileOpen(true)}
                       className={cn(
-                        "flex items-center gap-2 px-2 py-1.5 text-sm rounded-md outline-hidden ring-sidebar-ring",
+                        "flex items-center gap-2 rounded-md px-2 py-1.5 text-sm outline-hidden ring-sidebar-ring",
                         "text-sidebar-foreground",
                         "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
                         "active:bg-sidebar-accent active:text-sidebar-accent-foreground",
@@ -523,7 +508,7 @@ export default function SideBar() {
                       useSession().logout();
                     }}
                     className={cn(
-                      "flex items-center gap-2 px-2 py-1.5 text-sm rounded-md outline-hidden ring-sidebar-ring",
+                      "flex items-center gap-2 rounded-md px-2 py-1.5 text-sm outline-hidden ring-sidebar-ring",
                       "text-sidebar-foreground",
                       "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
                       "active:bg-sidebar-accent active:text-sidebar-accent-foreground",
@@ -536,6 +521,7 @@ export default function SideBar() {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenuPortal>
+
               <EditProfileDialog
                 open={profileOpen}
                 onOpenChange={setProfileOpen}
@@ -546,6 +532,7 @@ export default function SideBar() {
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
+
       <SidebarRail />
     </Sidebar>
   );
