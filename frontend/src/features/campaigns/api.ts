@@ -1,4 +1,7 @@
 import api from "../../lib/apiClient";
+import { createCharacter } from "../characters/api";
+import { createLocation } from "../locations/api";
+import { createObject } from "../objects/api";
 import type { Campaign, CampaignExport, EventItem } from "./types";
 
 // Campaigns
@@ -24,16 +27,14 @@ export async function createCampaign(payload: {
         ? payload.description?.trim() || null
         : null,
     imageUrl:
-      payload.imageUrl !== undefined
-        ? payload.imageUrl?.trim() || null
-        : null,
+      payload.imageUrl !== undefined ? payload.imageUrl?.trim() || null : null,
   });
   return data as Campaign;
 }
 
 export async function updateCampaign(
   id: string,
-  payload: Partial<Campaign> & { imageUrl?: string | null },
+  payload: Partial<Campaign> & { imageUrl?: string | null }
 ) {
   const { data } = await api.put(`/campaigns/${id}`, {
     name: payload.name?.trim(),
@@ -69,15 +70,51 @@ export async function duplicateCampaign(sourceId: string) {
 
 export async function importCampaign(payload: CampaignExport) {
   const base = payload.campaign;
+
   const newCamp = await createCampaign({
     name: base?.name ? `${base.name} (Imported)` : "Imported campaign",
     description: base?.description ?? null,
     imageUrl: (base as any)?.imageUrl ?? null,
   });
 
-  for (const ev of payload.events || []) {
-    await createCampaignEvent(newCamp.id, ev);
+  const newCampaignId = newCamp.id;
+
+  // Characters
+  for (const ch of payload.characters ?? []) {
+    await createCharacter(newCampaignId, {
+      name: ch.name,
+      description: ch.description ?? null,
+      imageUrl: ch.imageUrl ?? null,
+    });
   }
+
+  // Locations
+  for (const loc of payload.locations ?? []) {
+    await createLocation(newCampaignId, {
+      name: loc.name,
+      description: loc.description ?? null,
+      imageUrl: loc.imageUrl ?? null,
+    });
+  }
+
+  // Objects
+  for (const obj of payload.objects ?? []) {
+    await createObject(newCampaignId, {
+      name: obj.name,
+      description: obj.description ?? null,
+      imageUrl: obj.imageUrl ?? null,
+    });
+  }
+
+  // Events
+  for (const ev of payload.events ?? []) {
+    await createCampaignEvent(newCampaignId, {
+      title: ev.title,
+      description: ev.description ?? null,
+      imageUrl: ev.imageUrl ?? null,
+    });
+  }
+
   return newCamp;
 }
 
@@ -87,7 +124,7 @@ export async function deleteCampaign(id: string) {
 
 // Events
 export async function listCampaignEvents(
-  campaignId: string,
+  campaignId: string
 ): Promise<EventItem[]> {
   const { data } = await api.get(`/campaigns/${campaignId}/events`);
   return data;
@@ -99,7 +136,7 @@ export async function createCampaignEvent(
     title: string;
     description?: string | null;
     imageUrl?: string | null;
-  },
+  }
 ) {
   const body = {
     title: payload.title.trim(),
@@ -108,9 +145,7 @@ export async function createCampaignEvent(
         ? payload.description?.trim() || null
         : null,
     imageUrl:
-      payload.imageUrl !== undefined
-        ? payload.imageUrl?.trim() || null
-        : null,
+      payload.imageUrl !== undefined ? payload.imageUrl?.trim() || null : null,
   };
 
   const { data } = await api.post(`/campaigns/${campaignId}/events`, body);
@@ -123,7 +158,7 @@ export async function updateEvent(
     title?: string;
     description?: string | null;
     imageUrl?: string | null;
-  },
+  }
 ) {
   const body = {
     title: payload.title?.trim(),
@@ -171,10 +206,10 @@ export type CampaignGraphResponse = {
 };
 
 export async function getCampaignGraph(
-  campaignId: string,
+  campaignId: string
 ): Promise<CampaignGraphResponse> {
   const res = await api.get<CampaignGraphResponse>(
-    `/campaigns/${campaignId}/graph`,
+    `/campaigns/${campaignId}/graph`
   );
   return res.data;
 }

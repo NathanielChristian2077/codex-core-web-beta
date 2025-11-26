@@ -4,8 +4,13 @@ import {
   deleteCampaign,
   duplicateCampaign,
   getCampaign,
+  listCampaignEvents,
   updateCampaign,
 } from "../../features/campaigns/api";
+import { CampaignExport } from "../../features/campaigns/types";
+import { listCharacters } from "../../features/characters/api";
+import { listLocations } from "../../features/locations/api";
+import { listObjects } from "../../features/objects/api";
 import {
   Dialog,
   DialogContent,
@@ -106,21 +111,35 @@ export default function ManageCampaignModal({
 
   async function handleExportJSON() {
     if (!campaignId) return;
+
     try {
-      const camp = await getCampaign(campaignId);
-      const events = await (
-        await import("../../features/campaigns/api")
-      ).listCampaignEvents(campaignId);
-      const payload = { campaign: camp, events };
+      const [camp, events, characters, locations, objects] = await Promise.all([
+        getCampaign(campaignId),
+        listCampaignEvents(campaignId),
+        listCharacters(campaignId),
+        listLocations(campaignId),
+        listObjects(campaignId),
+      ]);
+
+      const payload: CampaignExport = {
+        campaign: camp,
+        events,
+        characters,
+        locations,
+        objects,
+      };
+
       const blob = new Blob([JSON.stringify(payload, null, 2)], {
         type: "application/json",
       });
+
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
       a.download = `campaign-${campaignId}.json`;
       a.click();
       URL.revokeObjectURL(url);
+
       toast.show("Exported as JSON", "success");
     } catch {
       toast.show("Failed to export", "error");

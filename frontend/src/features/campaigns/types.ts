@@ -1,3 +1,7 @@
+import type { Character } from "../characters/types";
+import type { LocationEntity } from "../locations/types";
+import type { ObjectEntity } from "../objects/types";
+
 export type Campaign = {
   id: string;
   name: string;
@@ -10,7 +14,10 @@ export type Campaign = {
 
 export type CampaignExport = {
   campaign: Campaign;
-  events: Array<EventItem>;
+  events?: EventItem[];
+  characters?: Character[];
+  locations?: LocationEntity[];
+  objects?: ObjectEntity[];
 };
 
 export type EventItem = {
