@@ -1,4 +1,4 @@
-import { PlusCircle, Upload } from "lucide-react";
+import { Download, PlusCircle } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 import CampaignCard from "../components/campaigns/CampaignCard";
@@ -100,7 +100,7 @@ export default function DashboardPage() {
             className="cursor-pointer inline-flex items-center gap-2 rounded-md border border-zinc-300 px-3.5 py-2 text-sm font-medium text-zinc-900 shadow-sm transition-colors hover:border-zinc-400 hover:bg-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-300/70 dark:border-zinc-700 dark:text-zinc-100 dark:hover:border-zinc-500 dark:hover:bg-zinc-800 dark:focus:ring-zinc-600/60"
             type="button"
           >
-            <Upload className="h-4 w-4" />
+            <Download className="h-4 w-4" />
             <span className="hidden sm:inline">Import JSON</span>
             <span className="sm:hidden">Import</span>
           </button>

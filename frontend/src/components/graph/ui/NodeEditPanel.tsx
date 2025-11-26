@@ -17,7 +17,8 @@ export const NodeEditPanel: React.FC = () => {
   const [title, setTitle] = React.useState("");
   const [description, setDescription] = React.useState("");
   const [initialTitle, setInitialTitle] = React.useState<string>("");
-  const [initialDescription, setInitialDescription] = React.useState<string>("");
+  const [initialDescription, setInitialDescription] =
+    React.useState<string>("");
   const [saving, setSaving] = React.useState(false);
   const [deleting, setDeleting] = React.useState(false);
 
@@ -87,7 +88,7 @@ export const NodeEditPanel: React.FC = () => {
                     ? payload.description
                     : (n as any).description ?? null,
               }
-            : n
+            : n,
         ),
       };
 
@@ -109,7 +110,7 @@ export const NodeEditPanel: React.FC = () => {
         ...graphData,
         nodes: graphData.nodes.filter((n) => n.id !== node.id),
         links: graphData.links.filter(
-          (l) => l.source !== node.id && l.target !== node.id
+          (l) => l.source !== node.id && l.target !== node.id,
         ),
       };
 
@@ -126,55 +127,36 @@ export const NodeEditPanel: React.FC = () => {
   };
 
   return (
-    <div className="text-slate-100 text-[11px] space-y-3">
-      <div className="mb-1 flex items-center justify-between gap-2">
-        <div className="flex-1">
-          <p className="text-[10px] uppercase tracking-wide text-slate-400">
-            Edit node
-          </p>
-          <h2 className="truncate text-xs font-semibold">
-            {node.label ?? node.id}
-          </h2>
-        </div>
-        <button
-          className="text-[10px] text-slate-400 hover:text-slate-100"
-          onClick={handleClose}
-        >
-          ×
-        </button>
-      </div>
-
-      <p className="text-[10px] text-slate-400">
-        Type: <span className="font-medium text-slate-200">{node.type}</span>
+    <div className="space-y-4 text-[11px] text-zinc-100">
+      <p className="text-[10px] uppercase tracking-wide text-zinc-400">
+        Edit node · <span className="font-medium text-zinc-200">{node.type}</span>
       </p>
 
-      <div className="space-y-2">
-        <div>
-          <label className="mb-1 block text-[10px] font-medium text-slate-300">
-            Name / Title
-          </label>
-          <input
-            className="w-full rounded border border-slate-700 bg-slate-900/70 px-2 py-1 text-[11px] text-slate-100 outline-none focus:border-slate-400"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-          />
-        </div>
-
-        <div>
-          <MarkdownEditor
-            value={description}
-            onChange={setDescription}
-            label="Description"
-            placeholder="Add a description using markdown..."
-            className="space-y-1"
-            tone="dark"
-          />
-        </div>
+      <div>
+        <label className="mb-1 block text-[10px] font-medium text-zinc-300">
+          Name / Title
+        </label>
+        <input
+          className="w-full rounded-md border border-zinc-700 bg-zinc-900/70 px-2 py-1 text-[11px] text-zinc-100 outline-none focus:border-zinc-400"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+        />
       </div>
 
-      <div className="mt-3 flex items-center justify-between">
+      <div>
+        <MarkdownEditor
+          value={description}
+          onChange={setDescription}
+          label="Description"
+          placeholder="Add a description using markdown..."
+          className="space-y-1"
+          tone="dark"
+        />
+      </div>
+
+      <div className="mt-2 flex items-center justify-between">
         <button
-          className="rounded border border-red-500 px-3 py-1 text-[11px] text-red-300 hover:bg-red-500/10 disabled:opacity-60"
+          className="rounded-md border border-red-500 px-3 py-1 text-[11px] text-red-300 hover:bg-red-500/10 disabled:opacity-60"
           onClick={handleDelete}
           disabled={deleting || saving}
         >
@@ -183,14 +165,14 @@ export const NodeEditPanel: React.FC = () => {
 
         <div className="space-x-2">
           <button
-            className="rounded border border-slate-600 px-3 py-1 text-[11px] text-slate-200 hover:bg-slate-700/60 disabled:opacity-60"
+            className="rounded-md border border-zinc-600 px-3 py-1 text-[11px] text-zinc-200 hover:bg-zinc-800/80 disabled:opacity-60"
             onClick={handleClose}
             disabled={saving}
           >
             Cancel
           </button>
           <button
-            className="rounded bg-emerald-600 px-3 py-1 text-[11px] text-white hover:bg-emerald-500 disabled:opacity-60"
+            className="rounded-md bg-emerald-600 px-3 py-1 text-[11px] text-white hover:bg-emerald-500 disabled:opacity-60"
             onClick={handleSave}
             disabled={saving || deleting}
           >

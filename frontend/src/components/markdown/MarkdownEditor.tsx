@@ -31,15 +31,15 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
   const isDark = tone === "dark";
 
   const editClasses = isDark
-    ? "min-h-[140px] w-full resize-y rounded-md border border-slate-700 bg-slate-900/80 px-3 py-2 text-sm text-slate-100 shadow-sm outline-none focus-visible:ring-1 focus-visible:ring-emerald-500 disabled:cursor-not-allowed disabled:opacity-50 font-mono"
+    ? "min-h-[140px] w-full resize-y rounded-md border border-zinc-700 bg-zinc-900/80 px-3 py-2 text-sm text-zinc-100 shadow-sm outline-none focus-visible:ring-1 focus-visible:ring-emerald-500 disabled:cursor-not-allowed disabled:opacity-50 font-mono"
     : "min-h-[140px] w-full resize-y rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm outline-none focus-visible:ring-1 focus-visible:ring-blue-600 disabled:cursor-not-allowed disabled:opacity-50 font-mono";
 
   const previewWrapperClasses = isDark
-    ? "min-h-[140px] rounded-md border border-slate-700 bg-slate-900/80 px-3 py-2 text-sm overflow-y-auto max-h-80"
+    ? "min-h-[140px] rounded-md border border-zinc-700 bg-zinc-900/80 px-3 py-2 text-sm overflow-y-auto max-h-80"
     : "min-h-[140px] rounded-md border border-zinc-300 bg-zinc-50 px-3 py-2 text-sm overflow-y-auto max-h-80";
 
   const hintTextClasses = isDark
-    ? "text-[11px] text-slate-400"
+    ? "text-[11px] text-zinc-400"
     : "text-[11px] text-zinc-500 dark:text-zinc-400";
 
   return (
@@ -49,7 +49,7 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
         <div
           className={
             isDark
-              ? "inline-flex rounded-md border border-slate-700 bg-slate-900/80 p-0.5 text-xs"
+              ? "inline-flex rounded-md border border-zinc-700 bg-zinc-900/80 p-0.5 text-xs"
               : "inline-flex rounded-md border border-zinc-300 bg-background p-0.5 text-xs dark:border-zinc-700 dark:bg-zinc-900"
           }
         >
@@ -60,7 +60,7 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
               tab === "edit"
                 ? "bg-blue-600 text-white"
                 : isDark
-                ? "text-slate-200 hover:text-slate-50"
+                ? "text-zinc-200 hover:text-zinc-50"
                 : "text-zinc-600 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-zinc-100"
             }`}
           >
@@ -73,7 +73,7 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
               tab === "preview"
                 ? "bg-blue-600 text-white"
                 : isDark
-                ? "text-slate-200 hover:text-slate-50"
+                ? "text-zinc-200 hover:text-zinc-50"
                 : "text-zinc-600 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-zinc-100"
             }`}
           >
@@ -105,7 +105,7 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
             <p
               className={
                 isDark
-                  ? "text-xs text-slate-400"
+                  ? "text-xs text-zinc-400"
                   : "text-xs text-zinc-500 dark:text-zinc-400"
               }
             >

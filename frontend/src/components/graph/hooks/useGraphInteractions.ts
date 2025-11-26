@@ -25,6 +25,8 @@ export function useGraphInteractions({
     offsetY: number;
   } | null>(null);
 
+  const hoverTimeoutRef = useRef<number | null>(null);
+
   // Start dragging (no teleport)
   const onNodePointerDown = useCallback(
     (id: string, nodeX: number, nodeY: number, wx: number, wy: number) => {
@@ -43,7 +45,12 @@ export function useGraphInteractions({
       n.fx = nodeX;
       n.fy = nodeY;
 
+      if (hoverTimeoutRef.current) {
+        window.clearTimeout(hoverTimeoutRef.current);
+        hoverTimeoutRef.current = null;
+      }
       setFocusNodeId(id);
+
       simulationRef.current?.alphaTarget(0.3).restart();
     },
     [nodeById, setFocusNodeId, simulationRef]
@@ -76,19 +83,29 @@ export function useGraphInteractions({
     }
 
     dragRef.current = null;
-    simulationRef.current?.alphaTarget(0.1);
+    simulationRef.current?.alphaTarget(0.0);
   }, [nodeById, simulationRef]);
 
   // Hover
   const onNodeEnter = useCallback(
     (id: string) => {
+      if (hoverTimeoutRef.current) {
+        window.clearTimeout(hoverTimeoutRef.current);
+        hoverTimeoutRef.current = null;
+      }
       setFocusNodeId(id);
     },
     [setFocusNodeId]
   );
 
   const onNodeLeave = useCallback(() => {
-    setFocusNodeId(null);
+    if (hoverTimeoutRef.current) {
+      window.clearTimeout(hoverTimeoutRef.current);
+    }
+
+    hoverTimeoutRef.current = window.setTimeout(() => {
+      setFocusNodeId(null);
+    }, 80) as unknown as number;
   }, [setFocusNodeId]);
 
   const onNodeDoubleClick = useCallback(
@@ -118,7 +135,14 @@ export function useGraphInteractions({
 
       focusOnWorldPoint(n.x, n.y, { scale: 1.6 });
     },
-    [setSelectedNodeId, setFocusNodeId, setEditingNodeId, nodeById, focusOnWorldPoint, autoZoomOnClick]
+    [
+      setSelectedNodeId,
+      setFocusNodeId,
+      setEditingNodeId,
+      nodeById,
+      focusOnWorldPoint,
+      autoZoomOnClick,
+    ]
   );
 
   return {

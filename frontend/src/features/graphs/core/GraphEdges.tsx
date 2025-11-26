@@ -93,8 +93,9 @@ export const GraphEdges: React.FC<Props> = ({
             stroke={stroke}
             strokeWidth={edgeWidth}
             strokeLinecap="round"
-            opacity={opacity}
             markerEnd={arrow}
+            className="transition-opacity duration-200 ease-out"
+            style={{ opacity }}
           />
         );
       })}

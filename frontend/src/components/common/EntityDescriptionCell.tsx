@@ -13,7 +13,7 @@ export const EntityDescriptionCell: React.FC<Props> = ({
   const desc = (description ?? "").trim();
   if (!desc) {
     return (
-      <span className="text-[11px] italic text-slate-500">
+      <span className="text-[11px] italic text-zinc-500">
         No description.
       </span>
     );

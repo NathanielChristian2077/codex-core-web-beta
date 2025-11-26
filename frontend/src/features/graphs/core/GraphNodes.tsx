@@ -13,12 +13,10 @@ type Props = {
   selectedNodeId: string | null;
   distanceById: Record<string, number>;
 
-  // world-coord helper from useZoomAndPan
   getWorldPointFromPointer: (
     event: React.PointerEvent<Element>
   ) => { x: number; y: number } | null;
 
-  // interaction callbacks from useGraphInteractions
   onNodePointerDown: (
     id: string,
     nodeX: number,
@@ -54,7 +52,6 @@ export const GraphNodes: React.FC<Props> = ({
       event.stopPropagation();
       event.preventDefault();
 
-      // convert pointer → world coords
       const world = getWorldPointFromPointer(event);
       if (!world) return;
 
@@ -64,7 +61,6 @@ export const GraphNodes: React.FC<Props> = ({
         // ignore
       }
 
-      // pass id + node current position + world pointer
       if (typeof node.x === "number" && typeof node.y === "number") {
         onNodePointerDown(node.id, node.x, node.y, world.x, world.y);
       }
@@ -118,7 +114,6 @@ export const GraphNodes: React.FC<Props> = ({
 
         const distance = distanceById[node.id];
         const baseOpacity = focusNodeId ? opacityForDistance(distance) : 1;
-
         const isSelected = selectedNodeId === node.id;
 
         return (
@@ -133,10 +128,11 @@ export const GraphNodes: React.FC<Props> = ({
             onDoubleClick={() => onNodeDoubleClick(node.id)}
             onContextMenu={(e) => {
               e.preventDefault();
-              e.stopPropagation;
+              e.stopPropagation();
               onNodeRightClick(node.id);
             }}
-            style={{ cursor: "grab" }}
+            className="cursor-grab transition-opacity duration-200 ease-out"
+            style={{ opacity: baseOpacity }}
           >
             {isSelected && (
               <circle
@@ -144,7 +140,6 @@ export const GraphNodes: React.FC<Props> = ({
                 fill="none"
                 stroke="rgba(251,191,36,0.9)"
                 strokeWidth={1.5}
-                opacity={baseOpacity}
               />
             )}
 
@@ -153,8 +148,8 @@ export const GraphNodes: React.FC<Props> = ({
               fill={colorCfg.fill}
               stroke={colorCfg.stroke}
               strokeWidth={isSelected ? 2 : 1.2}
-              opacity={baseOpacity}
             />
+
             <text
               x={0}
               y={r + 10}
@@ -162,7 +157,6 @@ export const GraphNodes: React.FC<Props> = ({
               className="select-none"
               fontSize={10}
               fill="rgba(148,163,184,0.95)"
-              opacity={baseOpacity}
             >
               {node.label}
             </text>

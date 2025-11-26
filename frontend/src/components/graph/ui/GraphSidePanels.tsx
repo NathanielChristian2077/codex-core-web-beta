@@ -1,7 +1,10 @@
-// components/graph/ui/GraphSidePanels.tsx
+import { Trash2, X } from "lucide-react";
 import React from "react";
 import { useGraph } from "../../../features/graphs/GraphContext";
-import type { GraphNode, GraphNodeType } from "../../../features/graphs/types";
+import type {
+  GraphNode,
+  GraphNodeType,
+} from "../../../features/graphs/types";
 import type { InternalLink } from "../../../lib/internalLinks";
 import { NodeEditPanel } from "./NodeEditPanel";
 import { NodeViewPanel } from "./NodeQuickView";
@@ -36,7 +39,7 @@ function kindToNodeType(kind: InternalLink["kind"]): GraphNodeType | null {
 
 function resolveInternalLinkInGraph(
   link: InternalLink,
-  nodes: GraphNode[]
+  nodes: GraphNode[],
 ): GraphNode | null {
   const targetType = kindToNodeType(link.kind);
   if (!targetType) return null;
@@ -47,10 +50,97 @@ function resolveInternalLinkInGraph(
     nodes.find(
       (n) =>
         n.type === targetType &&
-        (n.label ?? "").trim().toLowerCase() === normalizedName
+        (n.label ?? "").trim().toLowerCase() === normalizedName,
     ) ?? null
   );
 }
+
+const STORAGE_KEY = "cc_graph_sidepanels_v1";
+
+type StoredState = {
+  openPanels: PanelEntry[];
+  isSheetOpen: boolean;
+};
+
+type SidePanelEntryProps = {
+  panel: PanelEntry;
+  isTop: boolean;
+  node: GraphNode;
+  onBringToTop: () => void;
+  onClose: () => void;
+  onInternalLinkClick: (link: InternalLink) => void;
+};
+
+const SidePanelEntry: React.FC<SidePanelEntryProps> = ({
+  panel,
+  isTop,
+  node,
+  onBringToTop,
+  onClose,
+  onInternalLinkClick,
+}) => {
+  const [entered, setEntered] = React.useState(false);
+
+  React.useEffect(() => {
+    const id = requestAnimationFrame(() => setEntered(true));
+    return () => cancelAnimationFrame(id);
+  }, []);
+
+  const cardClasses = [
+    "border-b border-zinc-800/70",
+    "transition-all duration-200 ease-out",
+    "bg-zinc-900/70",
+    "transform",
+    entered ? "translate-x-0 opacity-100" : "translate-x-4 opacity-0",
+    isTop ? "max-h-[70vh]" : "max-h-9 cursor-pointer",
+  ].join(" ");
+
+  return (
+    <div
+      className={cardClasses}
+      onClick={() => {
+        if (!isTop) onBringToTop();
+      }}
+    >
+      <div className="flex items-center justify-between gap-2 px-4 py-2.5">
+        <div className="min-w-0">
+          <span className="block truncate text-[11px] font-semibold text-zinc-100">
+            {panel.title}
+          </span>
+        </div>
+
+        <button
+          className="cursor-pointer flex h-6 w-6 items-center justify-center rounded-full text-[11px] text-zinc-400 transition hover:bg-zinc-800 hover:text-zinc-100"
+          onClick={(e) => {
+            e.stopPropagation();
+            onClose();
+          }}
+        >
+          <X className="h-3 w-3"/>
+        </button>
+      </div>
+
+      <div
+        className={[
+          "overflow-y-auto px-4 pb-4",
+          isTop
+            ? "pointer-events-auto opacity-100"
+            : "pointer-events-none opacity-0",
+        ].join(" ")}
+      >
+        {panel.kind === "view" && (
+          <NodeViewPanel
+            node={node as any}
+            onClose={onClose}
+            onInternalLinkClick={onInternalLinkClick}
+          />
+        )}
+
+        {panel.kind === "edit" && <NodeEditPanel />}
+      </div>
+    </div>
+  );
+};
 
 export const GraphSidePanels: React.FC<GraphSidePanelsProps> = ({
   onCreateFromInternalLink,
@@ -67,10 +157,34 @@ export const GraphSidePanels: React.FC<GraphSidePanelsProps> = ({
 
   const [openPanels, setOpenPanels] = React.useState<PanelEntry[]>([]);
   const [mounted, setMounted] = React.useState(false);
+  const [isSheetOpen, setIsSheetOpen] = React.useState(true);
 
-  if (!graphData) {
-    return null;
-  }
+  if (!graphData) return null;
+
+  React.useEffect(() => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as StoredState;
+      if (Array.isArray(parsed.openPanels)) {
+        setOpenPanels(parsed.openPanels);
+      }
+      if (typeof parsed.isSheetOpen === "boolean") {
+        setIsSheetOpen(parsed.isSheetOpen);
+      }
+    } catch {
+
+    }
+  }, []);
+
+  React.useEffect(() => {
+    try {
+      const payload: StoredState = { openPanels, isSheetOpen };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+    } catch {
+
+    }
+  }, [openPanels, isSheetOpen]);
 
   React.useEffect(() => {
     const id = requestAnimationFrame(() => setMounted(true));
@@ -78,7 +192,7 @@ export const GraphSidePanels: React.FC<GraphSidePanelsProps> = ({
   }, []);
 
   React.useEffect(() => {
-    if (!selectedNodeId) return;
+    if (!selectedNodeId || editingNodeId) return;
     const node = graphData.nodes.find((n) => n.id === selectedNodeId);
     if (!node) return;
 
@@ -95,7 +209,9 @@ export const GraphSidePanels: React.FC<GraphSidePanelsProps> = ({
         },
       ];
     });
-  }, [selectedNodeId, graphData]);
+
+    setIsSheetOpen(true);
+  }, [selectedNodeId, editingNodeId, graphData]);
 
   React.useEffect(() => {
     if (!editingNodeId) return;
@@ -115,23 +231,29 @@ export const GraphSidePanels: React.FC<GraphSidePanelsProps> = ({
         },
       ];
     });
+
+    setIsSheetOpen(true);
   }, [editingNodeId, graphData]);
 
   React.useEffect(() => {
     setOpenPanels((prev) =>
-      prev.filter((panel) => graphData.nodes.some((n) => n.id === panel.nodeId))
+      prev.filter((panel) =>
+        graphData.nodes.some((n) => n.id === panel.nodeId),
+      ),
     );
   }, [graphData]);
 
   const hasPanels = openPanels.length > 0;
-  if (!hasPanels) return null;
+  if (!hasPanels || !isSheetOpen) return null;
 
   const containerClasses = [
-    "pointer-events-auto flex h-full flex-col overflow-y-auto",
-    "w-80 max-w-xs",
+    "pointer-events-auto",
+    "relative m-4 flex h-[calc(100%-2rem)] flex-col overflow-y-auto",
+    "w-[360px] max-w-md",
+    "rounded-2xl border border-zinc-800/80 bg-zinc-900/70",
+    "backdrop-blur-xl shadow-2xl",
     "transition-transform duration-200 ease-out",
-    mounted ? "translate-x-0" : "translate-x-full",
-    "bg-slate-900/30 backdrop-blur-md border-l border-slate-800/60",
+    mounted ? "translate-x-0 opacity-100" : "translate-x-full opacity-0",
   ].join(" ");
 
   const topId = openPanels[openPanels.length - 1].id;
@@ -181,8 +303,6 @@ export const GraphSidePanels: React.FC<GraphSidePanelsProps> = ({
       setSelectedNodeId(target.id);
       setFocusNodeId?.(target.id);
       bringToTop(panelId);
-
-      // zoom suave via ref global
       zoomToNodeRef.current?.(target.id);
       return;
     }
@@ -190,62 +310,66 @@ export const GraphSidePanels: React.FC<GraphSidePanelsProps> = ({
     onCreateFromInternalLink?.(link);
   };
 
+  const handleClearAll = () => {
+    setOpenPanels([]);
+    setSelectedNodeId(null);
+    setEditingNodeId(null);
+  };
+
+  const handleCloseSheet = () => {
+    setIsSheetOpen(false);
+  };
+
   return (
     <div className={containerClasses}>
-      {openPanels.map((panel) => {
-        const isTop = panel.id === topId;
-        const node = graphData.nodes.find((n) => n.id === panel.nodeId) ?? null;
-        if (!node) return null;
+      <div className="pointer-events-auto absolute right-3 top-3 z-10 flex items-center gap-2">
+        <button
+          type="button"
+          onClick={handleClearAll}
+          className="
+            cursor-pointer flex h-7 w-7 items-center justify-center
+            rounded-full border border-zinc-600/70 bg-transparent
+            text-zinc-400 transition
+            hover:bg-zinc-800 hover:text-zinc-100
+          "
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+        </button>
 
-        return (
-          <div
-            key={panel.id}
-            className={[
-              "border-b border-slate-800/70",
-              "transition-all duration-200 ease-out",
-              "bg-slate-900/40",
-              isTop ? "max-h-[70vh]" : "max-h-9 cursor-pointer",
-            ].join(" ")}
-            onClick={() => {
-              if (!isTop) bringToTop(panel.id);
-            }}
-          >
-            <div className="flex items-center justify-between gap-2 px-3 py-2">
-              <div className="truncate text-[11px] font-semibold">
-                {panel.title}
-              </div>
-              <button
-                className="text-[10px] text-slate-400 hover:text-slate-100"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleClosePanel(panel);
-                }}
-              >
-                ×
-              </button>
-            </div>
+        <button
+          type="button"
+          onClick={handleCloseSheet}
+          className="
+            flex h-7 w-7 items-center justify-center
+            rounded-full border border-red-500/80 bg-transparent
+            text-red-500/90 text-sm font-semibold
+            transition hover:bg-red-500/10
+          "
+        >
+          <X className="h-3.5 w-3.5"/>
+        </button>
+      </div>
 
-            <div
-              className={[
-                "overflow-y-auto px-3 pb-3",
-                isTop
-                  ? "opacity-100 pointer-events-auto"
-                  : "opacity-0 pointer-events-none",
-              ].join(" ")}
-            >
-              {panel.kind === "view" && (
-                <NodeViewPanel
-                  node={node as any}
-                  onClose={() => handleClosePanel(panel)}
-                  onInternalLinkClick={handleInternalLinkClick}
-                />
-              )}
+      <div className="mt-12 flex flex-col">
+        {openPanels.map((panel) => {
+          const isTop = panel.id === topId;
+          const node =
+            graphData.nodes.find((n) => n.id === panel.nodeId) ?? null;
+          if (!node) return null;
 
-              {panel.kind === "edit" && <NodeEditPanel />}
-            </div>
-          </div>
-        );
-      })}
+          return (
+            <SidePanelEntry
+              key={panel.id}
+              panel={panel}
+              isTop={isTop}
+              node={node}
+              onBringToTop={() => bringToTop(panel.id)}
+              onClose={() => handleClosePanel(panel)}
+              onInternalLinkClick={handleInternalLinkClick}
+            />
+          );
+        })}
+      </div>
     </div>
   );
 };

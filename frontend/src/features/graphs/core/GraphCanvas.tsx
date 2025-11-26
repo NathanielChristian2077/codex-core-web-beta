@@ -1,4 +1,3 @@
-// GraphCanvas
 import type { Simulation } from "d3-force";
 import React, { useCallback, useEffect } from "react";
 

@@ -12,13 +12,46 @@ type NodeViewPanelProps = {
   onInternalLinkClick?: (link: InternalLink) => void;
 };
 
+function parseInternalLinkFromHref(
+  hrefRaw: string | null,
+): InternalLink | null {
+  if (!hrefRaw) return null;
+  const href = hrefRaw.trim();
+  if (!href || !href.includes(INTERNAL_LINK_PROTOCOL)) return null;
+
+  const idx = href.indexOf(INTERNAL_LINK_PROTOCOL);
+  const rest = href.slice(idx + INTERNAL_LINK_PROTOCOL.length);
+  const colonIndex = rest.indexOf(":");
+  if (colonIndex <= 0) return null;
+
+  const kindRaw = rest.slice(0, colonIndex).toUpperCase();
+  const rawName = rest.slice(colonIndex + 1);
+
+  if (!["E", "C", "L", "O"].includes(kindRaw)) return null;
+
+  let decodedName = rawName;
+  try {
+    decodedName = decodeURIComponent(rawName);
+  } catch {
+
+  }
+
+  const name = decodedName.trim();
+  if (!name) return null;
+
+  return {
+    kind: kindRaw as InternalLink["kind"],
+    name,
+  };
+}
+
 export const NodeViewPanel: React.FC<NodeViewPanelProps> = ({
   node,
-  onClose,
   onInternalLinkClick,
 }) => {
   const hasDescription =
-    typeof node.description === "string" && node.description.trim().length > 0;
+    typeof node.description === "string" &&
+    node.description.trim().length > 0;
 
   const relationCount =
     typeof (node as any).degree === "number"
@@ -26,7 +59,7 @@ export const NodeViewPanel: React.FC<NodeViewPanelProps> = ({
       : null;
 
   const handleDescriptionClickCapture = (
-    e: React.MouseEvent<HTMLDivElement>
+    e: React.MouseEvent<HTMLDivElement>,
   ) => {
     const target = e.target as HTMLElement | null;
     if (!target) return;
@@ -34,98 +67,46 @@ export const NodeViewPanel: React.FC<NodeViewPanelProps> = ({
     const anchor = target.closest("a") as HTMLAnchorElement | null;
     if (!anchor) return;
 
-    // mata a navegação padrão SEMPRE
     e.preventDefault();
     e.stopPropagation();
 
-    // tenta primeiro o atributo, depois a propriedade resolvida
     const hrefAttr = anchor.getAttribute("href");
-    const href = (hrefAttr && hrefAttr.trim()) || (anchor.href ?? "").trim();
-
-    console.log("[NODE VIEW] anchor href =", href);
-
+    const href = hrefAttr?.trim() || anchor.href?.trim();
     if (!href) return;
 
-    if (href.includes(INTERNAL_LINK_PROTOCOL)) {
-      try {
-        const idx = href.indexOf(INTERNAL_LINK_PROTOCOL);
-        const rest = href.slice(idx + INTERNAL_LINK_PROTOCOL.length); // "E:Uma%20Festa..."
-        const colonIndex = rest.indexOf(":");
-        if (colonIndex <= 0) return;
-
-        const kindRaw = rest.slice(0, colonIndex).toUpperCase();
-        const rawName = rest.slice(colonIndex + 1);
-
-        if (
-          kindRaw !== "E" &&
-          kindRaw !== "C" &&
-          kindRaw !== "L" &&
-          kindRaw !== "O"
-        ) {
-          return;
-        }
-
-        let decodedName = rawName;
-        try {
-          decodedName = decodeURIComponent(rawName);
-        } catch {
-          // paciência
-        }
-
-        const link: InternalLink = {
-          kind: kindRaw as InternalLink["kind"],
-          name: decodedName.trim(),
-        };
-
-        console.log("[NODE VIEW] internal link parsed", link);
-        onInternalLinkClick?.(link);
-      } catch {
-        // não explode nada
-      }
-
+    const link = parseInternalLinkFromHref(href);
+    if (link) {
+      onInternalLinkClick?.(link);
       return;
     }
 
-    // se algum dia tiver link externo, abre manual
     try {
       window.open(href, "_blank", "noopener,noreferrer");
     } catch {
-      // se o navegador não quiser, problema dele
+
     }
   };
 
   return (
-    <div className="text-slate-100 text-[11px] space-y-2">
-      <div className="mb-1 flex items-center justify-between gap-2">
-        <div className="flex-1">
-          <p className="text-[10px] uppercase tracking-wide text-slate-400">
-            View node
-          </p>
-          <h2 className="truncate text-xs font-semibold">
-            {node.label ?? node.id}
-          </h2>
-        </div>
-        <button
-          className="text-[10px] text-slate-400 hover:text-slate-100"
-          onClick={onClose}
-        >
-          ×
-        </button>
+    <div className="space-y-3 text-[11px] text-zinc-100">
+      <div>
+        <p className="text-[10px] uppercase tracking-wide text-zinc-400">
+          Node · <span className="font-medium text-zinc-200">{node.type}</span>
+        </p>
+        <h2 className="truncate text-xs font-semibold text-zinc-100">
+          {node.label ?? node.id}
+        </h2>
       </div>
 
-      <p className="text-[10px] text-slate-400">
-        Type: <span className="font-medium text-slate-200">{node.type}</span>
-      </p>
-
       {relationCount != null && (
-        <p className="text-[10px] text-slate-400">
+        <p className="text-[10px] text-zinc-400">
           Relations:{" "}
-          <span className="font-medium text-slate-200">{relationCount}</span>
+          <span className="font-medium text-zinc-200">{relationCount}</span>
         </p>
       )}
 
-      <div className="mt-2 rounded-md border border-slate-700/80 bg-slate-900/60 p-2">
-        <p className="mb-1 text-[10px] font-medium text-slate-300">
+      <div className="mt-1 rounded-md border border-zinc-700/80 bg-zinc-900/60 p-2">
+        <p className="mb-1 text-[10px] font-medium text-zinc-300">
           Description
         </p>
 
@@ -140,7 +121,7 @@ export const NodeViewPanel: React.FC<NodeViewPanelProps> = ({
             />
           </div>
         ) : (
-          <p className="text-[10px] italic text-slate-500">
+          <p className="text-[10px] italic text-zinc-500">
             No description yet.
           </p>
         )}

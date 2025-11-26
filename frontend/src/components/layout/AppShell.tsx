@@ -12,7 +12,7 @@ import {
 } from "../animate-ui/components/radix/sidebar";
 
 function FloatingSidebarTrigger() {
-  const { state } = useSidebar(); 
+  const { state } = useSidebar();
 
   return (
     <SidebarTrigger
@@ -44,7 +44,7 @@ export default function AppShell() {
       <FloatingSidebarTrigger />
 
       <SidebarInset className="flex-1">
-        <main className="mx-auto max-w-6xl px-4 py-8">
+        <main className="w-full px-6 py-6 max-w-[1700px] mx-auto min-h-[calc(100vh-4rem)]">
           <Outlet />
         </main>
       </SidebarInset>
