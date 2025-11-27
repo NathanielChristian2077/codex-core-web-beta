@@ -52,6 +52,15 @@ export type GraphStyleConfig = {
   background: string;
 };
 
+type GraphProviderProps = {
+  initialData: GraphData | null;
+  /** localStorage key for node positions */
+  storageKey?: string;
+  /** localStorage key for graph style */
+  styleStorageKey?: string;
+  children: ReactNode;
+};
+
 export type GraphContextValue = {
   graphData: GraphData | null;
   setGraphDataFromOutside: (data: GraphData | null) => void;
@@ -66,9 +75,7 @@ export type GraphContextValue = {
 
   /** visual styling (node size, edge width, arrows) */
   displaySettings: DisplaySettingsState;
-  setDisplaySettings: React.Dispatch<
-    React.SetStateAction<DisplaySettingsState>
-  >;
+  setDisplaySettings: React.Dispatch<React.SetStateAction<DisplaySettingsState>>;
 
   /** per-type color customization for nodes & links */
   graphStyle: GraphStyleConfig;
@@ -76,9 +83,7 @@ export type GraphContextValue = {
 
   /** physics configuration for d3-force */
   physicsSettings: PhysicsSettingsState;
-  setPhysicsSettings: React.Dispatch<
-    React.SetStateAction<PhysicsSettingsState>
-  >;
+  setPhysicsSettings: React.Dispatch<React.SetStateAction<PhysicsSettingsState>>;
 
   /** hovered or focused node */
   focusNodeId: string | null;
@@ -96,11 +101,7 @@ export type GraphContextValue = {
   nodePositions: NodePositions;
   setNodePositions: (positions: NodePositions) => void;
 
-  /**
-   * Global "zoom to node" hook:
-   * GraphCanvas registra a função real,
-   * outros chamam zoomToNodeRef.current?.(nodeId)
-   */
+  /** global "zoom to node" hook */
   zoomToNodeRef: React.MutableRefObject<((id: string) => void) | null>;
 };
 
@@ -130,7 +131,6 @@ const defaultPhysicsSettings: PhysicsSettingsState = {
   collisionRadius: 18,
 };
 
-/** Default style (mirroring the old hardcoded palette) */
 export const DEFAULT_GRAPH_STYLE: GraphStyleConfig = {
   nodes: {
     EVENT: {
@@ -155,22 +155,16 @@ export const DEFAULT_GRAPH_STYLE: GraphStyleConfig = {
 };
 
 export const createDefaultGraphStyle = (): GraphStyleConfig =>
-  JSON.parse(JSON.stringify(DEFAULT_GRAPH_STYLE));
+  JSON.parse(JSON.stringify(DEFAULT_GRAPH_STYLE)) as GraphStyleConfig;
 
 const GraphContext = createContext<GraphContextValue | undefined>(undefined);
 
-type GraphProviderProps = {
-  initialData: GraphData | null;
-  storageKey?: string;
-  styleStorageKey?: string;
-  children: ReactNode;
-};
-
-/** Safely load saved node positions from localStorage */
+/** Load node positions from localStorage safely */
 function loadNodePositionsFromStorage(storageKey?: string): NodePositions {
-  if (!storageKey) return {};
+  if (typeof window === "undefined" || !storageKey) return {};
+
   try {
-    const raw = localStorage.getItem(storageKey);
+    const raw = window.localStorage.getItem(storageKey);
     if (!raw) return {};
     const parsed = JSON.parse(raw);
     if (!parsed || typeof parsed !== "object") return {};
@@ -180,13 +174,14 @@ function loadNodePositionsFromStorage(storageKey?: string): NodePositions {
   }
 }
 
-/** Safely load saved graph style from localStorage */
+/** Load graph style from localStorage safely */
 function loadGraphStyleFromStorage(
   styleStorageKey?: string
 ): GraphStyleConfig | null {
-  if (!styleStorageKey) return null;
+  if (typeof window === "undefined" || !styleStorageKey) return null;
+
   try {
-    const raw = localStorage.getItem(styleStorageKey);
+    const raw = window.localStorage.getItem(styleStorageKey);
     if (!raw) return null;
     const parsed = JSON.parse(raw);
     if (!parsed || typeof parsed !== "object") return null;
@@ -211,12 +206,12 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
   /** UI filters */
   const [filters, setFilters] = useState<FiltersState>(defaultFilters);
 
-  /** display settings (visual only) */
+  /** display settings */
   const [displaySettings, setDisplaySettings] = useState<DisplaySettingsState>(
     defaultDisplaySettings
   );
 
-  /** per-type graph styling (nodes & edges) */
+  /** per-type graph styling */
   const [graphStyle, setGraphStyle] = useState<GraphStyleConfig>(() => {
     const loaded = loadGraphStyleFromStorage(styleStorageKey);
     return loaded ?? createDefaultGraphStyle();
@@ -230,21 +225,21 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
   /** currently double-click selected node */
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
 
-  /** hovered/pointed node (used for highlight waves) */
+  /** hovered/pointed node */
   const [focusNodeId, setFocusNodeId] = useState<string | null>(null);
 
   /** currently right-click selected node */
   const [editingNodeId, setEditingNodeId] = useState<string | null>(null);
 
-  /** internal real node positions */
+  /** internal node positions */
   const [nodePositionsState, setNodePositionsState] = useState<NodePositions>(
     () => loadNodePositionsFromStorage(storageKey)
   );
 
-  /** global "zoom to node" function holder (GraphCanvas preenche) */
+  /** global "zoom to node" function holder */
   const zoomToNodeRef = useRef<((id: string) => void) | null>(null);
 
-  /** reload positions when campaign or storage key changes */
+  /** reload positions & graph when initialData/storageKey changes */
   useEffect(() => {
     setGraphData(initialData);
     setFocusNodeId(null);
@@ -253,7 +248,7 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
     setNodePositionsState(loaded);
   }, [initialData, storageKey]);
 
-  /** reload style when style storage key changes (campaign switch) */
+  /** reload style when style storage key changes */
   useEffect(() => {
     const loaded = loadGraphStyleFromStorage(styleStorageKey);
     setGraphStyle(loaded ?? createDefaultGraphStyle());
@@ -263,24 +258,24 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
   useEffect(() => {
     if (!styleStorageKey) return;
     try {
-      localStorage.setItem(styleStorageKey, JSON.stringify(graphStyle));
+      window.localStorage.setItem(styleStorageKey, JSON.stringify(graphStyle));
     } catch {
       // ignore write errors
     }
   }, [graphStyle, styleStorageKey]);
 
-  /** setter that also persists to localStorage */
+  /** setter that also persists positions */
   const setNodePositions = (positions: NodePositions) => {
     setNodePositionsState(positions);
     if (!storageKey) return;
     try {
-      localStorage.setItem(storageKey, JSON.stringify(positions));
+      window.localStorage.setItem(storageKey, JSON.stringify(positions));
     } catch {
-      /* ignore write errors */
+      /* ignore */
     }
   };
 
-  /** memoized context value to avoid re-renders */
+  /** memoized context value */
   const value = useMemo<GraphContextValue>(
     () => ({
       graphData,
@@ -320,12 +315,12 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
       viewMode,
       filters,
       displaySettings,
+      graphStyle,
       physicsSettings,
       focusNodeId,
-      nodePositionsState,
       selectedNodeId,
       editingNodeId,
-      zoomToNodeRef,
+      nodePositionsState,
     ]
   );
 

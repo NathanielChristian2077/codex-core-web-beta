@@ -24,7 +24,6 @@ const GraphPageContent: React.FC<GraphPageContentProps> = ({
   const {
     graphData,
     viewMode,
-    setViewMode,
     filters,
     setFilters,
     displaySettings,
@@ -35,7 +34,6 @@ const GraphPageContent: React.FC<GraphPageContentProps> = ({
     setGraphStyle,
   } = useGraph();
 
-  const [searchTerm, setSearchTerm] = useState("");
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [displayOpen, setDisplayOpen] = useState(false);
   const [forcesOpen, setForcesOpen] = useState(false);
@@ -121,50 +119,6 @@ const GraphPageContent: React.FC<GraphPageContentProps> = ({
           </div>
         </div>
 
-        {/* Search + view mode 
-        <div className="pointer-events-none absolute right-4 top-4 z-20 flex flex-col items-end gap-2 text-xs text-zinc-100">
-          <div className="pointer-events-auto flex items-center gap-2 rounded-xl border border-zinc-800 bg-zinc-950/85 px-3 py-2 shadow-lg backdrop-blur">
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => {
-                const value = e.target.value;
-                setSearchTerm(value);
-                // lógica real de search virá na GraphVisualization / highlight
-              }}
-              placeholder="search node…"
-              className="h-8 w-52 rounded-md border border-zinc-700 bg-zinc-900/80 px-2 text-[11px] text-zinc-100 outline-none focus:border-sky-500"
-            />
-            <button
-              type="button"
-              onClick={() => {
-                setSearchTerm("");
-                // reset real de camera/highlight virá depois
-              }}
-              className="h-8 rounded-md border border-zinc-700 bg-zinc-900/80 px-3 text-[11px] text-zinc-100 hover:border-sky-500"
-            >
-              reset
-            </button>
-          </div>
-
-          <div className="pointer-events-auto flex items-center gap-1 rounded-full border border-zinc-800 bg-zinc-950/80 px-1 py-1 shadow-md backdrop-blur">
-            <button
-              type="button"
-              className={viewButtonClasses("graph")}
-              onClick={() => setViewMode("graph")}
-            >
-              Graph
-            </button>
-            <button
-              type="button"
-              className={viewButtonClasses("timeline")}
-              onClick={() => setViewMode("timeline")}
-            >
-              Timeline
-            </button>
-          </div>
-        </div>*/}
-
         {/* Floating controls buttons */}
         <div className="pointer-events-none absolute bottom-4 left-4 z-20 flex gap-2">
           <button
@@ -172,7 +126,7 @@ const GraphPageContent: React.FC<GraphPageContentProps> = ({
             onClick={() => setFiltersOpen((v) => !v)}
             className="pointer-events-auto rounded-full border border-zinc-700 bg-zinc-900/70 px-3 py-1 text-[11px] text-zinc-200 shadow-sm backdrop-blur hover:border-sky-500 hover:bg-zinc-900/90"
           >
-            <Filter className="h-4 w-4"/>
+            <Filter className="h-4 w-4" />
           </button>
           <button
             type="button"
@@ -186,7 +140,7 @@ const GraphPageContent: React.FC<GraphPageContentProps> = ({
             onClick={() => setForcesOpen((v) => !v)}
             className="pointer-events-auto rounded-full border border-zinc-700 bg-zinc-900/70 px-3 py-1 text-[11px] text-zinc-200 shadow-sm backdrop-blur hover:border-emerald-500 hover:bg-zinc-900/90"
           >
-            <Move className="h-4 w-4"/>
+            <Move className="h-4 w-4" />
           </button>
         </div>
 
@@ -202,7 +156,7 @@ const GraphPageContent: React.FC<GraphPageContentProps> = ({
                 className="text-[10px] text-zinc-500 hover:text-zinc-300"
                 onClick={() => setFiltersOpen(false)}
               >
-                <X className="h-3 w-3"/>
+                <X className="h-3 w-3" />
               </button>
             </div>
 
@@ -281,7 +235,7 @@ const GraphPageContent: React.FC<GraphPageContentProps> = ({
                 className="text-[10px] text-zinc-500 hover:text-zinc-300"
                 onClick={() => setDisplayOpen(false)}
               >
-                <X className="h-3 w-3"/>
+                <X className="h-3 w-3" />
               </button>
             </div>
 
@@ -579,7 +533,7 @@ const GraphPageContent: React.FC<GraphPageContentProps> = ({
                 className="text-[10px] text-zinc-500 hover:text-zinc-300"
                 onClick={() => setForcesOpen(false)}
               >
-                <X className="h-3 w-3"/>
+                <X className="h-3 w-3" />
               </button>
             </div>
 

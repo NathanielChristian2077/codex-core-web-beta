@@ -3,6 +3,7 @@ import {
   Get,
   Param,
   ParseUUIDPipe,
+  Post,
   Req,
   UnauthorizedException,
   UseGuards,
@@ -40,5 +41,14 @@ export class GraphController {
   ) {
     const userId = this.getUserId(req);
     return this.svc.campaignGraph(campaignId, userId);
+  }
+
+  @Post('resync-links')
+  resyncLinks(
+    @Param('campaignId', new ParseUUIDPipe()) campaignId: string,
+    @Req() req: AuthedRequest,
+  ) {
+    const userId = this.getUserId(req);
+    return this.svc.resyncCampaignLinks(campaignId, userId);
   }
 }

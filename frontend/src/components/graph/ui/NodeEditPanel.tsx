@@ -1,6 +1,8 @@
 import React from "react";
+import { useParams } from "react-router-dom";
 import { nodeEditAdapters } from "../../../features/graphs/core/NodeEditAdapters";
 import { useGraph } from "../../../features/graphs/GraphContext";
+import { loadGraphDataWithDescriptions } from "../../../features/graphs/loadGraphWithDescriptions";
 import type { GraphNodeType } from "../../../features/graphs/types";
 import { MarkdownEditor } from "../../markdown/MarkdownEditor";
 
@@ -22,6 +24,8 @@ export const NodeEditPanel: React.FC = () => {
   const [saving, setSaving] = React.useState(false);
   const [deleting, setDeleting] = React.useState(false);
 
+  const { campaignId } = useParams<{ campaignId: string }>();
+
   const node =
     editingNodeId && graphData
       ? graphData.nodes.find((n) => n.id === editingNodeId) ?? null
@@ -42,6 +46,12 @@ export const NodeEditPanel: React.FC = () => {
     setInitialTitle(label);
     setInitialDescription(desc);
   }, [node]);
+
+  const reloadGraph = React.useCallback(async () => {
+    if (!campaignId) return;
+    const graph = await loadGraphDataWithDescriptions(campaignId);
+    setGraphDataFromOutside(graph);
+  }, [campaignId, setGraphDataFromOutside]);
 
   if (!node || !graphData) return null;
 
@@ -75,24 +85,8 @@ export const NodeEditPanel: React.FC = () => {
       }
 
       await adapter.update(node.id, payload);
+      await reloadGraph(); 
 
-      const updated = {
-        ...graphData,
-        nodes: graphData.nodes.map((n) =>
-          n.id === node.id
-            ? {
-                ...n,
-                label: payload.title ?? n.label,
-                description:
-                  payload.description !== undefined
-                    ? payload.description
-                    : (n as any).description ?? null,
-              }
-            : n,
-        ),
-      };
-
-      setGraphDataFromOutside(updated);
       handleClose();
     } finally {
       setSaving(false);
@@ -105,16 +99,7 @@ export const NodeEditPanel: React.FC = () => {
 
     try {
       await adapter.remove(node.id);
-
-      const updated = {
-        ...graphData,
-        nodes: graphData.nodes.filter((n) => n.id !== node.id),
-        links: graphData.links.filter(
-          (l) => l.source !== node.id && l.target !== node.id,
-        ),
-      };
-
-      setGraphDataFromOutside(updated);
+      await reloadGraph();
 
       const copy = { ...nodePositions };
       delete copy[node.id];

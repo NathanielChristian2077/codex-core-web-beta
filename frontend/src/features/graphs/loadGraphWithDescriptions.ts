@@ -1,7 +1,4 @@
-import {
-    getCampaignGraph,
-    listCampaignEvents,
-} from "../campaigns/api";
+import { getCampaignGraph, listCampaignEvents } from "../campaigns/api";
 import { listCharacters } from "../characters/api";
 import { listLocations } from "../locations/api";
 import { listObjects } from "../objects/api";
@@ -47,7 +44,7 @@ export async function loadGraphDataWithDescriptions(
 
     return {
       ...node,
-      description: fromEntities ?? node.description ?? null,
+      description: fromEntities ?? (node as any).description ?? null,
     };
   });
 
