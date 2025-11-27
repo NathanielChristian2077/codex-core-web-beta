@@ -12,14 +12,6 @@ export type Campaign = {
   _count?: { events?: number };
 };
 
-export type CampaignExport = {
-  campaign: Campaign;
-  events?: EventItem[];
-  characters?: Character[];
-  locations?: LocationEntity[];
-  objects?: ObjectEntity[];
-};
-
 export type EventItem = {
   id: string;
   title: string;
@@ -27,4 +19,12 @@ export type EventItem = {
   createdAt?: string;
   updatedAt?: string;
   imageUrl?: string | null;
+};
+
+export type CampaignExport = {
+  campaign: Campaign;
+  events: EventItem[];
+  characters: Character[];
+  locations: LocationEntity[];
+  objects: ObjectEntity[];
 };
