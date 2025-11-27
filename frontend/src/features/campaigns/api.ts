@@ -1,7 +1,7 @@
 import api from "../../lib/apiClient";
-import { createCharacter } from "../characters/api";
-import { createLocation } from "../locations/api";
-import { createObject } from "../objects/api";
+import { createCharacter, listCharacters, updateCharacter } from "../characters/api";
+import { createLocation, listLocations, updateLocation } from "../locations/api";
+import { createObject, listObjects, updateObject } from "../objects/api";
 import type { Campaign, CampaignExport, EventItem } from "./types";
 
 // Campaigns
@@ -113,6 +113,61 @@ export async function importCampaign(payload: CampaignExport) {
       description: ev.description ?? null,
       imageUrl: ev.imageUrl ?? null,
     });
+  }
+
+  try {
+    const [events, characters, locations, objects] = await Promise.all([
+      listCampaignEvents(newCampaignId),
+      listCharacters(newCampaignId),
+      listLocations(newCampaignId),
+      listObjects(newCampaignId),
+    ]);
+
+    // Events
+    await Promise.all(
+      events.map((ev) =>
+        updateEvent(ev.id, {
+          title: ev.title,
+          description: ev.description ?? null,
+          imageUrl: (ev as any).imageUrl ?? null,
+        })
+      )
+    );
+
+    // Characters
+    await Promise.all(
+      characters.map((ch) =>
+        updateCharacter(ch.id, {
+          name: ch.name,
+          description: ch.description ?? null,
+          imageUrl: (ch as any).imageUrl ?? null,
+        })
+      )
+    );
+
+    // Locations
+    await Promise.all(
+      locations.map((loc) =>
+        updateLocation(loc.id, {
+          name: loc.name,
+          description: loc.description ?? null,
+          imageUrl: (loc as any).imageUrl ?? null,
+        })
+      )
+    );
+
+    // Objects
+    await Promise.all(
+      objects.map((obj) =>
+        updateObject(obj.id, {
+          name: obj.name,
+          description: obj.description ?? null,
+          imageUrl: (obj as any).imageUrl ?? null,
+        })
+      )
+    );
+  } catch {
+
   }
 
   return newCamp;
