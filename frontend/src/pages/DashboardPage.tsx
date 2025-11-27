@@ -13,6 +13,7 @@ import {
   listCampaigns,
 } from "../features/campaigns/api";
 import type { Campaign, CampaignExport } from "../features/campaigns/types";
+import { useCurrentCampaign } from "../store/useCurrentCampaign";
 
 export default function DashboardPage() {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
@@ -21,6 +22,8 @@ export default function DashboardPage() {
   const [manageId, setManageId] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement | null>(null);
   const t = useToast();
+
+  const { setCurrentCampaign } = useCurrentCampaign();
 
   async function fetchAll() {
     try {
@@ -50,9 +53,16 @@ export default function DashboardPage() {
     try {
       const text = await file.text();
       const json = JSON.parse(text) as CampaignExport;
-      await importCampaign(json);
-      t.show("Campaign imported", "success");
+
+      const imported = await importCampaign(json);
+
       await fetchAll();
+
+      if (imported?.id) {
+        setCurrentCampaign(imported.id);
+      }
+
+      t.show("Campaign imported", "success");
     } catch {
       t.show("Invalid JSON or import failed", "error");
     } finally {
