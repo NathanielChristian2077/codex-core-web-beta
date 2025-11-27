@@ -11,7 +11,8 @@
     "module": "ESNext",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "ignoreDeprecations": "5.0"
+    "ignoreDeprecations": "5.0",
+    "skipLibCheck": true
   },
   "include": ["src"]
 }
