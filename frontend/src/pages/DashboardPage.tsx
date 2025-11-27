@@ -1,6 +1,7 @@
 import { Download, PlusCircle } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
+import { useNavigate } from "react-router-dom";
 import CampaignCard from "../components/campaigns/CampaignCard";
 import CreateCampaignModal from "../components/campaigns/CreateCampaignModal";
 import EmptyState from "../components/campaigns/EmptyState";
@@ -16,6 +17,7 @@ import type { Campaign, CampaignExport } from "../features/campaigns/types";
 import { useCurrentCampaign } from "../store/useCurrentCampaign";
 
 export default function DashboardPage() {
+  const navigate = useNavigate();
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
   const [createOpen, setCreateOpen] = useState(false);
@@ -60,6 +62,7 @@ export default function DashboardPage() {
 
       if (imported?.id) {
         setCurrentCampaign(imported.id);
+        navigate(`/campaigns/${imported.id}/timeline`);
       }
 
       t.show("Campaign imported", "success");
