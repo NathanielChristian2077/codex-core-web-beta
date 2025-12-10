@@ -1,8 +1,13 @@
 import axios from "axios";
 
+function getCsrfToken() {
+  const match = document.cookie.match(/XSRF-TOKEN=([^;]+)/);
+  return match ? decodeURIComponent(match[1]) : null;
+}
+
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
-  withCredentials: false,
+  withCredentials: true,
 });
 
 function getToken() {
@@ -16,6 +21,10 @@ function getToken() {
 api.interceptors.request.use((config) => {
   const token = getToken();
   if (token) config.headers.Authorization = `Bearer ${token}`;
+
+  const csrf = getCsrfToken();
+  if (csrf) config.headers["X-CSRF-Token"] = csrf;
+
   return config;
 });
 

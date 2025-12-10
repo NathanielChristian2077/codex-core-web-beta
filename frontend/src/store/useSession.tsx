@@ -1,40 +1,41 @@
 import { create } from "zustand";
+import { fetchSession, logoutUser } from "../features/auth/api";
 
-type SessionState = {
-  token: string | null;
-  isLogged: boolean;
-  setToken: (token: string | null) => void;
-  logout: () => void;
+type User = {
+  id: string;
+  email: string;
+  role: string;
 };
 
-function readTokenFromStorage(): string | null {
-  try {
-    return localStorage.getItem("accessToken");
-  } catch {
-    return null;
-  }
-}
+type SessionState = {
+  user: User | null;
+  loading: boolean;
+  isLogged: boolean;
 
-export const useSession = create<SessionState>((set) => {
-  const initialToken = readTokenFromStorage();
+  loadSession: () => Promise<void>;
+  logout: () => Promise<void>;
+};
 
-  return {
-    token: initialToken,
-    isLogged: !!initialToken,
+export const useSession = create<SessionState>((set) => ({
+  user: null,
+  loading: true,
+  isLogged: false,
 
-    setToken: (token) => {
-      if (token) {
-        localStorage.setItem("accessToken", token);
-      } else {
-        localStorage.removeItem("accessToken");
-      }
-      set({ token, isLogged: !!token });
-    },
+  loadSession: async () => {
+    try {
+      const user = await fetchSession();
+      set({ user, isLogged: true, loading: false });
+    } catch {
+      set({ user: null, isLogged: false, loading: false });
+    }
+  },
 
-    logout: () => {
-      localStorage.removeItem("accessToken");
-      set({ token: null, isLogged: false });
+  logout: async () => {
+    try {
+      await logoutUser();
+    } finally {
+      set({ user: null, isLogged: false });
       window.location.assign("/login");
-    },
-  };
-});
+    }
+  },
+}));

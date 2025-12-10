@@ -3,8 +3,9 @@ import api from "../../lib/apiClient";
 export type CurrentUser = {
   id: string;
   email: string;
-  name: string;
-  role: string;
+  name: string | null;
+  role: string | null;
+  avatarUrl?: string | null;
 };
 
 export async function getCurrentUser(): Promise<CurrentUser> {
