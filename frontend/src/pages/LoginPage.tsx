@@ -13,7 +13,7 @@ const variants = {
 
 export default function LoginPage() {
   const t = useToast();
-  const { setToken } = useSession.getState();
+  const { loadSession } = useSession.getState();
 
   const [mode, setMode] = useState<"signin" | "signup">("signin");
 
@@ -35,10 +35,10 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const res = await loginUser({ email: email.trim(), password });
-      if (!res?.accessToken) throw new Error("No token received");
+      await loginUser({ email: email.trim(), password });
 
-      setToken(res.accessToken);
+      await loadSession();
+
       t.show("Signed in", "success");
       window.location.assign("/dashboard");
     } catch (e: any) {
@@ -56,20 +56,12 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const reg = await registerUser({
+      await registerUser({
         email: email.trim(),
         password,
       });
 
-      const token = (reg as any)?.accessToken;
-
-      if (token) {
-        setToken(token);
-      } else {
-        const res = await loginUser({ email: email.trim(), password });
-        if (!res?.accessToken) throw new Error("No token after signup");
-        setToken(res.accessToken);
-      }
+      await loadSession();
 
       t.show("Account created. Welcome!", "success");
       window.location.assign("/dashboard");
@@ -127,7 +119,11 @@ export default function LoginPage() {
                   />
                 </label>
 
-                {err && <p className="text-sm text-red-600 dark:text-red-400">{err}</p>}
+                {err && (
+                  <p className="text-sm text-red-600 dark:text-red-400">
+                    {err}
+                  </p>
+                )}
 
                 <button
                   type="submit"
@@ -195,7 +191,11 @@ export default function LoginPage() {
                   />
                 </label>
 
-                {err && <p className="text-sm text-red-600 dark:text-red-400">{err}</p>}
+                {err && (
+                  <p className="text-sm text-red-600 dark:text-red-400">
+                    {err}
+                  </p>
+                )}
 
                 <button
                   type="submit"

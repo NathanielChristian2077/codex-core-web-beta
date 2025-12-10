@@ -14,6 +14,7 @@ type SessionState = {
 
   loadSession: () => Promise<void>;
   logout: () => Promise<void>;
+  setUser: (user: User | null) => void;
 };
 
 export const useSession = create<SessionState>((set) => ({
@@ -37,5 +38,9 @@ export const useSession = create<SessionState>((set) => ({
       set({ user: null, isLogged: false });
       window.location.assign("/login");
     }
+  },
+
+  setUser: (user) => {
+    set({ user, isLogged: !!user });
   },
 }));
