@@ -1,15 +1,10 @@
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-}
-
 generator client {
   provider = "prisma-client-js"
+  output   = "./generated"
 }
 
-enum Role {
-  GM
-  PLAYER
+datasource db {
+  provider = "postgresql"
 }
 
 model User {
@@ -24,12 +19,12 @@ model User {
 model Campaign {
   id          String        @id @default(uuid())
   userId      String
-  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   name        String
   description String?
-  imageUrl    String?       @db.Text
-  events      Event[]
+  imageUrl    String?
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   characters  Character[]
+  events      Event[]
   locations   Location[]
   objects     ObjectModel[]
 }
@@ -37,11 +32,12 @@ model Campaign {
 model Event {
   id          String   @id @default(uuid())
   campaignId  String
-  campaign    Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
   title       String
   description String?
   createdAt   DateTime @default(now())
-  imageUrl    String?  @db.Text
+  imageUrl    String?
+  campaign    Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
   @@unique([campaignId, title])
   @@index([campaignId, createdAt])
 }
@@ -49,11 +45,12 @@ model Event {
 model Character {
   id          String   @id @default(uuid())
   campaignId  String
-  campaign    Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
   name        String
   description String?
   createdAt   DateTime @default(now())
-  imageUrl    String?  @db.Text
+  imageUrl    String?
+  campaign    Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
   @@unique([campaignId, name])
   @@index([campaignId, name])
 }
@@ -61,11 +58,12 @@ model Character {
 model Location {
   id          String   @id @default(uuid())
   campaignId  String
-  campaign    Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
   name        String
   description String?
   createdAt   DateTime @default(now())
-  imageUrl    String?  @db.Text
+  imageUrl    String?
+  campaign    Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
   @@unique([campaignId, name])
   @@index([campaignId, name])
 }
@@ -73,13 +71,33 @@ model Location {
 model ObjectModel {
   id          String   @id @default(uuid())
   campaignId  String
-  campaign    Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
   name        String
   description String?
   createdAt   DateTime @default(now())
-  imageUrl    String?  @db.Text
+  imageUrl    String?
+  campaign    Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
   @@unique([campaignId, name])
   @@index([campaignId, name])
+}
+
+model Relation {
+  id        String       @id @default(uuid())
+  fromType  NodeType
+  fromId    String
+  toType    NodeType
+  toId      String
+  kind      RelationType
+  createdAt DateTime     @default(now())
+
+  @@unique([fromType, fromId, toType, toId, kind])
+  @@index([fromType, fromId])
+  @@index([toType, toId])
+}
+
+enum Role {
+  GM
+  PLAYER
 }
 
 enum NodeType {
@@ -98,18 +116,4 @@ enum RelationType {
   PREVIOUS
   NEXT
   LINK
-}
-
-model Relation {
-  id        String       @id @default(uuid())
-  fromType  NodeType
-  fromId    String
-  toType    NodeType
-  toId      String
-  kind      RelationType
-  createdAt DateTime     @default(now())
-
-  @@unique([fromType, fromId, toType, toId, kind])
-  @@index([fromType, fromId])
-  @@index([toType, toId])
 }
