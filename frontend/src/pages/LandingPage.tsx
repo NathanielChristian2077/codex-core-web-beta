@@ -1,10 +1,10 @@
 import {
-    ArrowRight,
-    BookOpenCheck,
-    GitBranch,
-    History,
-    Network,
-    ShieldCheck
+  ArrowRight,
+  BookOpenCheck,
+  GitBranch,
+  History,
+  Network,
+  ShieldCheck
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useSession } from "../store/useSession";
@@ -15,7 +15,6 @@ export default function LandingPage() {
 
   const primaryCta = () => {
     if (isLogged) navigate("/dashboard");
-    else navigate("/login");
   };
 
   return (
@@ -58,6 +57,15 @@ export default function LandingPage() {
             >
               {isLogged ? "Open dashboard" : "Get started"}
               <ArrowRight className="h-4 w-4" />
+            </button>
+
+            <button
+              type="button"
+              onClick={() => navigate("/demo/graph")}
+              className="inline-flex items-center gap-2 rounded-full border border-sky-500/40 bg-sky-500/10 px-5 py-2.5 text-sm font-medium text-sky-700 shadow-sm transition hover:bg-sky-500/20 dark:text-sky-300"
+            >
+              Open demo graph
+              <Network className="h-4 w-4" />
             </button>
 
             <a
