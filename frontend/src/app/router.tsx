@@ -11,11 +11,13 @@ import LocationsPage from "../pages/LocationsPage";
 import LoginPage from "../pages/LoginPage";
 import ObjectsPage from "../pages/ObjectsPage";
 import TimelinePage from "../pages/TimelinePage";
+import DemoGraphPage from "../pages/DemoGraphPage";
 
 export const router = createBrowserRouter([
   // public
   { path: "/", element: <LandingPage /> },
   { path: "/login", element: <LoginPage /> },
+  { path: "/demo/graph", element: <DemoGraphPage /> },
 
   // after auth
   {
