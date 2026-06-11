@@ -1,0 +1,39 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: codex-core-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: codex
+      POSTGRES_PASSWORD: codex
+      POSTGRES_DB: codex_core
+    ports:
+      - "15432:5432"
+    volumes:
+      - codex_core_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U codex -d codex_core"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: ./backend
+    container_name: codex-core-api
+    restart: unless-stopped
+    environment:
+      APP_ENV: development
+      HTTP_ADDR: :8080
+      FRONTEND_ORIGIN: http://localhost:5173
+      DATABASE_URL: postgres://codex:codex@postgres:5432/codex_core?sslmode=disable
+      MIGRATIONS_DIR: internal/adapters/postgres/migrations
+      RUN_MIGRATIONS: "true"
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  codex_core_pg_data:
