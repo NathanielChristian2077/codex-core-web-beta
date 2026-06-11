@@ -2,3 +2,16 @@ package-lock.json
 
 .vscode
 *.pid
+
+.env
+.env.*
+!.env.example
+
+# Go
+bin/
+coverage.out
+*.test
+
+# Node
+node_modules/
+dist/
