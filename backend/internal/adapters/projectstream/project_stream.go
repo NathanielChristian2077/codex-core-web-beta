@@ -72,6 +72,7 @@ func TryServe(w http.ResponseWriter, r *http.Request) bool {
 		respond.Error(w, http.StatusServiceUnavailable, "project_stream_unavailable", "Project stream service is unavailable.")
 		return true
 	}
+	svc.startNotificationListener()
 
 	svc.serve(projectID, w, r)
 	return true
