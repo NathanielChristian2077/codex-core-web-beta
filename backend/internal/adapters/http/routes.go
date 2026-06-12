@@ -46,6 +46,7 @@ func NewRouter(deps RouterDependencies) http.Handler {
 	healthHandler := handlers.NewHealthHandler(deps.DB)
 	authHandler := handlers.NewAuthHandler(store, tokenService, deps.Config.Auth)
 	resourceHandler := handlers.NewResourceHandler(store)
+	membershipHandler := handlers.NewMembershipHandler(store)
 
 	router.Get("/health", healthHandler.Live)
 	router.Get("/ready", healthHandler.Ready)
@@ -76,6 +77,11 @@ func NewRouter(deps RouterDependencies) http.Handler {
 		protected.Patch("/projects/{projectID}", resourceHandler.UpdateProject)
 		protected.Delete("/projects/{projectID}", resourceHandler.DeleteProject)
 		protected.Post("/projects/{projectID}/presets", resourceHandler.ApplyPreset)
+
+		protected.Get("/projects/{projectID}/members", membershipHandler.ListMembers)
+		protected.Post("/projects/{projectID}/members", membershipHandler.AddMember)
+		protected.Patch("/projects/{projectID}/members/{userID}", membershipHandler.UpdateMemberRole)
+		protected.Delete("/projects/{projectID}/members/{userID}", membershipHandler.RemoveMember)
 
 		protected.Get("/projects/{projectID}/node-types", resourceHandler.ListNodeTypes)
 		protected.Post("/projects/{projectID}/node-types", resourceHandler.CreateNodeType)
