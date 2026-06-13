@@ -1,4 +1,5 @@
 -- +goose Up
+-- +goose StatementBegin
 CREATE OR REPLACE FUNCTION notify_project_event()
 RETURNS trigger AS $$
 DECLARE
@@ -60,6 +61,7 @@ BEGIN
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+-- +goose StatementEnd
 
 CREATE TRIGGER projects_notify_project_event AFTER UPDATE OR DELETE ON projects FOR EACH ROW EXECUTE FUNCTION notify_project_event();
 CREATE TRIGGER memberships_notify_project_event AFTER INSERT OR UPDATE OR DELETE ON memberships FOR EACH ROW EXECUTE FUNCTION notify_project_event();

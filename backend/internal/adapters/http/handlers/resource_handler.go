@@ -14,15 +14,24 @@ import (
 
 type ResourceHandler struct{ store *postgres.Store }
 
-func NewResourceHandler(store *postgres.Store) *ResourceHandler { return &ResourceHandler{store: store} }
+func NewResourceHandler(store *postgres.Store) *ResourceHandler {
+	return &ResourceHandler{store: store}
+}
 
 func (h *ResourceHandler) ListProjects(w http.ResponseWriter, r *http.Request) {
 	userID, ok := userID(w, r)
 	if !ok {
 		return
 	}
-	h.writeRaw(w, h.store.ListProjectsJSON(r.Context(), userID))
+	projectsJSON, err := h.store.ListProjectsJSON(r.Context(), userID)
+	if err != nil {
+		respond.Error(w, http.StatusInternalServerError, "internal_error", err.Error())
+		return
+	}
+
+	h.writeRaw(w, projectsJSON, nil)
 }
+
 func (h *ResourceHandler) CreateProject(w http.ResponseWriter, r *http.Request) {
 	userID, ok := userID(w, r)
 	if !ok {
@@ -44,7 +53,12 @@ func (h *ResourceHandler) GetProject(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	h.writeRaw(w, h.store.GetProjectJSON(r.Context(), userID, chi.URLParam(r, "projectID")))
+	projectJSON, err := h.store.GetProjectJSON(r.Context(), userID, chi.URLParam(r, "projectID"))
+	if err != nil {
+		respond.Error(w, http.StatusInternalServerError, "internal_error", err.Error())
+		return
+	}
+	h.writeRaw(w, projectJSON, nil)
 }
 func (h *ResourceHandler) UpdateProject(w http.ResponseWriter, r *http.Request) {
 	_, projectID, ok := h.requireEditor(w, r)
@@ -55,7 +69,9 @@ func (h *ResourceHandler) UpdateProject(w http.ResponseWriter, r *http.Request) 
 	if !decode(w, r, &p) {
 		return
 	}
-	h.writeRaw(w, h.store.UpdateProjectJSON(r.Context(), projectID, p))
+
+	raw, err := h.store.UpdateProjectJSON(r.Context(), projectID, p)
+	h.writeRaw(w, raw, err)
 }
 func (h *ResourceHandler) DeleteProject(w http.ResponseWriter, r *http.Request) {
 	uid, ok := userID(w, r)
@@ -83,7 +99,8 @@ func (h *ResourceHandler) ListNodeTypes(w http.ResponseWriter, r *http.Request) 
 	if !ok {
 		return
 	}
-	h.writeRaw(w, h.store.ListNodeTypesJSON(r.Context(), pid))
+	raw, err := h.store.ListNodeTypesJSON(r.Context(), pid)
+	h.writeRaw(w, raw, err)
 }
 func (h *ResourceHandler) CreateNodeType(w http.ResponseWriter, r *http.Request) {
 	_, pid, ok := h.requireEditor(w, r)
@@ -110,7 +127,8 @@ func (h *ResourceHandler) UpdateNodeType(w http.ResponseWriter, r *http.Request)
 	if !decode(w, r, &p) {
 		return
 	}
-	h.writeRaw(w, h.store.UpdateNodeTypeJSON(r.Context(), id, p))
+	raw, err := h.store.UpdateNodeTypeJSON(r.Context(), id, p)
+	h.writeRaw(w, raw, err)
 }
 func (h *ResourceHandler) DeleteNodeType(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "nodeTypeID")
@@ -125,7 +143,8 @@ func (h *ResourceHandler) ListEdgeTypes(w http.ResponseWriter, r *http.Request) 
 	if !ok {
 		return
 	}
-	h.writeRaw(w, h.store.ListEdgeTypesJSON(r.Context(), pid))
+	raw, err := h.store.ListEdgeTypesJSON(r.Context(), pid)
+	h.writeRaw(w, raw, err)
 }
 func (h *ResourceHandler) CreateEdgeType(w http.ResponseWriter, r *http.Request) {
 	_, pid, ok := h.requireEditor(w, r)
@@ -152,7 +171,8 @@ func (h *ResourceHandler) UpdateEdgeType(w http.ResponseWriter, r *http.Request)
 	if !decode(w, r, &p) {
 		return
 	}
-	h.writeRaw(w, h.store.UpdateEdgeTypeJSON(r.Context(), id, p))
+	raw, err := h.store.UpdateEdgeTypeJSON(r.Context(), id, p)
+	h.writeRaw(w, raw, err)
 }
 func (h *ResourceHandler) DeleteEdgeType(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "edgeTypeID")
@@ -168,7 +188,8 @@ func (h *ResourceHandler) ListNodes(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	q := r.URL.Query()
-	h.writeRaw(w, h.store.ListNodesJSON(r.Context(), pid, q.Get("typeId"), q.Get("typeSlug"), q.Get("search")))
+	raw, err := h.store.ListNodesJSON(r.Context(), pid, q.Get("typeId"), q.Get("typeSlug"), q.Get("search"))
+	h.writeRaw(w, raw, err)
 }
 func (h *ResourceHandler) CreateNode(w http.ResponseWriter, r *http.Request) {
 	_, pid, ok := h.requireEditor(w, r)
@@ -191,7 +212,8 @@ func (h *ResourceHandler) GetNode(w http.ResponseWriter, r *http.Request) {
 	if !h.requireResourceAccess(w, r, "node", id) {
 		return
 	}
-	h.writeRaw(w, h.store.GetNodeJSON(r.Context(), id))
+	raw, err := h.store.GetNodeJSON(r.Context(), id)
+	h.writeRaw(w, raw, err)
 }
 func (h *ResourceHandler) UpdateNode(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "nodeID")
@@ -202,7 +224,8 @@ func (h *ResourceHandler) UpdateNode(w http.ResponseWriter, r *http.Request) {
 	if !decode(w, r, &p) {
 		return
 	}
-	h.writeRaw(w, h.store.UpdateNodeJSON(r.Context(), id, p))
+	raw, err := h.store.UpdateNodeJSON(r.Context(), id, p)
+	h.writeRaw(w, raw, err)
 }
 func (h *ResourceHandler) DeleteNode(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "nodeID")
@@ -217,7 +240,8 @@ func (h *ResourceHandler) ListEdges(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	h.writeRaw(w, h.store.ListEdgesJSON(r.Context(), pid))
+	raw, err := h.store.ListEdgesJSON(r.Context(), pid)
+	h.writeRaw(w, raw, err)
 }
 func (h *ResourceHandler) CreateEdge(w http.ResponseWriter, r *http.Request) {
 	_, pid, ok := h.requireEditor(w, r)
@@ -244,7 +268,8 @@ func (h *ResourceHandler) UpdateEdge(w http.ResponseWriter, r *http.Request) {
 	if !decode(w, r, &p) {
 		return
 	}
-	h.writeRaw(w, h.store.UpdateEdgeJSON(r.Context(), id, p))
+	raw, err := h.store.UpdateEdgeJSON(r.Context(), id, p)
+	h.writeRaw(w, raw, err)
 }
 func (h *ResourceHandler) DeleteEdge(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "edgeID")
@@ -258,7 +283,8 @@ func (h *ResourceHandler) GetGraph(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	h.writeRaw(w, h.store.GraphJSON(r.Context(), pid))
+	raw, err := h.store.GraphJSON(r.Context(), pid)
+	h.writeRaw(w, raw, err)
 }
 
 func (h *ResourceHandler) ListViews(w http.ResponseWriter, r *http.Request) {
@@ -266,7 +292,8 @@ func (h *ResourceHandler) ListViews(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	h.writeRaw(w, h.store.ListViewsJSON(r.Context(), pid))
+	raw, err := h.store.ListViewsJSON(r.Context(), pid)
+	h.writeRaw(w, raw, err)
 }
 func (h *ResourceHandler) CreateView(w http.ResponseWriter, r *http.Request) {
 	_, pid, ok := h.requireEditor(w, r)
@@ -293,7 +320,8 @@ func (h *ResourceHandler) UpdateView(w http.ResponseWriter, r *http.Request) {
 	if !decode(w, r, &p) {
 		return
 	}
-	h.writeRaw(w, h.store.UpdateViewJSON(r.Context(), id, p))
+	raw, err := h.store.UpdateViewJSON(r.Context(), id, p)
+	h.writeRaw(w, raw, err)
 }
 func (h *ResourceHandler) DeleteView(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "viewID")
@@ -307,7 +335,8 @@ func (h *ResourceHandler) ListLayouts(w http.ResponseWriter, r *http.Request) {
 	if !h.requireResourceAccess(w, r, "view", viewID) {
 		return
 	}
-	h.writeRaw(w, h.store.ListLayoutsJSON(r.Context(), viewID))
+	raw, err := h.store.ListLayoutsJSON(r.Context(), viewID)
+	h.writeRaw(w, raw, err)
 }
 func (h *ResourceHandler) UpsertLayout(w http.ResponseWriter, r *http.Request) {
 	viewID := chi.URLParam(r, "viewID")
@@ -326,7 +355,8 @@ func (h *ResourceHandler) UpsertLayout(w http.ResponseWriter, r *http.Request) {
 	if p.NodeID == "" {
 		p.NodeID = chi.URLParam(r, "nodeID")
 	}
-	h.writeRaw(w, h.store.UpsertLayoutJSON(r.Context(), pid, viewID, p))
+	raw, err := h.store.UpsertLayoutJSON(r.Context(), pid, viewID, p)
+	h.writeRaw(w, raw, err)
 }
 
 func (h *ResourceHandler) requireAccess(w http.ResponseWriter, r *http.Request) (string, string, bool) {
