@@ -1,0 +1,8 @@
+# Override local (não versionado no fluxo principal).
+# A porta 15432 do host cai numa faixa de portas excluída pelo Windows
+# (Hyper-V/WinNAT: 15417-15516), então remapeamos o Postgres para 15990.
+# A API continua falando com o Postgres pela rede interna (postgres:5432).
+services:
+  postgres:
+    ports: !override
+      - "15990:5432"
