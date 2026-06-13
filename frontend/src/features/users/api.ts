@@ -1,33 +1,27 @@
-import api from "../../lib/apiClient";
+// Wrapper de compatibilidade sobre a camada de API nova.
+import * as authApi from "../../api/modules/auth";
+import type { CurrentUser } from "../../api/contracts/auth";
 
-export type CurrentUser = {
-  id: string;
-  email: string;
-  name: string | null;
-  role: string | null;
-  avatarUrl?: string | null;
-};
+export type { CurrentUser };
 
-export async function getCurrentUser(): Promise<CurrentUser> {
-  const { data } = await api.get<CurrentUser>("/auth/me");
-  return data;
+export function getCurrentUser(): Promise<CurrentUser> {
+  return authApi.me();
 }
 
-export async function updateCurrentUser(payload: {
+export function updateCurrentUser(payload: {
   name?: string;
   email?: string;
-}) {
-  const { data } = await api.patch<CurrentUser>("/auth/me", payload);
-  return data;
+}): Promise<CurrentUser> {
+  return authApi.updateMe(payload);
 }
 
-export async function changePassword(payload: {
+export function changePassword(payload: {
   currentPassword: string;
   newPassword: string;
-}) {
-  await api.patch("/auth/me/password", payload);
+}): Promise<void> {
+  return authApi.changePassword(payload);
 }
 
-export async function deleteCurrentUser() {
-  await api.delete("/auth/me");
+export function deleteCurrentUser(): Promise<void> {
+  return authApi.deleteMe();
 }

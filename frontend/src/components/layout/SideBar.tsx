@@ -106,8 +106,7 @@ export default function SideBar() {
     let ignore = false;
 
     async function fetchMe() {
-      const token = localStorage.getItem("accessToken");
-      if (!isLogged || !token) {
+      if (!isLogged) {
         if (!ignore) {
           setUser(null);
           setUserLoading(false);
@@ -503,9 +502,7 @@ export default function SideBar() {
 
                   <DropdownMenuItem
                     onClick={() => {
-                      localStorage.removeItem("accessToken");
-                      window.location.href = "/";
-                      useSession().logout();
+                      useSession.getState().logout();
                     }}
                     className={cn(
                       "flex items-center gap-2 rounded-md px-2 py-1.5 text-sm outline-hidden ring-sidebar-ring",
