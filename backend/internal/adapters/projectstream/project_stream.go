@@ -172,13 +172,13 @@ func projectIDFromPath(path string) (string, bool) {
 func (h *hub) room(projectID string) *room {
 	h.mu.Lock()
 	defer h.mu.Unlock()
-	room, ok := h.rooms[projectID]
+	nuroom, ok := h.rooms[projectID]
 	if ok {
-		return room
+		return nuroom
 	}
-	room = &room{clients: make(map[*client]struct{})}
-	h.rooms[projectID] = room
-	return room
+	nuroom = &room{clients: make(map[*client]struct{})}
+	h.rooms[projectID] = nuroom
+	return nuroom
 }
 
 func newClient(bufferSize int) *client {

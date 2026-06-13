@@ -101,7 +101,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	user, passwordHash, err := h.store.FindUserByEmail(r.Context(), payload.Email)
-	if err != nil || !auth.CheckPasswordHash(payload.Password, passwordHash) {
+	if err != nil || !auth.CheckPassword(payload.Password, passwordHash) {
 		respond.Error(w, http.StatusUnauthorized, "invalid_credentials", "Invalid email or password.")
 		return
 	}
@@ -180,7 +180,7 @@ func (h *AuthHandler) ChangePassword(w http.ResponseWriter, r *http.Request) {
 	}
 
 	_, passwordHash, err := h.store.FindUserByEmail(r.Context(), currentUser.Email)
-	if err != nil || !auth.CheckPasswordHash(payload.CurrentPassword, passwordHash) {
+	if err != nil || !auth.CheckPassword(payload.CurrentPassword, passwordHash) {
 		respond.Error(w, http.StatusUnauthorized, "invalid_password", "Current password is invalid.")
 		return
 	}

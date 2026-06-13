@@ -1,4 +1,5 @@
 -- +goose Up
+-- +goose StatementBegin
 CREATE EXTENSION IF NOT EXISTS citext;
 
 CREATE OR REPLACE FUNCTION set_updated_at()
@@ -8,6 +9,7 @@ BEGIN
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+-- +goose StatementEnd
 
 CREATE TABLE users (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
