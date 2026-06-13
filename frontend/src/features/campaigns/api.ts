@@ -1,26 +1,35 @@
 import api from "../../lib/apiClient";
+import * as projectsApi from "../../api/modules/projects";
+import * as nodesApi from "../../api/modules/nodes";
+import {
+  eventToCreatePayload,
+  eventToUpdatePayload,
+  nodeToEvent,
+} from "../nodes/adapters";
+import { resolveNodeTypeId } from "../nodes/nodeTypeResolver";
 import { createCharacter, listCharacters, updateCharacter } from "../characters/api";
 import { createLocation, listLocations, updateLocation } from "../locations/api";
 import { createObject, listObjects, updateObject } from "../objects/api";
 import type { Campaign, CampaignExport, EventItem } from "./types";
 
-// Campaigns
-export async function listCampaigns(): Promise<Campaign[]> {
-  const { data } = await api.get("/campaigns");
-  return data;
+// Campaigns -> Projects.
+// A UI ainda fala "Campaign", mas internamente isto usa a API nova /projects.
+// Os nomes antigos continuam exportados como aliases para não quebrar telas.
+
+export async function listProjects(): Promise<Campaign[]> {
+  return projectsApi.listProjects() as Promise<Campaign[]>;
 }
 
-export async function getCampaign(id: string): Promise<Campaign> {
-  const { data } = await api.get(`/campaigns/${id}`);
-  return data;
+export async function getProject(id: string): Promise<Campaign> {
+  return projectsApi.getProject(id) as Promise<Campaign>;
 }
 
-export async function createCampaign(payload: {
+export async function createProject(payload: {
   name: string;
   description?: string | null;
   imageUrl?: string | null;
-}) {
-  const { data } = await api.post("/campaigns", {
+}): Promise<Campaign> {
+  const project = await projectsApi.createProject({
     name: payload.name.trim(),
     description:
       payload.description !== undefined
@@ -28,15 +37,18 @@ export async function createCampaign(payload: {
         : null,
     imageUrl:
       payload.imageUrl !== undefined ? payload.imageUrl?.trim() || null : null,
+    // Semeia os NodeTypes/EdgeTypes (character/location/object/event/faction)
+    // para a campanha já nascer utilizável no grafo e nas entidades.
+    presetSlug: "rpg-campaign",
   });
-  return data as Campaign;
+  return project as Campaign;
 }
 
-export async function updateCampaign(
+export async function updateProject(
   id: string,
   payload: Partial<Campaign> & { imageUrl?: string | null }
-) {
-  const { data } = await api.put(`/campaigns/${id}`, {
+): Promise<Campaign> {
+  const project = await projectsApi.updateProject(id, {
     name: payload.name?.trim(),
     description:
       payload.description !== undefined
@@ -47,8 +59,14 @@ export async function updateCampaign(
         ? payload.imageUrl?.trim() || null
         : undefined,
   });
-  return data as Campaign;
+  return project as Campaign;
 }
+
+// Aliases temporários de compatibilidade (UI antiga).
+export const listCampaigns = listProjects;
+export const getCampaign = getProject;
+export const createCampaign = createProject;
+export const updateCampaign = updateProject;
 
 export async function duplicateCampaign(sourceId: string) {
   const [camp, events] = await Promise.all([
@@ -173,16 +191,20 @@ export async function importCampaign(payload: CampaignExport) {
   return newCamp;
 }
 
-export async function deleteCampaign(id: string) {
-  await api.delete(`/campaigns/${id}`);
+export async function deleteProject(id: string) {
+  await projectsApi.deleteProject(id);
 }
 
-// Events
+export const deleteCampaign = deleteProject;
+
+// Events -> Nodes (typeSlug "event").
+const EVENT_SLUG = "event";
+
 export async function listCampaignEvents(
   campaignId: string
 ): Promise<EventItem[]> {
-  const { data } = await api.get(`/campaigns/${campaignId}/events`);
-  return data;
+  const nodes = await nodesApi.listNodes(campaignId, { typeSlug: EVENT_SLUG });
+  return nodes.map(nodeToEvent);
 }
 
 export async function createCampaignEvent(
@@ -192,19 +214,13 @@ export async function createCampaignEvent(
     description?: string | null;
     imageUrl?: string | null;
   }
-) {
-  const body = {
-    title: payload.title.trim(),
-    description:
-      payload.description !== undefined
-        ? payload.description?.trim() || null
-        : null,
-    imageUrl:
-      payload.imageUrl !== undefined ? payload.imageUrl?.trim() || null : null,
-  };
-
-  const { data } = await api.post(`/campaigns/${campaignId}/events`, body);
-  return data as EventItem;
+): Promise<EventItem> {
+  const typeId = await resolveNodeTypeId(campaignId, EVENT_SLUG);
+  const node = await nodesApi.createNode(
+    campaignId,
+    eventToCreatePayload(typeId, payload)
+  );
+  return nodeToEvent(node);
 }
 
 export async function updateEvent(
@@ -214,25 +230,13 @@ export async function updateEvent(
     description?: string | null;
     imageUrl?: string | null;
   }
-) {
-  const body = {
-    title: payload.title?.trim(),
-    description:
-      payload.description !== undefined
-        ? payload.description?.trim() || null
-        : undefined,
-    imageUrl:
-      payload.imageUrl !== undefined
-        ? payload.imageUrl?.trim() || null
-        : undefined,
-  };
-
-  const { data } = await api.put(`/events/${eventId}`, body);
-  return data as EventItem;
+): Promise<EventItem> {
+  const node = await nodesApi.updateNode(eventId, eventToUpdatePayload(payload));
+  return nodeToEvent(node);
 }
 
 export async function deleteEvent(eventId: string) {
-  await api.delete(`/events/${eventId}`);
+  await nodesApi.deleteNode(eventId);
 }
 
 export type GraphNodeDto = {
