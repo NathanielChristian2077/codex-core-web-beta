@@ -1,20 +1,15 @@
 import { create } from "zustand";
 import { fetchSession, logoutUser } from "../features/auth/api";
-
-type User = {
-  id: string;
-  email: string;
-  role: string;
-};
+import type { CurrentUser } from "../api/contracts/auth";
 
 type SessionState = {
-  user: User | null;
+  user: CurrentUser | null;
   loading: boolean;
   isLogged: boolean;
 
   loadSession: () => Promise<void>;
   logout: () => Promise<void>;
-  setUser: (user: User | null) => void;
+  setUser: (user: CurrentUser | null) => void;
 };
 
 export const useSession = create<SessionState>((set) => ({
@@ -22,6 +17,7 @@ export const useSession = create<SessionState>((set) => ({
   loading: true,
   isLogged: false,
 
+  // Chamado no boot da aplicação (GET /auth/me lê o cookie HttpOnly).
   loadSession: async () => {
     try {
       const user = await fetchSession();
