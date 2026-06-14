@@ -2,7 +2,7 @@ import { Pencil, Trash2 } from "lucide-react";
 import { MarkdownRenderer } from "../../components/markdown/MarkdownRenderer";
 import type { EventItem } from "../../features/campaigns/types";
 import {
-  INTERNAL_LINK_PROTOCOL,
+  decodeInternalLinkHref,
   type InternalLink,
 } from "../../lib/internalLinks";
 
@@ -21,35 +21,6 @@ function formatCreatedAt(s?: string) {
   const mm = String(d.getMonth() + 1).padStart(2, "0");
   const dd = String(d.getDate()).padStart(2, "0");
   return `${yyyy}-${mm}-${dd}`;
-}
-
-function parseInternalLinkFromHref(hrefRaw: string | null): InternalLink | null {
-  if (!hrefRaw) return null;
-  const href = hrefRaw.trim();
-  if (!href || !href.includes(INTERNAL_LINK_PROTOCOL)) return null;
-
-  const idx = href.indexOf(INTERNAL_LINK_PROTOCOL);
-  const rest = href.slice(idx + INTERNAL_LINK_PROTOCOL.length);
-  const colonIndex = rest.indexOf(":");
-  if (colonIndex <= 0) return null;
-
-  const kindRaw = rest.slice(0, colonIndex).toUpperCase();
-  const rawName = rest.slice(colonIndex + 1);
-
-  if (!["E", "C", "L", "O"].includes(kindRaw)) return null;
-
-  let decodedName = rawName;
-  try {
-    decodedName = decodeURIComponent(rawName);
-  } catch {}
-
-  const name = decodedName.trim();
-  if (!name) return null;
-
-  return {
-    kind: kindRaw as InternalLink["kind"],
-    name,
-  };
 }
 
 export default function EventRow({
@@ -75,7 +46,7 @@ export default function EventRow({
     const hrefAttr = anchor.getAttribute("href");
     const href = (hrefAttr && hrefAttr.trim()) || (anchor.href ?? "").trim();
 
-    const link = parseInternalLinkFromHref(href);
+    const link = decodeInternalLinkHref(href);
     if (!link) return;
 
     e.preventDefault();

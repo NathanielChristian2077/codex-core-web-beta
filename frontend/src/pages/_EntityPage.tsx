@@ -5,7 +5,7 @@ import EntityList, { EntityBase } from "../components/entity/EntityList";
 import EntityModal from "../components/entity/EntityModal";
 import Spinner from "../components/layout/Spinner";
 import { useToast } from "../components/layout/ToastProvider";
-import type { InternalLink } from "../lib/internalLinks";
+import { pathForNodeType, type InternalLink } from "../lib/internalLinks";
 
 import * as nodesApi from "../api/modules/nodes";
 import {
@@ -27,26 +27,6 @@ type Props = {
   /** slug do NodeType: "character" | "location" | "object" ... */
   nodeTypeSlug: string;
 };
-
-const SLUG_TO_KIND: Record<string, "E" | "C" | "L" | "O"> = {
-  event: "E",
-  character: "C",
-  location: "L",
-  object: "O",
-};
-
-function pathForKind(kind: "E" | "C" | "L" | "O", projectId: string): string {
-  switch (kind) {
-    case "E":
-      return `/campaigns/${projectId}/timeline`;
-    case "C":
-      return `/campaigns/${projectId}/characters`;
-    case "L":
-      return `/campaigns/${projectId}/locations`;
-    case "O":
-      return `/campaigns/${projectId}/objects`;
-  }
-}
 
 export default function EntityPage({ title, projectId, nodeTypeSlug }: Props) {
   const t = useToast();
@@ -97,11 +77,8 @@ export default function EntityPage({ title, projectId, nodeTypeSlug }: Props) {
   }
 
   const handleInternalLinkClick = (link: InternalLink) => {
-    const pageKind = SLUG_TO_KIND[nodeTypeSlug];
-    if (!pageKind) return;
-
-    if (link.kind !== pageKind) {
-      navigate(pathForKind(link.kind, projectId));
+    if (link.type !== nodeTypeSlug) {
+      navigate(pathForNodeType(link.type, projectId));
       return;
     }
 
