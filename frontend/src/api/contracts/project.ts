@@ -23,3 +23,12 @@ export type UpdateProjectRequest = {
   description?: string | null;
   imageUrl?: string | null;
 };
+
+// Export/import: a forma exata é definida pelo backend. O front só faz
+// round-trip (baixa o que vem de /export e devolve o mesmo em /import),
+// por isso mantemos os campos conhecidos tipados e o resto livre.
+export type ProjectExport = {
+  version?: number;
+  project?: ProjectDto;
+  [key: string]: unknown;
+};

@@ -1,6 +1,4 @@
-import type { Character } from "../characters/types";
-import type { LocationEntity } from "../locations/types";
-import type { ObjectEntity } from "../objects/types";
+import type { ProjectExport } from "../../api/contracts/project";
 
 export type Campaign = {
   id: string;
@@ -21,10 +19,5 @@ export type EventItem = {
   imageUrl?: string | null;
 };
 
-export type CampaignExport = {
-  campaign: Campaign;
-  events: EventItem[];
-  characters: Character[];
-  locations: LocationEntity[];
-  objects: ObjectEntity[];
-};
+// Mantido como alias por compat: o snapshot agora vem do backend (/export).
+export type CampaignExport = ProjectExport;
