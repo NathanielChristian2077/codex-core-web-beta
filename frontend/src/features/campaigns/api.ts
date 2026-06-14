@@ -7,10 +7,8 @@ import {
   nodeToEvent,
 } from "../nodes/adapters";
 import { resolveNodeTypeId } from "../nodes/nodeTypeResolver";
-import { createCharacter, listCharacters, updateCharacter } from "../characters/api";
-import { createLocation, listLocations, updateLocation } from "../locations/api";
-import { createObject, listObjects, updateObject } from "../objects/api";
-import type { Campaign, CampaignExport, EventItem } from "./types";
+import type { ProjectExport } from "../../api/contracts/project";
+import type { Campaign, EventItem } from "./types";
 
 // Campaigns -> Projects.
 // A UI ainda fala "Campaign", mas internamente isto usa a API nova /projects.
@@ -68,127 +66,20 @@ export const getCampaign = getProject;
 export const createCampaign = createProject;
 export const updateCampaign = updateProject;
 
-export async function duplicateCampaign(sourceId: string) {
-  const [camp, events] = await Promise.all([
-    getCampaign(sourceId),
-    listCampaignEvents(sourceId),
-  ]);
-
-  const newCamp = await createCampaign({
-    name: `${camp.name} (Copy)`,
-    description: camp.description ?? null,
-    imageUrl: (camp as any).imageUrl ?? null,
-  });
-
-  for (const ev of events) {
-    await createCampaignEvent(newCamp.id, ev);
-  }
-  return newCamp;
+// Duplicate/export/import são responsabilidade do backend (cópia profunda do
+// grafo inteiro). O front só dispara o endpoint e trata loading/erro.
+export async function duplicateCampaign(sourceId: string): Promise<Campaign> {
+  return projectsApi.duplicateProject(sourceId) as Promise<Campaign>;
 }
 
-export async function importCampaign(payload: CampaignExport) {
-  const base = payload.campaign;
+export async function exportCampaign(id: string): Promise<ProjectExport> {
+  return projectsApi.exportProject(id);
+}
 
-  const newCamp = await createCampaign({
-    name: base?.name ? `${base.name} (Imported)` : "Imported campaign",
-    description: base?.description ?? null,
-    imageUrl: (base as any)?.imageUrl ?? null,
-  });
-
-  const newCampaignId = newCamp.id;
-
-  // Characters
-  for (const ch of payload.characters ?? []) {
-    await createCharacter(newCampaignId, {
-      name: ch.name,
-      description: ch.description ?? null,
-      imageUrl: ch.imageUrl ?? null,
-    });
-  }
-
-  // Locations
-  for (const loc of payload.locations ?? []) {
-    await createLocation(newCampaignId, {
-      name: loc.name,
-      description: loc.description ?? null,
-      imageUrl: loc.imageUrl ?? null,
-    });
-  }
-
-  // Objects
-  for (const obj of payload.objects ?? []) {
-    await createObject(newCampaignId, {
-      name: obj.name,
-      description: obj.description ?? null,
-      imageUrl: obj.imageUrl ?? null,
-    });
-  }
-
-  // Events
-  for (const ev of payload.events ?? []) {
-    await createCampaignEvent(newCampaignId, {
-      title: ev.title,
-      description: ev.description ?? null,
-      imageUrl: ev.imageUrl ?? null,
-    });
-  }
-
-  try {
-    const [events, characters, locations, objects] = await Promise.all([
-      listCampaignEvents(newCampaignId),
-      listCharacters(newCampaignId),
-      listLocations(newCampaignId),
-      listObjects(newCampaignId),
-    ]);
-
-    // Events
-    await Promise.all(
-      events.map((ev) =>
-        updateEvent(ev.id, {
-          title: ev.title,
-          description: ev.description ?? null,
-          imageUrl: (ev as any).imageUrl ?? null,
-        })
-      )
-    );
-
-    // Characters
-    await Promise.all(
-      characters.map((ch) =>
-        updateCharacter(ch.id, {
-          name: ch.name,
-          description: ch.description ?? null,
-          imageUrl: (ch as any).imageUrl ?? null,
-        })
-      )
-    );
-
-    // Locations
-    await Promise.all(
-      locations.map((loc) =>
-        updateLocation(loc.id, {
-          name: loc.name,
-          description: loc.description ?? null,
-          imageUrl: (loc as any).imageUrl ?? null,
-        })
-      )
-    );
-
-    // Objects
-    await Promise.all(
-      objects.map((obj) =>
-        updateObject(obj.id, {
-          name: obj.name,
-          description: obj.description ?? null,
-          imageUrl: (obj as any).imageUrl ?? null,
-        })
-      )
-    );
-  } catch {
-
-  }
-
-  return newCamp;
+export async function importCampaign(
+  payload: ProjectExport
+): Promise<Campaign> {
+  return projectsApi.importProject(payload) as Promise<Campaign>;
 }
 
 export async function deleteProject(id: string) {
