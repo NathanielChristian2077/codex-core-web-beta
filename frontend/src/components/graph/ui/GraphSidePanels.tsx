@@ -1,10 +1,7 @@
 import { Trash2, X } from "lucide-react";
 import React from "react";
 import { useGraph } from "../../../features/graphs/GraphContext";
-import type {
-  GraphNode,
-  GraphNodeType,
-} from "../../../features/graphs/types";
+import type { GraphNode } from "../../../features/graphs/types";
 import type { InternalLink } from "../../../lib/internalLinks";
 import { NodeEditPanel } from "./NodeEditPanel";
 import { NodeViewPanel } from "./NodeQuickView";
@@ -22,34 +19,16 @@ type GraphSidePanelsProps = {
   onCreateFromInternalLink?: (link: InternalLink) => void;
 };
 
-function kindToNodeType(kind: InternalLink["kind"]): GraphNodeType | null {
-  switch (kind) {
-    case "E":
-      return "EVENT";
-    case "C":
-      return "CHARACTER";
-    case "L":
-      return "LOCATION";
-    case "O":
-      return "OBJECT";
-    default:
-      return null;
-  }
-}
-
 function resolveInternalLinkInGraph(
   link: InternalLink,
   nodes: GraphNode[],
 ): GraphNode | null {
-  const targetType = kindToNodeType(link.kind);
-  if (!targetType) return null;
-
   const normalizedName = link.name.trim().toLowerCase();
 
   return (
     nodes.find(
       (n) =>
-        n.type === targetType &&
+        n.type === link.type &&
         (n.label ?? "").trim().toLowerCase() === normalizedName,
     ) ?? null
   );

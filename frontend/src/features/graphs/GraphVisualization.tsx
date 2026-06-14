@@ -237,40 +237,26 @@ export const GraphVisualization: React.FC = () => {
     const worldX = WIDTH / 2;
     const worldY = HEIGHT / 2;
 
-    switch (link.kind) {
-      case "E":
-        setCreateContext({
-          kind: "event",
-          worldX,
-          worldY,
-          initialTitle: link.name,
-        });
-        break;
-      case "C":
-        setCreateContext({
-          kind: "character",
-          worldX,
-          worldY,
-          initialName: link.name,
-        });
-        break;
-      case "L":
-        setCreateContext({
-          kind: "location",
-          worldX,
-          worldY,
-          initialName: link.name,
-        });
-        break;
-      case "O":
-        setCreateContext({
-          kind: "object",
-          worldX,
-          worldY,
-          initialName: link.name,
-        });
-        break;
+    if (link.type === "event") {
+      setCreateContext({
+        kind: "event",
+        worldX,
+        worldY,
+        initialTitle: link.name,
+      });
+    } else if (
+      link.type === "character" ||
+      link.type === "location" ||
+      link.type === "object"
+    ) {
+      setCreateContext({
+        kind: link.type,
+        worldX,
+        worldY,
+        initialName: link.name,
+      });
     }
+    // Outros tipos (faction, ...) ainda não têm modal de criação dedicado.
   };
 
   useEffect(() => {

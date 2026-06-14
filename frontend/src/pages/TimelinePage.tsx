@@ -11,20 +11,7 @@ import {
   listCampaignEvents,
 } from "../features/campaigns/api";
 import type { EventItem } from "../features/campaigns/types";
-import type { InternalLink } from "../lib/internalLinks";
-
-function pathForKind(kind: "E" | "C" | "L" | "O", campaignId: string): string {
-  switch (kind) {
-    case "E":
-      return `/campaigns/${campaignId}/timeline`;
-    case "C":
-      return `/campaigns/${campaignId}/characters`;
-    case "L":
-      return `/campaigns/${campaignId}/locations`;
-    case "O":
-      return `/campaigns/${campaignId}/objects`;
-  }
-}
+import { pathForNodeType, type InternalLink } from "../lib/internalLinks";
 
 export default function TimelinePage() {
   const { id } = useParams<{ id: string }>();
@@ -72,9 +59,8 @@ export default function TimelinePage() {
   const handleInternalLinkClick = (link: InternalLink) => {
     if (!id) return;
 
-    if (link.kind !== "E") {
-      const path = pathForKind(link.kind, id);
-      navigate(path);
+    if (link.type !== "event") {
+      navigate(pathForNodeType(link.type, id));
       return;
     }
 
