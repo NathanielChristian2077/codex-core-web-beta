@@ -7,6 +7,14 @@ import Spinner from "../components/layout/Spinner";
 import { useToast } from "../components/layout/ToastProvider";
 import type { InternalLink } from "../lib/internalLinks";
 
+import * as nodesApi from "../api/modules/nodes";
+import {
+  entityToCreatePayload,
+  entityToUpdatePayload,
+  nodeToEntity,
+} from "../features/nodes/adapters";
+import { resolveNodeTypeId } from "../features/nodes/nodeTypeResolver";
+
 type EntityPayload = {
   name: string;
   description?: string | null;
@@ -14,43 +22,33 @@ type EntityPayload = {
 
 type Props = {
   title: string;
-  campaignId: string;
-
-  listFn: (campaignId: string) => Promise<EntityBase[]>;
-  createFn: (campaignId: string, p: EntityPayload) => Promise<any>;
-  updateFn: (id: string, p: EntityPayload) => Promise<any>;
-  deleteFn: (id: string) => Promise<any>;
+  /** id do projeto (antiga campanha) */
+  projectId: string;
+  /** slug do NodeType: "character" | "location" | "object" ... */
+  nodeTypeSlug: string;
 };
 
-function inferKindFromTitle(title: string): "C" | "L" | "O" | null {
-  const t = title.toLowerCase();
-  if (t.startsWith("character")) return "C";
-  if (t.startsWith("location")) return "L";
-  if (t.startsWith("object")) return "O";
-  return null;
-}
+const SLUG_TO_KIND: Record<string, "E" | "C" | "L" | "O"> = {
+  event: "E",
+  character: "C",
+  location: "L",
+  object: "O",
+};
 
-function pathForKind(kind: "E" | "C" | "L" | "O", campaignId: string): string {
+function pathForKind(kind: "E" | "C" | "L" | "O", projectId: string): string {
   switch (kind) {
     case "E":
-      return `/campaigns/${campaignId}/timeline`;
+      return `/campaigns/${projectId}/timeline`;
     case "C":
-      return `/campaigns/${campaignId}/characters`;
+      return `/campaigns/${projectId}/characters`;
     case "L":
-      return `/campaigns/${campaignId}/locations`;
+      return `/campaigns/${projectId}/locations`;
     case "O":
-      return `/campaigns/${campaignId}/objects`;
+      return `/campaigns/${projectId}/objects`;
   }
 }
 
-export default function EntityPage({
-  title,
-  campaignId,
-  listFn,
-  createFn,
-  updateFn,
-  deleteFn,
-}: Props) {
+export default function EntityPage({ title, projectId, nodeTypeSlug }: Props) {
   const t = useToast();
   const navigate = useNavigate();
 
@@ -63,8 +61,10 @@ export default function EntityPage({
   async function load() {
     try {
       setLoading(true);
-      const data = await listFn(campaignId);
-      setItems(data);
+      const nodes = await nodesApi.listNodes(projectId, {
+        typeSlug: nodeTypeSlug,
+      });
+      setItems(nodes.map(nodeToEntity));
     } catch {
       t.show("Failed to load data", "error");
     } finally {
@@ -74,12 +74,12 @@ export default function EntityPage({
 
   useEffect(() => {
     load();
-  }, [campaignId]);
+  }, [projectId, nodeTypeSlug]);
 
   async function handleDelete(id: string) {
     if (!confirm("Delete this item?")) return;
     try {
-      await deleteFn(id);
+      await nodesApi.deleteNode(id);
       t.show("Deleted", "success");
       load();
     } catch {
@@ -89,19 +89,19 @@ export default function EntityPage({
 
   async function handleSave(payload: EntityPayload) {
     if (editing) {
-      await updateFn(editing.id, payload);
+      await nodesApi.updateNode(editing.id, entityToUpdatePayload(payload));
     } else {
-      await createFn(campaignId, payload);
+      const typeId = await resolveNodeTypeId(projectId, nodeTypeSlug);
+      await nodesApi.createNode(projectId, entityToCreatePayload(typeId, payload));
     }
   }
 
   const handleInternalLinkClick = (link: InternalLink) => {
-    const pageKind = inferKindFromTitle(title);
+    const pageKind = SLUG_TO_KIND[nodeTypeSlug];
     if (!pageKind) return;
 
     if (link.kind !== pageKind) {
-      const path = pathForKind(link.kind, campaignId);
-      navigate(path);
+      navigate(pathForKind(link.kind, projectId));
       return;
     }
 
