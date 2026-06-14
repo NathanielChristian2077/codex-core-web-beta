@@ -38,24 +38,25 @@ const GraphPageContent: React.FC<GraphPageContentProps> = ({
   const [displayOpen, setDisplayOpen] = useState(false);
   const [forcesOpen, setForcesOpen] = useState(false);
 
+  // Semeia o filtro de relações com os tipos presentes (default: visível).
+  // Idempotente: só adiciona o que falta e devolve `prev` quando nada muda,
+  // evitando um loop de render quando o grafo não tem nenhuma relação.
   React.useEffect(() => {
     if (!graphData) return;
-    if (Object.keys(filters.relations).length > 0) return;
-
-    const relationsSet = new Set<string>();
-    graphData.links.forEach((l) => relationsSet.add(l.type));
-
-    setFilters((prev) => ({
-      ...prev,
-      relations: Array.from(relationsSet).reduce(
-        (acc, rel) => {
-          acc[rel] = true;
-          return acc;
-        },
-        {} as Record<string, boolean>
-      ),
-    }));
-  }, [graphData, filters.relations, setFilters]);
+    const relationTypes = new Set<string>();
+    graphData.links.forEach((l) => relationTypes.add(l.type));
+    setFilters((prev) => {
+      const next = { ...prev.relations };
+      let changed = false;
+      relationTypes.forEach((rel) => {
+        if (next[rel] === undefined) {
+          next[rel] = true;
+          changed = true;
+        }
+      });
+      return changed ? { ...prev, relations: next } : prev;
+    });
+  }, [graphData, setFilters]);
 
   React.useEffect(() => {
     if (!graphData) return;
@@ -80,6 +81,38 @@ const GraphPageContent: React.FC<GraphPageContentProps> = ({
       return { ...prev, edges: nextEdges };
     });
   }, [graphData, setGraphStyle]);
+
+  // Tipos de node presentes no grafo (dinâmicos: character, faction, ...).
+  const nodeTypes = React.useMemo(() => {
+    const set = new Set<string>();
+    graphData?.nodes.forEach((n) => set.add(n.type));
+    return Array.from(set);
+  }, [graphData]);
+
+  // Cor de cada tipo (vinda do backend) para usar como padrão nos painéis.
+  const typeColor = React.useMemo(() => {
+    const map: Record<string, string> = {};
+    graphData?.nodes.forEach((n) => {
+      if (n.color && !map[n.type]) map[n.type] = n.color;
+    });
+    return map;
+  }, [graphData]);
+
+  // Semeia o filtro de tipos com os tipos presentes (default: visível).
+  React.useEffect(() => {
+    if (!graphData) return;
+    setFilters((prev) => {
+      const next = { ...prev.types };
+      let changed = false;
+      nodeTypes.forEach((t) => {
+        if (next[t] === undefined) {
+          next[t] = true;
+          changed = true;
+        }
+      });
+      return changed ? { ...prev, types: next } : prev;
+    });
+  }, [graphData, nodeTypes, setFilters]);
 
   const viewButtonClasses = (mode: "graph" | "timeline") =>
     [
@@ -165,27 +198,30 @@ const GraphPageContent: React.FC<GraphPageContentProps> = ({
                 node types
               </h3>
               <div className="flex flex-col gap-1">
-                {(["EVENT", "CHARACTER", "LOCATION", "OBJECT"] as const).map(
-                  (t) => (
-                    <label key={t} className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        className="h-3 w-3 accent-sky-500"
-                        checked={filters.types[t]}
-                        onChange={(e) => {
-                          const checked = e.target.checked;
-                          setFilters((prev) => ({
-                            ...prev,
-                            types: { ...prev.types, [t]: checked },
-                          }));
-                        }}
-                      />
-                      <span className="capitalize text-[11px] text-zinc-300">
-                        {t.toLowerCase()}
-                      </span>
-                    </label>
-                  )
+                {nodeTypes.length === 0 && (
+                  <span className="text-[11px] text-zinc-500">
+                    no node types found
+                  </span>
                 )}
+                {nodeTypes.map((t) => (
+                  <label key={t} className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      className="h-3 w-3 accent-sky-500"
+                      checked={filters.types[t] ?? true}
+                      onChange={(e) => {
+                        const checked = e.target.checked;
+                        setFilters((prev) => ({
+                          ...prev,
+                          types: { ...prev.types, [t]: checked },
+                        }));
+                      }}
+                    />
+                    <span className="capitalize text-[11px] text-zinc-300">
+                      {t}
+                    </span>
+                  </label>
+                ))}
               </div>
             </div>
 
@@ -386,11 +422,11 @@ const GraphPageContent: React.FC<GraphPageContentProps> = ({
                     node types
                   </h3>
                   <div className="flex flex-col gap-2">
-                    {(
-                      ["EVENT", "CHARACTER", "LOCATION", "OBJECT"] as const
-                    ).map((type) => {
-                      const cfg = graphStyle.nodes[type];
-                      if (!cfg) return null;
+                    {nodeTypes.map((type) => {
+                      const cfg = graphStyle.nodes[type] ?? {
+                        fill: typeColor[type] ?? "#64748b",
+                        stroke: typeColor[type] ?? "#64748b",
+                      };
 
                       return (
                         <div
@@ -405,7 +441,7 @@ const GraphPageContent: React.FC<GraphPageContentProps> = ({
                               }}
                             />
                             <span className="text-[10px] uppercase text-zinc-400">
-                              {type.toLowerCase()}
+                              {type}
                             </span>
                           </div>
 
