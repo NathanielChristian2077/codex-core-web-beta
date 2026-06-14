@@ -10,6 +10,7 @@ export function useGraphInteractions({
   simulationRef,
   autoZoomOnClick,
   focusOnWorldPoint,
+  onNodeMoved,
 }: {
   nodeById: Map<string, SimNode>;
   setFocusNodeId: (id: string | null) => void;
@@ -18,6 +19,8 @@ export function useGraphInteractions({
   simulationRef: React.RefObject<Simulation<SimNode, any> | null>;
   autoZoomOnClick: boolean;
   focusOnWorldPoint?: (x: number, y: number, opts?: { scale?: number }) => void;
+  /** chamado ao soltar um node, com a posição final (persistência determinística) */
+  onNodeMoved?: (id: string, x: number, y: number) => void;
 }) {
   const dragRef = useRef<{
     id: string;
@@ -78,13 +81,19 @@ export function useGraphInteractions({
 
     const n = nodeById.get(drag.id);
     if (n) {
+      // Persiste a posição final assim que o usuário solta o node.
+      const x = typeof n.fx === "number" ? n.fx : n.x;
+      const y = typeof n.fy === "number" ? n.fy : n.y;
+      if (onNodeMoved && typeof x === "number" && typeof y === "number") {
+        onNodeMoved(drag.id, x, y);
+      }
       n.fx = null;
       n.fy = null;
     }
 
     dragRef.current = null;
     simulationRef.current?.alphaTarget(0.0);
-  }, [nodeById, simulationRef]);
+  }, [nodeById, simulationRef, onNodeMoved]);
 
   // Hover
   const onNodeEnter = useCallback(

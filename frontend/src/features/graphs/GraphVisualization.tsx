@@ -444,6 +444,9 @@ export const GraphVisualization: React.FC = () => {
           simulationRef={simulationRef}
           autoZoomOnClick={displaySettings.autoZoomOnClick}
           backgroundColor={graphStyle.background}
+          onNodeMoved={(id, x, y) => {
+            setNodePositions({ ...nodePositions, [id]: { x, y } });
+          }}
           onBackgroundContextMenu={({ screenX, screenY, worldX, worldY }) => {
             if (!canEditGraph) {
               setBackgroundContextMenu(null);

@@ -1,5 +1,6 @@
 import React, {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useMemo,
@@ -32,7 +33,7 @@ type PhysicsSettingsState = {
   collisionRadius: number;
 };
 
-type NodePositions = Record<string, { x: number; y: number }>;
+export type NodePositions = Record<string, { x: number; y: number }>;
 
 /** Per-node-type color config */
 type NodeColorConfig = {
@@ -54,10 +55,14 @@ export type GraphStyleConfig = {
 
 type GraphProviderProps = {
   initialData: GraphData | null;
-  /** localStorage key for node positions */
+  /** localStorage key for node positions (fallback quando não há backend) */
   storageKey?: string;
   /** localStorage key for graph style */
   styleStorageKey?: string;
+  /** posições iniciais vindas do backend (View/Layout) — têm prioridade sobre o localStorage */
+  initialPositions?: NodePositions;
+  /** persiste posições no backend (debounce fica a cargo de quem passa) — substitui o localStorage */
+  onPersistPositions?: (positions: NodePositions) => void;
   children: ReactNode;
 };
 
@@ -195,6 +200,8 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
   initialData,
   storageKey,
   styleStorageKey,
+  initialPositions,
+  onPersistPositions,
   children,
 }) => {
   /** core graph data */
@@ -231,22 +238,23 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
   /** currently right-click selected node */
   const [editingNodeId, setEditingNodeId] = useState<string | null>(null);
 
-  /** internal node positions */
+  /** internal node positions (backend tem prioridade; localStorage é fallback) */
   const [nodePositionsState, setNodePositionsState] = useState<NodePositions>(
-    () => loadNodePositionsFromStorage(storageKey)
+    () => initialPositions ?? loadNodePositionsFromStorage(storageKey)
   );
 
   /** global "zoom to node" function holder */
   const zoomToNodeRef = useRef<((id: string) => void) | null>(null);
 
-  /** reload positions & graph when initialData/storageKey changes */
+  /** reload positions & graph when initialData/storageKey/initialPositions changes */
   useEffect(() => {
     setGraphData(initialData);
     setFocusNodeId(null);
 
-    const loaded = loadNodePositionsFromStorage(storageKey);
-    setNodePositionsState(loaded);
-  }, [initialData, storageKey]);
+    setNodePositionsState(
+      initialPositions ?? loadNodePositionsFromStorage(storageKey)
+    );
+  }, [initialData, storageKey, initialPositions]);
 
   /** reload style when style storage key changes */
   useEffect(() => {
@@ -264,16 +272,25 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
     }
   }, [graphStyle, styleStorageKey]);
 
-  /** setter that also persists positions */
-  const setNodePositions = (positions: NodePositions) => {
-    setNodePositionsState(positions);
-    if (!storageKey) return;
-    try {
-      window.localStorage.setItem(storageKey, JSON.stringify(positions));
-    } catch {
-      /* ignore */
-    }
-  };
+  /** setter que também persiste: backend se houver, senão localStorage */
+  const setNodePositions = useCallback(
+    (positions: NodePositions) => {
+      setNodePositionsState(positions);
+
+      if (onPersistPositions) {
+        onPersistPositions(positions);
+        return;
+      }
+
+      if (!storageKey) return;
+      try {
+        window.localStorage.setItem(storageKey, JSON.stringify(positions));
+      } catch {
+        /* ignore */
+      }
+    },
+    [onPersistPositions, storageKey]
+  );
 
   /** memoized context value */
   const value = useMemo<GraphContextValue>(
@@ -321,6 +338,7 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({
       selectedNodeId,
       editingNodeId,
       nodePositionsState,
+      setNodePositions,
     ]
   );
 

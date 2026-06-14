@@ -13,6 +13,7 @@ import {
 import GraphVisualization from "../features/graphs/GraphVisualization";
 import { loadGraphDataWithDescriptions } from "../features/graphs/loadGraphWithDescriptions";
 import type { GraphData } from "../features/graphs/types";
+import { useViewLayout } from "../features/graphs/useViewLayout";
 
 type GraphPageContentProps = {
   campaignName: string;
@@ -723,6 +724,12 @@ export const GraphPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const {
+    ready: layoutReady,
+    initialPositions,
+    persistPositions,
+  } = useViewLayout(campaignId);
+
   useEffect(() => {
     if (!campaignId) return;
 
@@ -753,7 +760,7 @@ export const GraphPage: React.FC = () => {
     load();
   }, [campaignId]);
 
-  if (loading) {
+  if (loading || !layoutReady) {
     return (
       <div className="flex h-full min-h-screen items-center justify-center text-sm text-zinc-400">
         loading your node multiverse…
@@ -773,9 +780,8 @@ export const GraphPage: React.FC = () => {
   return (
     <GraphProvider
       initialData={graphData}
-      storageKey={
-        campaignId ? `campaign:${campaignId}:graph-positions` : undefined
-      }
+      initialPositions={initialPositions}
+      onPersistPositions={persistPositions}
       styleStorageKey={
         campaignId ? `campaign:${campaignId}:graph-style` : undefined
       }
