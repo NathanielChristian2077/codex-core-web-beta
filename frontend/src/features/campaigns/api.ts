@@ -1,6 +1,6 @@
-import api from "../../lib/apiClient";
 import * as projectsApi from "../../api/modules/projects";
 import * as nodesApi from "../../api/modules/nodes";
+import * as edgesApi from "../../api/modules/edges";
 import {
   eventToCreatePayload,
   eventToUpdatePayload,
@@ -239,36 +239,9 @@ export async function deleteEvent(eventId: string) {
   await nodesApi.deleteNode(eventId);
 }
 
-export type GraphNodeDto = {
-  id: string;
-  label: string;
-  type: "EVENT" | "CHARACTER" | "LOCATION" | "OBJECT";
-  description?: string | null;
-};
+// Grafo: formato novo do backend (nodes/edges genéricos com metadados de tipo).
+export type { GraphResponse } from "../../api/contracts/edge";
 
-export type GraphEdgeDto = {
-  id: string;
-  from: {
-    id: string;
-    type: "EVENT" | "CHARACTER" | "LOCATION" | "OBJECT";
-  };
-  to: {
-    id: string;
-    type: "EVENT" | "CHARACTER" | "LOCATION" | "OBJECT";
-  };
-  kind: string;
-};
-
-export type CampaignGraphResponse = {
-  nodes: GraphNodeDto[];
-  edges: GraphEdgeDto[];
-};
-
-export async function getCampaignGraph(
-  campaignId: string
-): Promise<CampaignGraphResponse> {
-  const res = await api.get<CampaignGraphResponse>(
-    `/campaigns/${campaignId}/graph`
-  );
-  return res.data;
+export async function getCampaignGraph(campaignId: string) {
+  return edgesApi.getGraph(campaignId);
 }

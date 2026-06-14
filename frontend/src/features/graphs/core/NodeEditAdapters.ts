@@ -30,7 +30,7 @@ type NodeEditAdapter = {
 };
 
 export const nodeEditAdapters: Record<GraphNodeType, NodeEditAdapter> = {
-  EVENT: {
+  event: {
     async update(id, data) {
       const payload: { title?: string; description?: string | null } = {};
 
@@ -52,7 +52,7 @@ export const nodeEditAdapters: Record<GraphNodeType, NodeEditAdapter> = {
     },
   },
 
-  CHARACTER: {
+  character: {
     async update(id, data) {
       const payload: { name?: string; description?: string | null } = {};
 
@@ -74,7 +74,7 @@ export const nodeEditAdapters: Record<GraphNodeType, NodeEditAdapter> = {
     },
   },
 
-  LOCATION: {
+  location: {
     async update(id, data) {
       const payload: { name?: string; description?: string | null } = {};
 
@@ -96,7 +96,7 @@ export const nodeEditAdapters: Record<GraphNodeType, NodeEditAdapter> = {
     },
   },
 
-  OBJECT: {
+  object: {
     async update(id, data) {
       const payload: { name?: string; description?: string | null } = {};
 

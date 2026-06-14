@@ -141,7 +141,9 @@ export const GraphVisualization: React.FC = () => {
     const allowedTypes = filters.types;
     const allowedRelations = filters.relations;
 
-    const nodesFiltered = graphData.nodes.filter((n) => allowedTypes[n.type]);
+    const nodesFiltered = graphData.nodes.filter(
+      (n) => allowedTypes[n.type] ?? true
+    );
     const nodeSet = new Set(nodesFiltered.map((n) => n.id));
 
     const linksFiltered = graphData.links.filter(
@@ -170,7 +172,7 @@ export const GraphVisualization: React.FC = () => {
   const timelinePositions: TimelinePositions = useMemo(() => {
     if (viewMode !== "timeline") return {};
 
-    const events = visibleNodes.filter((n) => n.type === "EVENT");
+    const events = visibleNodes.filter((n) => n.type === "event");
     if (!events.length) return {};
 
     const sorted = [...events].sort((a, b) =>
