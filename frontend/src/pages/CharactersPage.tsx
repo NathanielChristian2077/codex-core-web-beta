@@ -1,10 +1,4 @@
 import { useParams } from "react-router-dom";
-import {
-  createCharacter,
-  deleteCharacter,
-  listCharacters,
-  updateCharacter,
-} from "../features/characters/api";
 import EntityPage from "./_EntityPage";
 
 export default function CharactersPage() {
@@ -18,14 +12,5 @@ export default function CharactersPage() {
     );
   }
 
-  return (
-    <EntityPage
-      title="Characters"
-      campaignId={id}
-      listFn={listCharacters}
-      createFn={createCharacter}
-      updateFn={updateCharacter}
-      deleteFn={deleteCharacter}
-    />
-  );
+  return <EntityPage title="Characters" projectId={id} nodeTypeSlug="character" />;
 }
