@@ -61,7 +61,8 @@ func (h *ResourceHandler) ImportProject(w http.ResponseWriter, r *http.Request) 
 	}
 
 	var payload postgres.ProjectTransferPayload
-	if !decode(w, r, &payload) {
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		respond.Error(w, http.StatusBadRequest, "invalid_body", "Request body is invalid.")
 		return
 	}
 
