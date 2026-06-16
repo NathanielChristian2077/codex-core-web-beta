@@ -2,12 +2,13 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
+	"io"
 	"net/http"
 	"strings"
 
 	"github.com/NathanielChristian2077/codex-core-web-beta/backend/internal/adapters/http/respond"
 	"github.com/NathanielChristian2077/codex-core-web-beta/backend/internal/adapters/postgres"
-	"github.com/go-chi/chi/v5"
 )
 
 type duplicateProjectRequest struct {
@@ -40,7 +41,7 @@ func (h *ResourceHandler) DuplicateProject(w http.ResponseWriter, r *http.Reques
 	if r.Body != nil {
 		decoder := json.NewDecoder(r.Body)
 		decoder.DisallowUnknownFields()
-		if err := decoder.Decode(&payload); err != nil {
+		if err := decoder.Decode(&payload); err != nil && !errors.Is(err, io.EOF) {
 			respond.Error(w, http.StatusBadRequest, "invalid_body", "Request body is invalid.")
 			return
 		}
@@ -78,8 +79,4 @@ func (h *ResourceHandler) DuplicateCampaign(w http.ResponseWriter, r *http.Reque
 
 func (h *ResourceHandler) ImportCampaign(w http.ResponseWriter, r *http.Request) {
 	h.ImportProject(w, r)
-}
-
-func campaignProjectID(r *http.Request) string {
-	return chi.URLParam(r, "projectID")
 }
