@@ -73,9 +73,12 @@ func NewRouter(deps RouterDependencies) http.Handler {
 
 		protected.Get("/projects", resourceHandler.ListProjects)
 		protected.Post("/projects", resourceHandler.CreateProject)
+		protected.Post("/projects/import", resourceHandler.ImportProject)
 		protected.Get("/projects/{projectID}", resourceHandler.GetProject)
 		protected.Patch("/projects/{projectID}", resourceHandler.UpdateProject)
 		protected.Delete("/projects/{projectID}", resourceHandler.DeleteProject)
+		protected.Post("/projects/{projectID}/duplicate", resourceHandler.DuplicateProject)
+		protected.Get("/projects/{projectID}/export", resourceHandler.ExportProject)
 		protected.Post("/projects/{projectID}/presets", resourceHandler.ApplyPreset)
 
 		protected.Get("/projects/{projectID}/members", membershipHandler.ListMembers)
@@ -115,9 +118,12 @@ func NewRouter(deps RouterDependencies) http.Handler {
 
 		protected.Get("/campaigns", resourceHandler.ListProjects)
 		protected.Post("/campaigns", resourceHandler.CreateProject)
+		protected.Post("/campaigns/import", resourceHandler.ImportCampaign)
 		protected.Get("/campaigns/{projectID}", resourceHandler.GetProject)
 		protected.Put("/campaigns/{projectID}", resourceHandler.UpdateProject)
 		protected.Delete("/campaigns/{projectID}", resourceHandler.DeleteProject)
+		protected.Post("/campaigns/{projectID}/duplicate", resourceHandler.DuplicateCampaign)
+		protected.Get("/campaigns/{projectID}/export", resourceHandler.ExportCampaign)
 		protected.Get("/campaigns/{projectID}/graph", resourceHandler.GetGraph)
 	})
 
