@@ -36,6 +36,7 @@ type Props = {
   autoZoomOnClick: boolean;
   onBackgroundContextMenu?: (payload: BackgroundContextMenuPayload) => void;
   backgroundColor?: string;
+  onNodeMoved?: (id: string, x: number, y: number) => void;
 };
 
 export const GraphCanvas: React.FC<Props> = ({
@@ -55,6 +56,7 @@ export const GraphCanvas: React.FC<Props> = ({
   autoZoomOnClick,
   onBackgroundContextMenu,
   backgroundColor,
+  onNodeMoved,
 }) => {
   const {
     camera,
@@ -96,6 +98,7 @@ export const GraphCanvas: React.FC<Props> = ({
     simulationRef,
     autoZoomOnClick,
     focusOnWorldPoint,
+    onNodeMoved,
   });
 
   const handleSvgContextMenu = useCallback(

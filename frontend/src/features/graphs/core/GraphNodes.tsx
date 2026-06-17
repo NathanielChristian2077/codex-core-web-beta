@@ -107,10 +107,14 @@ export const GraphNodes: React.FC<Props> = ({
         }
 
         const r = getNodeRadius(node, nodeSizeBase);
-        const colorCfg = graphStyle.nodes[node.type] ?? {
-          fill: "rgba(148,163,184,0.2)",
-          stroke: "rgba(148,163,184,0.9)",
-        };
+        const colorCfg =
+          graphStyle.nodes[node.type] ??
+          (node.color
+            ? { fill: node.color, stroke: node.color }
+            : {
+                fill: "rgba(148,163,184,0.2)",
+                stroke: "rgba(148,163,184,0.9)",
+              });
 
         const distance = distanceById[node.id];
         const baseOpacity = focusNodeId ? opacityForDistance(distance) : 1;

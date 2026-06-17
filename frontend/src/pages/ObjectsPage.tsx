@@ -1,10 +1,4 @@
 import { useParams } from "react-router-dom";
-import {
-  createObject,
-  deleteObject,
-  listObjects,
-  updateObject,
-} from "../features/objects/api";
 import EntityPage from "./_EntityPage";
 
 export default function ObjectsPage() {
@@ -18,14 +12,5 @@ export default function ObjectsPage() {
     );
   }
 
-  return (
-    <EntityPage
-      title="Objects"
-      campaignId={id}
-      listFn={listObjects}
-      createFn={createObject}
-      updateFn={updateObject}
-      deleteFn={deleteObject}
-    />
-  );
+  return <EntityPage title="Objects" projectId={id} nodeTypeSlug="object" />;
 }

@@ -1,10 +1,4 @@
 import { useParams } from "react-router-dom";
-import {
-    createLocation,
-    deleteLocation,
-    listLocations,
-    updateLocation,
-} from "../features/locations/api";
 import EntityPage from "./_EntityPage";
 
 export default function LocationsPage() {
@@ -18,14 +12,5 @@ export default function LocationsPage() {
     );
   }
 
-  return (
-    <EntityPage
-      title="Locations"
-      campaignId={id}
-      listFn={listLocations}
-      createFn={createLocation}
-      updateFn={updateLocation}
-      deleteFn={deleteLocation}
-    />
-  );
+  return <EntityPage title="Locations" projectId={id} nodeTypeSlug="location" />;
 }

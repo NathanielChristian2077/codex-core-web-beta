@@ -28,7 +28,7 @@ func (s *Store) nodeJSON(ctx context.Context, where string, args ...any) (json.R
 }
 
 func (s *Store) CreateNodeJSON(ctx context.Context, projectID string, p NodePayload) (json.RawMessage, error) {
-	return queryJSON(ctx, s.pool, `WITH inserted AS (INSERT INTO nodes (project_id,type_id,title,content,properties) SELECT $1, nt.id, $3, $4, $5 FROM node_types nt WHERE nt.id=$2 AND nt.project_id=$1 RETURNING id) SELECT row_to_json(t) FROM (SELECT n.id, n.project_id AS "projectId", n.type_id AS "typeId", n.title, n.content, n.properties, n.created_at AS "createdAt", n.updated_at AS "updatedAt" FROM nodes n JOIN inserted i ON i.id=n.id) t`, projectID, p.TypeID, strings.TrimSpace(p.Title), nullableString(p.Content), jsonDefault(p.Properties, "{}"))
+	return queryJSON(ctx, s.pool, `WITH inserted AS (INSERT INTO nodes (project_id,type_id,title,content,properties) SELECT $1, nt.id, $3, $4, $5 FROM node_types nt WHERE nt.id=$2 AND nt.project_id=$1 RETURNING id, project_id AS "projectId", type_id AS "typeId", title, content, properties, created_at AS "createdAt", updated_at AS "updatedAt") SELECT row_to_json(inserted) FROM inserted`, projectID, p.TypeID, strings.TrimSpace(p.Title), nullableString(p.Content), jsonDefault(p.Properties, "{}"))
 }
 
 func (s *Store) UpdateNodeJSON(ctx context.Context, id string, p NodePayload) (json.RawMessage, error) {

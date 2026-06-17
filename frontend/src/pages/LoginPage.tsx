@@ -24,9 +24,9 @@ export default function LoginPage() {
   const [err, setErr] = useState("");
 
   const validEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  const canLogin = validEmail && password.length >= 6;
+  const canLogin = validEmail && password.length >= 8;
   const canSignup =
-    validEmail && password.length >= 6 && password === confirm;
+    validEmail && password.length >= 8 && password === confirm;
 
   async function onSignIn(e: FormEvent) {
     e.preventDefault();

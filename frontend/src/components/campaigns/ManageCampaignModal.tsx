@@ -3,14 +3,10 @@ import { useEffect, useState } from "react";
 import {
   deleteCampaign,
   duplicateCampaign,
+  exportCampaign,
   getCampaign,
-  listCampaignEvents,
   updateCampaign,
 } from "../../features/campaigns/api";
-import { CampaignExport } from "../../features/campaigns/types";
-import { listCharacters } from "../../features/characters/api";
-import { listLocations } from "../../features/locations/api";
-import { listObjects } from "../../features/objects/api";
 import {
   Dialog,
   DialogContent,
@@ -113,21 +109,7 @@ export default function ManageCampaignModal({
     if (!campaignId) return;
 
     try {
-      const [camp, events, characters, locations, objects] = await Promise.all([
-        getCampaign(campaignId),
-        listCampaignEvents(campaignId),
-        listCharacters(campaignId),
-        listLocations(campaignId),
-        listObjects(campaignId),
-      ]);
-
-      const payload: CampaignExport = {
-        campaign: camp,
-        events,
-        characters,
-        locations,
-        objects,
-      };
+      const payload = await exportCampaign(campaignId);
 
       const blob = new Blob([JSON.stringify(payload, null, 2)], {
         type: "application/json",

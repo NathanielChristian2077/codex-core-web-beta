@@ -1,7 +1,7 @@
 import React from "react";
 import type { GraphNode } from "../../../features/graphs/types";
 import {
-  INTERNAL_LINK_PROTOCOL,
+  decodeInternalLinkHref,
   type InternalLink,
 } from "../../../lib/internalLinks";
 import { MarkdownRenderer } from "../../markdown/MarkdownRenderer";
@@ -11,39 +11,6 @@ type NodeViewPanelProps = {
   onClose: () => void;
   onInternalLinkClick?: (link: InternalLink) => void;
 };
-
-function parseInternalLinkFromHref(
-  hrefRaw: string | null,
-): InternalLink | null {
-  if (!hrefRaw) return null;
-  const href = hrefRaw.trim();
-  if (!href || !href.includes(INTERNAL_LINK_PROTOCOL)) return null;
-
-  const idx = href.indexOf(INTERNAL_LINK_PROTOCOL);
-  const rest = href.slice(idx + INTERNAL_LINK_PROTOCOL.length);
-  const colonIndex = rest.indexOf(":");
-  if (colonIndex <= 0) return null;
-
-  const kindRaw = rest.slice(0, colonIndex).toUpperCase();
-  const rawName = rest.slice(colonIndex + 1);
-
-  if (!["E", "C", "L", "O"].includes(kindRaw)) return null;
-
-  let decodedName = rawName;
-  try {
-    decodedName = decodeURIComponent(rawName);
-  } catch {
-
-  }
-
-  const name = decodedName.trim();
-  if (!name) return null;
-
-  return {
-    kind: kindRaw as InternalLink["kind"],
-    name,
-  };
-}
 
 export const NodeViewPanel: React.FC<NodeViewPanelProps> = ({
   node,
@@ -74,7 +41,7 @@ export const NodeViewPanel: React.FC<NodeViewPanelProps> = ({
     const href = hrefAttr?.trim() || anchor.href?.trim();
     if (!href) return;
 
-    const link = parseInternalLinkFromHref(href);
+    const link = decodeInternalLinkHref(href);
     if (link) {
       onInternalLinkClick?.(link);
       return;

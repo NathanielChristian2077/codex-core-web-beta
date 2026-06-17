@@ -1,4 +1,5 @@
-export type GraphNodeType = "EVENT" | "CHARACTER" | "LOCATION" | "OBJECT";
+// Tipo de node agora é dinâmico (slug do NodeType): "character", "faction", etc.
+export type GraphNodeType = string;
 
 export type GraphRelationType = string;
 
@@ -7,6 +8,9 @@ export interface GraphNode {
   label: string;
   type: GraphNodeType;
   description?: string | null;
+
+  /** Cor do NodeType (vem do backend) usada como fallback de estilo. */
+  color?: string | null;
 
   degree?: number;
 

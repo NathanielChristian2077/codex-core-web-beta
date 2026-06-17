@@ -14,7 +14,7 @@ export default function LandingPage() {
   const isLogged = useSession((s) => s.isLogged);
 
   const primaryCta = () => {
-    if (isLogged) navigate("/dashboard");
+    navigate(isLogged ? "/dashboard" : "/login");
   };
 
   return (

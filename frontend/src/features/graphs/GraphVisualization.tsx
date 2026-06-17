@@ -141,7 +141,9 @@ export const GraphVisualization: React.FC = () => {
     const allowedTypes = filters.types;
     const allowedRelations = filters.relations;
 
-    const nodesFiltered = graphData.nodes.filter((n) => allowedTypes[n.type]);
+    const nodesFiltered = graphData.nodes.filter(
+      (n) => allowedTypes[n.type] ?? true
+    );
     const nodeSet = new Set(nodesFiltered.map((n) => n.id));
 
     const linksFiltered = graphData.links.filter(
@@ -170,7 +172,7 @@ export const GraphVisualization: React.FC = () => {
   const timelinePositions: TimelinePositions = useMemo(() => {
     if (viewMode !== "timeline") return {};
 
-    const events = visibleNodes.filter((n) => n.type === "EVENT");
+    const events = visibleNodes.filter((n) => n.type === "event");
     if (!events.length) return {};
 
     const sorted = [...events].sort((a, b) =>
@@ -235,40 +237,26 @@ export const GraphVisualization: React.FC = () => {
     const worldX = WIDTH / 2;
     const worldY = HEIGHT / 2;
 
-    switch (link.kind) {
-      case "E":
-        setCreateContext({
-          kind: "event",
-          worldX,
-          worldY,
-          initialTitle: link.name,
-        });
-        break;
-      case "C":
-        setCreateContext({
-          kind: "character",
-          worldX,
-          worldY,
-          initialName: link.name,
-        });
-        break;
-      case "L":
-        setCreateContext({
-          kind: "location",
-          worldX,
-          worldY,
-          initialName: link.name,
-        });
-        break;
-      case "O":
-        setCreateContext({
-          kind: "object",
-          worldX,
-          worldY,
-          initialName: link.name,
-        });
-        break;
+    if (link.type === "event") {
+      setCreateContext({
+        kind: "event",
+        worldX,
+        worldY,
+        initialTitle: link.name,
+      });
+    } else if (
+      link.type === "character" ||
+      link.type === "location" ||
+      link.type === "object"
+    ) {
+      setCreateContext({
+        kind: link.type,
+        worldX,
+        worldY,
+        initialName: link.name,
+      });
     }
+    // Outros tipos (faction, ...) ainda não têm modal de criação dedicado.
   };
 
   useEffect(() => {
@@ -456,6 +444,9 @@ export const GraphVisualization: React.FC = () => {
           simulationRef={simulationRef}
           autoZoomOnClick={displaySettings.autoZoomOnClick}
           backgroundColor={graphStyle.background}
+          onNodeMoved={(id, x, y) => {
+            setNodePositions({ ...nodePositions, [id]: { x, y } });
+          }}
           onBackgroundContextMenu={({ screenX, screenY, worldX, worldY }) => {
             if (!canEditGraph) {
               setBackgroundContextMenu(null);
