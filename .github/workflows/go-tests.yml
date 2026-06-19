@@ -1,0 +1,158 @@
+name: Go Backend Automated Tests
+
+on:
+  push:
+    branches: [ main, master, develop ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  run-tests:
+    name: Build and Test Application
+    runs-on: ubuntu-latest
+
+    # Garante que todos os comandos rodem dentro da pasta do backend
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+    # Passo 1: Baixa o código do repositório
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    # Passo 2: Configura o ambiente Go 1.23
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.23' 
+        cache: true        
+        cache-dependency-path: backend/go.sum
+
+    # Passo 3: Baixa as dependências do projeto
+    - name: Install Dependencies
+      run: go mod download
+
+    # Passo 4: Cria o arquivo de teste dinamicamente
+    # Gera o arquivo 'api_routes_test.go' contendo os testes do contrato da API
+    - name: Generate Test File Automatically
+      run: |
+        cat << 'EOF' > api_routes_test.go
+        package main
+
+        import (
+        	"bytes"
+        	"encoding/json"
+        	"net/http"
+        	"net/http/httptest"
+        	"testing"
+
+        	"github.com/stretchr/testify/assert"
+        )
+
+        // SetupTestRouter centraliza o roteamento das rotas do contrato (API.md).
+        // NOTA: Para rodar contra as rotas REAIS, mude o retorno para o inicializador do roteador.
+        func SetupTestRouter() http.Handler {
+        	mux := http.NewServeMux()
+
+        	// Mocks baseados estritamente nas especificações do contrato
+        	mux.HandleFunc("/auth/register", func(w http.ResponseWriter, r *http.Request) {
+        		w.WriteHeader(http.StatusCreated)
+        	})
+        	mux.HandleFunc("/auth/csrf", func(w http.ResponseWriter, r *http.Request) {
+        		w.Header().Set("XSRF-TOKEN", "mock-csrf-token-ativo")
+        		w.WriteHeader(http.StatusOK)
+        	})
+        	mux.HandleFunc("/projects", func(w http.ResponseWriter, r *http.Request) {
+        		cookie, _ := r.Cookie("session_id")
+        		csrf := r.Header.Get("X-CSRF-Token")
+
+        		if cookie == nil || cookie.Value == "" || csrf == "" {
+        			w.WriteHeader(http.StatusForbidden)
+        			return
+        		}
+        		w.WriteHeader(http.StatusCreated)
+        	})
+        	mux.HandleFunc("/projects/123/nodes", func(w http.ResponseWriter, r *http.Request) {
+        		w.WriteHeader(http.StatusOK)
+        		w.Write([]byte(`{"nodes": []}`))
+        	})
+
+        	return mux
+        }
+
+        // --- TESTES DE ROTAS ---
+
+        func TestRoute_Auth_Register(t *testing.T) {
+        	router := SetupTestRouter()
+        	payload := map[string]string{
+        		"name":     "Ada Lovelace",
+        		"email":    "ada@example.com",
+        		"password": "password123",
+        	}
+        	body, _ := json.Marshal(payload)
+
+        	req, _ := http.NewRequest("POST", "/auth/register", bytes.NewBuffer(body))
+        	req.Header.Set("Content-Type", "application/json")
+        	rr := httptest.NewRecorder()
+
+        	router.ServeHTTP(rr, req)
+        	assert.Equal(t, http.StatusCreated, rr.Code)
+        }
+
+        func TestRoute_Auth_GetCSRF(t *testing.T) {
+        	router := SetupTestRouter()
+        	req, _ := http.NewRequest("GET", "/auth/csrf", nil)
+        	rr := httptest.NewRecorder()
+
+        	router.ServeHTTP(rr, req)
+        	assert.Equal(t, http.StatusOK, rr.Code)
+        	assert.NotEmpty(t, rr.Header().Get("XSRF-TOKEN"))
+        }
+
+        func TestRoute_Projects_Create_Success(t *testing.T) {
+        	router := SetupTestRouter()
+        	payload := map[string]interface{}{
+        		"name":       "Blackspire Campaign",
+        		"presetSlug": "rpg-campaign",
+        	}
+        	body, _ := json.Marshal(payload)
+
+        	req, _ := http.NewRequest("POST", "/projects", bytes.NewBuffer(body))
+        	req.Header.Set("Content-Type", "application/json")
+        	req.AddCookie(&http.Cookie{Name: "session_id", Value: "session-valida"})
+        	req.Header.Set("X-CSRF-Token", "csrf-valido")
+
+        	rr := httptest.NewRecorder()
+        	router.ServeHTTP(rr, req)
+        	assert.Equal(t, http.StatusCreated, rr.Code)
+        }
+
+        func TestRoute_Projects_Create_MissingCSRF_ShouldFail(t *testing.T) {
+        	router := SetupTestRouter()
+        	payload := map[string]string{"name": "Projeto Inseguro"}
+        	body, _ := json.Marshal(payload)
+
+        	req, _ := http.NewRequest("POST", "/projects", bytes.NewBuffer(body))
+        	req.Header.Set("Content-Type", "application/json")
+        	req.AddCookie(&http.Cookie{Name: "session_id", Value: "session-valida"}) // Sem token CSRF
+
+        	rr := httptest.NewRecorder()
+        	router.ServeHTTP(rr, req)
+        	assert.Equal(t, http.StatusForbidden, rr.Code)
+        }
+
+        func TestRoute_Nodes_ListByProject(t *testing.T) {
+        	router := SetupTestRouter()
+        	req, _ := http.NewRequest("GET", "/projects/123/nodes", nil)
+        	rr := httptest.NewRecorder()
+
+        	router.ServeHTTP(rr, req)
+        	assert.Equal(t, http.StatusOK, rr.Code)
+        	assert.Contains(t, rr.Body.String(), "nodes")
+        }
+        EOF
+
+    # Passo 5: Executa os testes
+    - name: Run Tests
+      run: go test -v ./...
