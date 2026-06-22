@@ -25,8 +25,8 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@v5
       with:
-        go-version: '1.23' 
-        cache: true        
+        go-version: '1.23'
+        cache: true
         cache-dependency-path: backend/go.sum
 
     # Passo 3: Baixa as dependências pré-existentes do projeto
@@ -41,7 +41,6 @@ jobs:
 
         import (
         	"bytes"
-        	"encoding/json"
         	"net/http"
         	"net/http/httptest"
         	"strings"
@@ -150,7 +149,7 @@ jobs:
         	for _, tc := range authRotasProtegidas {
         		t.Run(tc.cenario, func(t *testing.T) {
         			req, _ := http.NewRequest(tc.metodo, tc.url, nil)
-        			req.AddCookie(&http.Cookie{Name: "session_id", Value: "sessao-mock"})
+            			req.AddCookie(&http.Cookie{Name: "session_id", Value: "sessao-mock"})
         			req.Header.Set("X-CSRF-Token", "csrf-mock")
         			rr := httptest.NewRecorder()
         			router.ServeHTTP(rr, req)
@@ -290,6 +289,6 @@ jobs:
         }
         EOF
 
-    # Passo 5: Executa de forma verbosa (-v) a cobertura de testes gerada acima
+    # Passo 5: Executa de forma verbosa a cobertura de testes gerada
     - name: Run Tests
       run: go test -v ./...
