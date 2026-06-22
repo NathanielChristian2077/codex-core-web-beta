@@ -29,12 +29,11 @@ jobs:
         cache: true        
         cache-dependency-path: backend/go.sum
 
-    # Passo 3: Baixa as dependências do projeto
+    # Passo 3: Baixa as dependências originais do projeto
     - name: Install Dependencies
       run: go mod download
 
-    # Passo 4: Cria o arquivo de teste dinamicamente
-    # Gera o arquivo 'api_routes_test.go' contendo os testes do contrato da API
+    # Passo 4: Cria o arquivo de teste dinamicamente usando apenas a biblioteca nativa do Go
     - name: Generate Test File Automatically
       run: |
         cat << 'EOF' > api_routes_test.go
@@ -45,13 +44,11 @@ jobs:
         	"encoding/json"
         	"net/http"
         	"net/http/httptest"
+        	"strings"
         	"testing"
-
-        	"github.com/stretchr/testify/assert"
         )
 
         // SetupTestRouter centraliza o roteamento das rotas do contrato (API.md).
-        // NOTA: Para rodar contra as rotas REAIS, mude o retorno para o inicializador do roteador.
         func SetupTestRouter() http.Handler {
         	mux := http.NewServeMux()
 
@@ -81,7 +78,7 @@ jobs:
         	return mux
         }
 
-        // --- TESTES DE ROTAS ---
+        // --- TESTES DE ROTAS COM CORES E MÉTODOS NATIVOS ---
 
         func TestRoute_Auth_Register(t *testing.T) {
         	router := SetupTestRouter()
@@ -97,7 +94,10 @@ jobs:
         	rr := httptest.NewRecorder()
 
         	router.ServeHTTP(rr, req)
-        	assert.Equal(t, http.StatusCreated, rr.Code)
+        	
+        	if rr.Code != http.StatusCreated {
+        		t.Errorf("Espera status %d, mas recebeu: %d", http.StatusCreated, rr.Code)
+        	}
         }
 
         func TestRoute_Auth_GetCSRF(t *testing.T) {
@@ -106,8 +106,13 @@ jobs:
         	rr := httptest.NewRecorder()
 
         	router.ServeHTTP(rr, req)
-        	assert.Equal(t, http.StatusOK, rr.Code)
-        	assert.NotEmpty(t, rr.Header().Get("XSRF-TOKEN"))
+        	
+        	if rr.Code != http.StatusOK {
+        		t.Errorf("Espera status %d, mas recebeu: %d", http.StatusOK, rr.Code)
+        	}
+        	if rr.Header().Get("XSRF-TOKEN") == "" {
+        		t.Error("O cabeçalho XSRF-TOKEN não deveria estar vazio")
+        	}
         }
 
         func TestRoute_Projects_Create_Success(t *testing.T) {
@@ -125,7 +130,10 @@ jobs:
 
         	rr := httptest.NewRecorder()
         	router.ServeHTTP(rr, req)
-        	assert.Equal(t, http.StatusCreated, rr.Code)
+        	
+        	if rr.Code != http.StatusCreated {
+        		t.Errorf("Espera status %d, mas recebeu: %d", http.StatusCreated, rr.Code)
+        	}
         }
 
         func TestRoute_Projects_Create_MissingCSRF_ShouldFail(t *testing.T) {
@@ -135,11 +143,14 @@ jobs:
 
         	req, _ := http.NewRequest("POST", "/projects", bytes.NewBuffer(body))
         	req.Header.Set("Content-Type", "application/json")
-        	req.AddCookie(&http.Cookie{Name: "session_id", Value: "session-valida"}) // Sem token CSRF
+        	req.AddCookie(&http.Cookie{Name: "session_id", Value: "session-valida"})
 
         	rr := httptest.NewRecorder()
         	router.ServeHTTP(rr, req)
-        	assert.Equal(t, http.StatusForbidden, rr.Code)
+        	
+        	if rr.Code != http.StatusForbidden {
+        		t.Errorf("Espera bloqueio %d, mas recebeu: %d", http.StatusForbidden, rr.Code)
+        	}
         }
 
         func TestRoute_Nodes_ListByProject(t *testing.T) {
@@ -148,8 +159,13 @@ jobs:
         	rr := httptest.NewRecorder()
 
         	router.ServeHTTP(rr, req)
-        	assert.Equal(t, http.StatusOK, rr.Code)
-        	assert.Contains(t, rr.Body.String(), "nodes")
+        	
+        	if rr.Code != http.StatusOK {
+        		t.Errorf("Espera status %d, mas recebeu: %d", http.StatusOK, rr.Code)
+        	}
+        	if !strings.Contains(rr.Body.String(), "nodes") {
+        		t.Errorf("O corpo da resposta deveria conter o termo 'nodes'. Recebeu: %s", rr.Body.String())
+        	}
         }
         EOF
 
